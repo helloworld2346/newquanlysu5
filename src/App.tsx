@@ -1,41 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { AppProviders } from "@/app/providers";
 import { GlobalLoadingBar } from "@/shared/components/GlobalLoadingBar";
-
-function LoginPage() {
-  return (
-    <div className="grid min-h-screen place-items-center bg-background text-foreground">
-      <div className="w-full max-w-sm rounded-lg border bg-card p-6 text-card-foreground">
-        <h1 className="mb-4 text-xl font-semibold">Đăng nhập</h1>
-        <p className="text-sm text-muted-foreground">LoginPage placeholder</p>
-      </div>
-    </div>
-  );
-}
-
-function DashboardLayout() {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b p-4 text-lg font-semibold">
-        Quản lý Sư đoàn 5
-      </header>
-      <main className="p-4">
-        <p className="text-muted-foreground">DashboardLayout placeholder</p>
-      </main>
-    </div>
-  );
-}
+import { AppRouter } from "@/app/router";
 
 export default function App() {
   return (
     <AppProviders>
       <GlobalLoadingBar />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={<DashboardLayout />} />
-        </Routes>
+        <AppRouter />
       </BrowserRouter>
     </AppProviders>
   );
