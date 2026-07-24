@@ -1,14 +1,11 @@
+import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthInfo } from "@/features/auth/queries";
 import { getIdByPath } from "@/config/navigation";
 
 const EXEMPT = ["/settings", "/political-work-report"];
 
-export default function RequireRole({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RequireRole({ children }: { children: ReactNode }) {
   const { account, role, tenChucnang, isLoading } = useAuthInfo();
   const location = useLocation();
 
