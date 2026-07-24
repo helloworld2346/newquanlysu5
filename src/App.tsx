@@ -1,7 +1,6 @@
-// src/App.tsx
-import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { queryClient } from "@/app/queryClient";
+import { AppProviders } from "@/app/providers";
+import { GlobalLoadingBar } from "@/shared/components/GlobalLoadingBar";
 
 function LoginPage() {
   return (
@@ -29,7 +28,8 @@ function DashboardLayout() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <AppProviders>
+      <GlobalLoadingBar />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
@@ -37,6 +37,6 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardLayout />} />
         </Routes>
       </BrowserRouter>
-    </QueryClientProvider>
+    </AppProviders>
   );
 }
