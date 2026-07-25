@@ -1,5 +1,20 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, type LazyExoticComponent, type ComponentType } from "react";
+import {
+  LayoutDashboard,
+  Flag,
+  ClipboardList,
+  FileText,
+  UsersRound,
+  History,
+  CalendarPlus,
+  UserCog,
+  Building2,
+  ShieldCheck,
+  ScrollText,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 import { normalizeRoleName } from "@/lib/roles";
 
 export type NavItemId =
@@ -16,11 +31,20 @@ export type NavItemId =
   | "audit-log"
   | "settings";
 
+export type NavGroupId =
+  | "dashboard"
+  | "reports"
+  | "duty"
+  | "admin"
+  | "settings";
+
 export type NavItem = {
   id: NavItemId;
   label: string;
   path: string;
   component: LazyExoticComponent<ComponentType>;
+  icon: LucideIcon;
+  group: NavGroupId;
   allowedRoles?: string[];
 };
 
@@ -37,6 +61,14 @@ const ALL_REPORT_ROLES = [
 const ADMIN_ONLY = ["Quản Trị Viên"];
 const TAC_CHIEN = ["Quản Trị Viên", "Trực ban tác chiến"];
 
+export const NAV_GROUPS: { id: NavGroupId; label: string }[] = [
+  { id: "dashboard", label: "Tổng hợp" },
+  { id: "reports", label: "Báo ban" },
+  { id: "duty", label: "Ca trực" },
+  { id: "admin", label: "Quản trị" },
+  { id: "settings", label: "Hệ thống" },
+];
+
 export const ALL_NAV_ITEMS: NavItem[] = [
   // --- Dashboard ---
   {
@@ -44,6 +76,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Tổng hợp trong ngày",
     path: "/dashboard",
     component: Placeholder,
+    icon: LayoutDashboard,
+    group: "dashboard",
     allowedRoles: TAC_CHIEN,
   },
   {
@@ -51,6 +85,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Tổng hợp CTĐ, CTCT",
     path: "/political-dashboard",
     component: Placeholder,
+    icon: Flag,
+    group: "dashboard",
     allowedRoles: TAC_CHIEN,
   },
   // --- Cập nhật thống kê / Báo ban ---
@@ -59,13 +95,17 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Thống kê quân số trong ngày",
     path: "/daily-report",
     component: Placeholder,
+    icon: ClipboardList,
+    group: "reports",
     allowedRoles: ALL_REPORT_ROLES,
   },
   {
     id: "report-political-work",
-    label: "Hoạt động Công tác Đảng, công tác chính trị",
+    label: "Hoạt động CTĐ, CTCT",
     path: "/political-work-report",
     component: Placeholder,
+    icon: FileText,
+    group: "reports",
     allowedRoles: ALL_REPORT_ROLES,
   },
   // --- Ca trực ---
@@ -74,6 +114,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Quản lý ca trực",
     path: "/duty/personnel",
     component: Placeholder,
+    icon: UsersRound,
+    group: "duty",
     allowedRoles: TAC_CHIEN,
   },
   {
@@ -81,6 +123,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Lịch sử ca trực",
     path: "/duty/shifts",
     component: Placeholder,
+    icon: History,
+    group: "duty",
     allowedRoles: TAC_CHIEN,
   },
   {
@@ -88,6 +132,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Tạo ca trực",
     path: "/duty/create",
     component: Placeholder,
+    icon: CalendarPlus,
+    group: "duty",
     allowedRoles: TAC_CHIEN,
   },
   // --- Quản trị ---
@@ -96,6 +142,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Quản lý tài khoản",
     path: "/account-management",
     component: Placeholder,
+    icon: UserCog,
+    group: "admin",
     allowedRoles: ADMIN_ONLY,
   },
   {
@@ -103,6 +151,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Quản lý đơn vị",
     path: "/unit-management",
     component: Placeholder,
+    icon: Building2,
+    group: "admin",
     allowedRoles: ADMIN_ONLY,
   },
   {
@@ -110,6 +160,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Quản lý vai trò",
     path: "/role-management",
     component: Placeholder,
+    icon: ShieldCheck,
+    group: "admin",
     allowedRoles: ADMIN_ONLY,
   },
   {
@@ -117,6 +169,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Nhật ký hệ thống",
     path: "/audit-log",
     component: Placeholder,
+    icon: ScrollText,
+    group: "admin",
     allowedRoles: ADMIN_ONLY,
   },
   // --- Cài đặt ---
@@ -125,6 +179,8 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Cài đặt",
     path: "/settings",
     component: Placeholder,
+    icon: Settings,
+    group: "settings",
     allowedRoles: ALL_REPORT_ROLES,
   },
 ];
@@ -184,5 +240,29 @@ export function getNavItemsByRole(
 
   return ALL_NAV_ITEMS.filter(
     (i) => !i.allowedRoles || i.allowedRoles.includes(role),
+  );
+}
+
+export function getNavGroupsByRole(
+  userRole: string | null,
+  capDonVi: string | null = null,
+  tenChucnang: string[] | null = null,
+): { id: NavGroupId; label: string; items: NavItem[] }[] {
+  const items = getNavItemsByRole(userRole, capDonVi, tenChucnang);
+  return NAV_GROUPS.map((g) => ({
+    ...g,
+    items: items.filter((i) => i.group === g.id),
+  })).filter((g) => g.items.length > 0);
+}
+
+export function canAccessNavId(
+  id: NavItemId,
+  userRole: string | null,
+  capDonVi: string | null = null,
+  tenChucnang: string[] | null = null,
+): boolean {
+  if (id === "settings") return true;
+  return getNavItemsByRole(userRole, capDonVi, tenChucnang).some(
+    (i) => i.id === id,
   );
 }
