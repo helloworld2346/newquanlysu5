@@ -63,7 +63,7 @@ const TAC_CHIEN = ["Quản Trị Viên", "Trực ban tác chiến"];
 
 export const NAV_GROUPS: { id: NavGroupId; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "reports", label: "Cập nhật thống kê" },
+  { id: "reports", label: "Báo ban" },
   { id: "duty", label: "Ca trực" },
   { id: "admin", label: "Quản trị" },
   { id: "settings", label: "Hệ thống" },
