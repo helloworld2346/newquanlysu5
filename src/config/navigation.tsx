@@ -62,8 +62,8 @@ const ADMIN_ONLY = ["Quản Trị Viên"];
 const TAC_CHIEN = ["Quản Trị Viên", "Trực ban tác chiến"];
 
 export const NAV_GROUPS: { id: NavGroupId; label: string }[] = [
-  { id: "dashboard", label: "Tổng hợp" },
-  { id: "reports", label: "Báo ban" },
+  { id: "dashboard", label: "Dashboard" },
+  { id: "reports", label: "Cập nhật thống kê" },
   { id: "duty", label: "Ca trực" },
   { id: "admin", label: "Quản trị" },
   { id: "settings", label: "Hệ thống" },
