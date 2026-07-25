@@ -1,28 +1,15 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
+import Breadcrumb from "./Breadcrumb";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
-const BREAKPOINT = 1024;
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(
-    () =>
-      window.innerWidth < BREAKPOINT ||
-      localStorage.getItem(COLLAPSE_KEY) === "true",
+    () => localStorage.getItem(COLLAPSE_KEY) === "true",
   );
-
-  useEffect(() => {
-    const onResize = () => {
-      if (window.innerWidth < BREAKPOINT) {
-        setCollapsed(true);
-      } else {
-        setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "true");
-      }
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
 
   const toggle = () => {
     setCollapsed((prev) => {
@@ -31,6 +18,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       return next;
     });
   };
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth < 1024) setCollapsed(true);
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   return (
     <div className="relative flex h-screen bg-primary text-foreground">
@@ -46,7 +42,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         type="button"
         onClick={toggle}
         aria-label="Thu gọn/mở rộng menu"
-        className={`absolute top-1/2 z-20 grid size-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-primary text-gold shadow-md transition-[left,background-color,color] duration-300 ease-in-out hover:bg-gold hover:text-primary ${
+        className={`absolute top-1/2 z-20 grid size-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-primary text-primary-foreground shadow-md transition-[left,colors] duration-300 ease-in-out hover:bg-gold hover:text-primary ${
           collapsed ? "left-28" : "left-72"
         }`}
       >
@@ -58,13 +54,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </button>
 
       <main className="flex flex-1 flex-col overflow-hidden p-3 pl-0">
-        <header className="flex h-16 shrink-0 items-center justify-center px-3">
+        {/* <header className="flex h-16 shrink-0 items-center justify-center px-3">
           <p className="truncate text-xl font-bold uppercase text-gold">
             Thống kê quân số, Hoạt động CTĐ, CTCT
           </p>
-        </header>
-        <div className="flex-1 overflow-y-auto rounded-2xl bg-background p-6 text-foreground shadow-sm">
-          {children}
+        </header> */}
+
+        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b px-6">
+            <Breadcrumb />
+            <Topbar />
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">{children}</div>
         </div>
       </main>
     </div>

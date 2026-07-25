@@ -1,13 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { LogOut } from "lucide-react";
-import { useAuthInfo, useLogout } from "@/features/auth/queries";
+import { useAuthInfo } from "@/features/auth/queries";
 import { getNavGroupsByRole } from "@/config/navigation";
 import logo from "@/assets/images/logo-su5.png";
 
 export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const { account, role, capDonVi, tenChucnang } = useAuthInfo();
   const unitName = account?.donVi?.tenDonvi || "Chưa phân đơn vị";
-  const logout = useLogout();
   const sections = getNavGroupsByRole(role || null, capDonVi, tenChucnang);
 
   const textAnim = `overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out ${
@@ -16,11 +14,11 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
 
   return (
     <aside className="flex h-full w-full flex-col bg-primary text-primary-foreground">
-      <div className="flex h-16 shrink-0 items-center px-4 pt-6">
+      <div className="flex h-[76px] shrink-0 items-center border-b border-white/10 px-4">
         <img
           src={logo}
           alt="Logo SƯ ĐOÀN 5"
-          className="size-16 shrink-0 object-contain"
+          className="size-14 shrink-0 object-contain"
           draggable={false}
         />
         <span
@@ -30,7 +28,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
         </span>
       </div>
 
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-8">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
         {sections.map((sec, i) => (
           <div key={sec.id} className={i === 0 ? "" : "mt-6"}>
             <p
@@ -50,7 +48,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   to={path}
                   title={collapsed ? label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center rounded-lg py-2.5 text-sm transition-colors ${
+                    `flex items-center rounded-lg py-2 text-sm transition-colors ${
                       collapsed ? "justify-center px-2" : "pl-6 pr-3"
                     } ${
                       isActive
@@ -67,20 +65,6 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           </div>
         ))}
       </nav>
-
-      <div className="border-t border-white/10 p-3">
-        <button
-          type="button"
-          onClick={logout}
-          title={collapsed ? "Đăng xuất" : undefined}
-          className={`flex w-full items-center rounded-lg border border-white/20 py-2.5 text-sm text-primary-foreground hover:bg-gold/20 hover:text-gold ${
-            collapsed ? "justify-center px-2" : "px-3"
-          }`}
-        >
-          <LogOut className="size-5 shrink-0" />
-          <span className={`truncate ${textAnim}`}>Đăng xuất</span>
-        </button>
-      </div>
     </aside>
   );
 }
