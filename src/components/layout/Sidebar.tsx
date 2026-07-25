@@ -10,31 +10,39 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const logout = useLogout();
   const sections = getNavGroupsByRole(role || null, capDonVi, tenChucnang);
 
+  const textAnim = `overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out ${
+    collapsed ? "ml-0 max-w-0 opacity-0" : "ml-3 max-w-[12rem] opacity-100"
+  }`;
+
   return (
-    <aside className="flex h-full flex-col bg-primary text-primary-foreground">
-      {/* Header brand */}
+    <aside className="flex h-full w-full flex-col bg-primary text-primary-foreground">
       <div className="flex h-16 shrink-0 items-center px-4 pt-6">
         <img
           src={logo}
-          alt="Logo"
+          alt="Logo SƯ ĐOÀN 5"
           className="size-16 shrink-0 object-contain"
+          draggable={false}
         />
-        {!collapsed && (
-          <span className="ml-4 truncate text-lg font-bold uppercase text-gold">
-            {unitName}
-          </span>
-        )}
+        <span
+          className={`truncate text-lg font-bold uppercase text-gold ${textAnim}`}
+        >
+          {unitName}
+        </span>
       </div>
 
-      {/* Menu */}
-      <nav className="flex-1 overflow-y-auto p-3 pt-10">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-8">
         {sections.map((sec, i) => (
           <div key={sec.id} className={i === 0 ? "" : "mt-6"}>
-            {!collapsed && (
-              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground/60">
-                {sec.label}
-              </p>
-            )}
+            <p
+              className={`pb-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground/60 transition-all duration-300 ease-in-out ${
+                collapsed
+                  ? "px-1 text-center text-[10px] leading-tight"
+                  : "px-3"
+              }`}
+            >
+              {sec.label}
+            </p>
+
             <div className="space-y-1">
               {sec.items.map(({ path, label, icon: Icon }) => (
                 <NavLink
@@ -51,12 +59,8 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                     }`
                   }
                 >
-                  <Icon
-                    className={
-                      collapsed ? "size-5 shrink-0" : "mr-3 size-5 shrink-0"
-                    }
-                  />
-                  {!collapsed && <span className="truncate">{label}</span>}
+                  <Icon className="size-5 shrink-0" />
+                  <span className={`truncate ${textAnim}`}>{label}</span>
                 </NavLink>
               ))}
             </div>
@@ -64,7 +68,6 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
         ))}
       </nav>
 
-      {/* Đăng xuất */}
       <div className="border-t border-white/10 p-3">
         <button
           type="button"
@@ -74,10 +77,8 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
             collapsed ? "justify-center px-2" : "px-3"
           }`}
         >
-          <LogOut
-            className={collapsed ? "size-5 shrink-0" : "mr-3 size-5 shrink-0"}
-          />
-          {!collapsed && "Đăng xuất"}
+          <LogOut className="size-5 shrink-0" />
+          <span className={`truncate ${textAnim}`}>Đăng xuất</span>
         </button>
       </div>
     </aside>
