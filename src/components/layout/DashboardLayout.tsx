@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="relative flex h-screen bg-primary text-foreground">
+    <div className="relative flex h-screen bg-primary text-foreground overflow-hidden">
       <div
         className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out ${
           collapsed ? "w-28" : "w-72"

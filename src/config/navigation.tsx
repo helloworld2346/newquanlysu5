@@ -52,6 +52,9 @@ const Placeholder = lazy(
   () => import("@/features/_placeholder/PagePlaceholder"),
 );
 
+const UnitManagement = lazy(() => import("@/features/units/UnitManagement"));
+
+
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
   "Trực ban tác chiến",
@@ -150,7 +153,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "unit-management",
     label: "Quản lý đơn vị",
     path: "/unit-management",
-    component: Placeholder,
+    component: UnitManagement,
     icon: Building2,
     group: "admin",
     allowedRoles: ADMIN_ONLY,

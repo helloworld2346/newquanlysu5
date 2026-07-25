@@ -1,9 +1,9 @@
-// src/types/account.ts  
 export interface Role {  
   idVaiTro: string | null;  
   tenVaiTro: string | null;  
   tenChucnang?: string[];  
-}  
+}
+
 export interface DonVi {  
   maDonVi: string;  
   tenDonvi: string;  
@@ -15,7 +15,59 @@ export interface DonVi {
   quanSoQncn: number;  
   quanSoSiQuan: number;  
   quanSoTong: number;  
+  createdAt?: string;  
+  updatedAt?: string;  
+  isDeleted?: boolean;  
+  deletedAt?: string | null;  
 }  
+  
+export interface DonViResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: DonVi[];  
+}  
+  
+export interface CreateDonViRequest {  
+  tenDonvi: string;  
+  kyhieuDonvi: string;  
+  quanSoTong: number;  
+  quanSoHsqBs: number;  
+  quanSoSiQuan: number;  
+  quanSoQncn: number;  
+  donViCha: string;  
+  capDonVi: string;  
+  donViCon: string[];  
+}  
+  
+export interface CreateDonViResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: DonVi;  
+}  
+  
+export interface UpdateDonViRequest {  
+  tenDonvi: string;  
+  kyhieuDonvi: string;  
+  capDonVi: string;  
+  donViCha: string | null;  
+  quanSoTong: number;  
+  quanSoHsqBs: number;  
+  quanSoSiQuan: number;  
+  quanSoQncn: number;  
+  createdAt?: string;  
+  updatedAt?: string;  
+  isDeleted?: boolean;  
+  deletedAt?: string | null;  
+}  
+  
+export interface UpdateDonViResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: DonVi;  
+}
 export interface Account {  
   idTaiKhoan: string;  
   tenDangNhap: string;  
