@@ -250,7 +250,12 @@ export default function AccountManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onClick={() => openEdit(a)}>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setTimeout(() => openEdit(a), 0);
+                          }}
+                        >
                           <Pencil />
                           Sửa
                         </DropdownMenuItem>
@@ -258,11 +263,21 @@ export default function AccountManagement() {
                           {a.khoa ? <LockOpen /> : <Lock />}
                           {a.khoa ? "Mở khóa" : "Khóa"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setResetAccount(a)}>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setTimeout(() => setResetAccount(a), 0);
+                          }}
+                        >
                           <Key />
                           Reset mật khẩu
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setChucNangAccount(a)}>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setTimeout(() => setChucNangAccount(a), 0);
+                          }}
+                        >
                           <SlidersHorizontal />
                           Đổi chức năng
                         </DropdownMenuItem>
