@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Plus,
   Pencil,
@@ -90,7 +90,7 @@ const STAT_CAPS: {
   },
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 export default function UnitManagement() {
   const { data: units = [], isLoading } = useUnits();
@@ -98,6 +98,10 @@ export default function UnitManagement() {
   const [search, setSearch] = useState("");
   const [filterCap, setFilterCap] = useState("");
   const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    
+    const topRef = useRef<HTMLDivElement>(null);
+
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -145,12 +149,19 @@ export default function UnitManagement() {
     });
   }, [units, search, filterCap]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const paginated = filtered.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE,
+    (safePage - 1) * pageSize,
+    safePage * pageSize,
   );
+    
+    const goToPage = (updater: number | ((p: number) => number)) => {
+      setPage(updater);
+      topRef.current
+        ?.closest(".overflow-y-auto")
+        ?.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
   const openCreate = () => {
     setEditingId(null);
@@ -171,7 +182,7 @@ export default function UnitManagement() {
   }
 
   return (
-    <div>
+    <div ref={topRef}>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Quản lý đơn vị</h1>
         <Button onClick={openCreate}>
@@ -269,7 +280,7 @@ export default function UnitManagement() {
         )}
       </div>
 
-      <div className="rounded-lg border">
+      <div className="overflow-hidden rounded-lg border bg-background">
         <Table className="min-w-[1120px] table-fixed">
           <TableHeader>
             <TableRow>
@@ -299,7 +310,7 @@ export default function UnitManagement() {
               paginated.map((u, index) => (
                 <TableRow key={u.maDonVi}>
                   <TableCell className="text-center text-muted-foreground">
-                    {(safePage - 1) * PAGE_SIZE + index + 1}
+                    {(safePage - 1) * pageSize + index + 1}
                   </TableCell>
                   <TableCell className="truncate font-medium" title={u.maDonVi}>
                     {u.maDonVi}
@@ -345,42 +356,71 @@ export default function UnitManagement() {
         </Table>
       </div>
 
-      {!isLoading && filtered.length > 0 && totalPages > 1 && (
-        <div className="mt-4 flex justify-center">
-          <Pagination className="mx-0 w-auto justify-end">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  disabled={safePage <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                />
-              </PaginationItem>
+      {!isLoading && filtered.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between">
+          <div className="mb-2 flex items-center">
+            <span className="mr-2 text-sm text-muted-foreground">Hiển thị</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => {
+                setPageSize(Number(v));
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="ml-2 text-sm text-muted-foreground">dòng</span>
+          </div>
 
-              {getPageList(safePage, totalPages).map((p, i) =>
-                p === "…" ? (
-                  <PaginationItem key={`e-${i}`}>
-                    <PaginationEllipsis />
+          {totalPages > 1 && (
+            <div className="mb-2 rounded-lg border bg-background px-2 py-1">
+              <Pagination className="mx-0 w-auto justify-end">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      disabled={safePage <= 1}
+                      onClick={() => goToPage((p) => Math.max(1, p - 1))}
+                    />
                   </PaginationItem>
-                ) : (
-                  <PaginationItem key={p}>
-                    <PaginationLink
-                      isActive={p === safePage}
-                      onClick={() => setPage(p)}
-                    >
-                      {p}
-                    </PaginationLink>
-                  </PaginationItem>
-                ),
-              )}
 
-              <PaginationItem>
-                <PaginationNext
-                  disabled={safePage >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+                  {getPageList(safePage, totalPages).map((p, i) =>
+                    p === "…" ? (
+                      <PaginationItem key={`e-${i}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          isActive={p === safePage}
+                          onClick={() => goToPage(p)}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ),
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      disabled={safePage >= totalPages}
+                      onClick={() =>
+                        goToPage((p) => Math.min(totalPages, p + 1))
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       )}
 

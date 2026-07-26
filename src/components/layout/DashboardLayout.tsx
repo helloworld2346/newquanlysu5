@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import Breadcrumb from "./Breadcrumb";
+import dongsonBg from "@/assets/images/login-bg-dongson.png";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
 
@@ -65,7 +66,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Breadcrumb />
             <Topbar />
           </div>
-          <div className="flex-1 overflow-y-auto p-6">{children}</div>
+          <div className="relative flex-1 overflow-hidden">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: `url(${dongsonBg})`,
+                backgroundSize: "60% auto",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+            <div className="relative z-10 h-full overflow-y-auto p-6">
+              {children}
+            </div>
+          </div>
         </div>
       </main>
     </div>
