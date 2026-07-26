@@ -1,7 +1,16 @@
 import { useMemo, useState } from "react";
-import { Plus, Pencil, X } from "lucide-react";
-import { toast } from "sonner";
+import {
+  Plus,
+  Pencil,
+  X,
+  Building2,
+  Briefcase,
+  ShieldCheck,
+  Flag,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -10,13 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Pagination,
   PaginationContent,
@@ -34,8 +36,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { getErrorMessage } from "@/lib/errorHandler";
-import { useUnits, useCreateUnit, useUpdateUnit } from "./queries";
+import { useUnits } from "./queries";
+import UnitFormDialog from "./UnitFormDialog";
 import type { DonVi } from "@/types/account";
 
 const CAP_LABELS: Record<string, string> = {
@@ -44,47 +46,54 @@ const CAP_LABELS: Record<string, string> = {
   TIEU_DOAN: "Tiểu đoàn",
   DAI_DOI: "Đại đội",
   PHONG: "Phòng",
-  BAN: "Ban",
 };
 const CAP_OPTIONS = Object.entries(CAP_LABELS).map(([value, label]) => ({
   value,
   label,
 }));
 
+const TOTAL_STAT = {
+  label: "Tổng đơn vị",
+  icon: Building2,
+  color: "bg-emerald-500",
+};
+
+const STAT_CAPS: {
+  cap: string;
+  label: string;
+  icon: typeof Building2;
+  color: string;
+}[] = [
+  {
+    cap: "PHONG",
+    label: "Phòng",
+    icon: Briefcase,
+    color: "bg-blue-500",
+  },
+  {
+    cap: "TRUNG_DOAN",
+    label: "Trung đoàn",
+    icon: ShieldCheck,
+    color: "bg-amber-500",
+  },
+  {
+    cap: "TIEU_DOAN",
+    label: "Tiểu đoàn",
+    icon: Flag,
+    color: "bg-rose-500",
+  },
+  {
+    cap: "DAI_DOI",
+    label: "Đại đội",
+    icon: Users,
+    color: "bg-violet-500",
+  },
+];
+
 const PAGE_SIZE = 10;
-const toInt = (v: string) => {
-  const n = parseInt(v, 10);
-  return Number.isNaN(n) ? 0 : n;
-};
-
-type FormState = {
-  tenDonvi: string;
-  kyhieuDonvi: string;
-  capDonVi: string;
-  donViCha: string;
-  quanSoTong: string;
-  quanSoHsqBs: string;
-  quanSoSiQuan: string;
-  quanSoQncn: string;
-};
-const EMPTY_FORM: FormState = {
-  tenDonvi: "",
-  kyhieuDonvi: "",
-  capDonVi: "",
-  donViCha: "",
-  quanSoTong: "0",
-  quanSoHsqBs: "0",
-  quanSoSiQuan: "0",
-  quanSoQncn: "0",
-};
-
-const inputCls =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring";
 
 export default function UnitManagement() {
   const { data: units = [], isLoading } = useUnits();
-  const createUnit = useCreateUnit();
-  const updateUnit = useUpdateUnit();
 
   const [search, setSearch] = useState("");
   const [filterCap, setFilterCap] = useState("");
@@ -92,17 +101,34 @@ export default function UnitManagement() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
 
   const editingUnit = useMemo(
-    () => units.find((u) => u.maDonVi === editingId),
+    () => units.find((u) => u.maDonVi === editingId) ?? null,
     [units, editingId],
   );
 
-  const parentOptions = useMemo(
-    () => units.map((u) => ({ value: u.maDonVi, label: u.tenDonvi })),
-    [units],
-  );
+  const directChildren = useMemo(() => {
+    const rootCode =
+      units.find((u) => u.donViCha === null)?.maDonVi ??
+      units.find((u) => u.capDonVi === "SU_DOAN")?.maDonVi ??
+      "";
+    if (!rootCode) return [];
+    const prefix = `${rootCode}.`;
+    return units.filter((u) => {
+      if (!u.maDonVi.startsWith(prefix)) return false;
+      const rest = u.maDonVi.slice(prefix.length);
+      return rest.length > 0 && !rest.includes(".");
+    });
+  }, [units]);
+
+  const capCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const u of directChildren) {
+      const key = u.capDonVi ?? "";
+      map[key] = (map[key] ?? 0) + 1;
+    }
+    return map;
+  }, [directChildren]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -126,74 +152,15 @@ export default function UnitManagement() {
     safePage * PAGE_SIZE,
   );
 
-  const setField = (k: keyof FormState, v: string) =>
-    setForm((prev) => ({ ...prev, [k]: v }));
-
   const openCreate = () => {
     setEditingId(null);
-    setForm({ ...EMPTY_FORM });
     setDialogOpen(true);
   };
 
   const openEdit = (u: DonVi) => {
-    const parent = units.find((x) => x.tenDonvi === u.donViCha);
     setEditingId(u.maDonVi);
-    setForm({
-      tenDonvi: u.tenDonvi,
-      kyhieuDonvi: u.kyhieuDonvi,
-      capDonVi: u.capDonVi ?? "",
-      donViCha: parent ? parent.maDonVi : "",
-      quanSoTong: String(u.quanSoTong),
-      quanSoHsqBs: String(u.quanSoHsqBs),
-      quanSoSiQuan: String(u.quanSoSiQuan),
-      quanSoQncn: String(u.quanSoQncn),
-    });
     setDialogOpen(true);
   };
-
-  const handleSubmit = async () => {
-    if (!form.tenDonvi.trim()) return toast.error("Vui lòng nhập tên đơn vị");
-    if (!form.kyhieuDonvi.trim()) return toast.error("Vui lòng nhập ký hiệu");
-    if (!form.capDonVi) return toast.error("Vui lòng chọn cấp đơn vị");
-
-    const base = {
-      tenDonvi: form.tenDonvi.trim(),
-      kyhieuDonvi: form.kyhieuDonvi.trim(),
-      capDonVi: form.capDonVi,
-      donViCha: form.donViCha,
-      quanSoTong: toInt(form.quanSoTong),
-      quanSoHsqBs: toInt(form.quanSoHsqBs),
-      quanSoSiQuan: toInt(form.quanSoSiQuan),
-      quanSoQncn: toInt(form.quanSoQncn),
-    };
-
-    try {
-      if (editingId && editingUnit) {
-        const res = await updateUnit.mutateAsync({
-          id: editingId,
-          data: {
-            ...base,
-            createdAt: editingUnit.createdAt,
-            updatedAt: new Date().toISOString(),
-            isDeleted: editingUnit.isDeleted,
-            deletedAt: editingUnit.deletedAt,
-          },
-        });
-        if (!res.success) throw new Error(res.message);
-        toast.success("Cập nhật đơn vị thành công");
-      } else {
-        const res = await createUnit.mutateAsync({ ...base, donViCon: [] });
-        if (!res.success) throw new Error(res.message);
-        toast.success("Tạo đơn vị thành công");
-        setPage(1);
-      }
-      setDialogOpen(false);
-    } catch (e) {
-      toast.error(getErrorMessage(e, "Không thể lưu đơn vị"));
-    }
-  };
-
-  const saving = createUnit.isPending || updateUnit.isPending;
 
   function getPageList(current: number, total: number): (number | "…")[] {
     if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
@@ -211,6 +178,50 @@ export default function UnitManagement() {
           <Plus className="mr-2 size-4" />
           Thêm đơn vị
         </Button>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="p-1.5">
+          <Card className="h-full shadow-md transition-shadow hover:shadow-lg">
+            <CardContent className="flex min-h-[84px] items-center p-5">
+              <div
+                className={`mr-4 grid size-12 shrink-0 place-items-center rounded-xl text-white ${TOTAL_STAT.color}`}
+              >
+                <TOTAL_STAT.icon className="size-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="mb-1 truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  {TOTAL_STAT.label}
+                </p>
+                <strong className="block text-2xl font-extrabold leading-none tabular-nums">
+                  {directChildren.length}
+                </strong>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {STAT_CAPS.map(({ cap, label, icon: Icon, color }) => (
+          <div key={cap} className="p-1.5">
+            <Card className="h-full shadow-md transition-shadow hover:shadow-lg">
+              <CardContent className="flex min-h-[84px] items-center p-5">
+                <div
+                  className={`mr-4 grid size-12 shrink-0 place-items-center rounded-xl text-white ${color}`}
+                >
+                  <Icon className="size-6" />
+                </div>
+                <div className="min-w-0">
+                  <p className="mb-1 truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    {label}
+                  </p>
+                  <strong className="block text-2xl font-extrabold leading-none tabular-nums">
+                    {capCounts[cap] ?? 0}
+                  </strong>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ))}
       </div>
 
       <div className="mb-4 flex flex-wrap items-center">
@@ -372,131 +383,14 @@ export default function UnitManagement() {
           </Pagination>
         </div>
       )}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingId ? "Cập nhật đơn vị" : "Thêm đơn vị"}
-            </DialogTitle>
-          </DialogHeader>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2">
-            <Field label="Tên đơn vị *">
-              <input
-                className={inputCls}
-                value={form.tenDonvi}
-                onChange={(e) => setField("tenDonvi", e.target.value)}
-              />
-            </Field>
-            <Field label="Ký hiệu *">
-              <input
-                className={inputCls}
-                value={form.kyhieuDonvi}
-                onChange={(e) => setField("kyhieuDonvi", e.target.value)}
-              />
-            </Field>
-            <Field label="Cấp đơn vị *">
-              <select
-                className={inputCls}
-                value={form.capDonVi}
-                onChange={(e) => setField("capDonVi", e.target.value)}
-              >
-                <option value="">-- Chọn cấp --</option>
-                {CAP_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Đơn vị cha">
-              <select
-                className={inputCls}
-                value={form.donViCha}
-                onChange={(e) => setField("donViCha", e.target.value)}
-                disabled={!!editingId}
-              >
-                <option value="">-- Không có (đơn vị gốc) --</option>
-                {parentOptions
-                  .filter((o) => o.value !== editingId)
-                  .map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-              </select>
-            </Field>
-            <Field label="Quân số tổng">
-              <input
-                type="number"
-                min={0}
-                className={inputCls}
-                value={form.quanSoTong}
-                onChange={(e) => setField("quanSoTong", e.target.value)}
-              />
-            </Field>
-            <Field label="HSQ-BS">
-              <input
-                type="number"
-                min={0}
-                className={inputCls}
-                value={form.quanSoHsqBs}
-                onChange={(e) => setField("quanSoHsqBs", e.target.value)}
-              />
-            </Field>
-            <Field label="Sĩ quan">
-              <input
-                type="number"
-                min={0}
-                className={inputCls}
-                value={form.quanSoSiQuan}
-                onChange={(e) => setField("quanSoSiQuan", e.target.value)}
-              />
-            </Field>
-            <Field label="QNCN">
-              <input
-                type="number"
-                min={0}
-                className={inputCls}
-                value={form.quanSoQncn}
-                onChange={(e) => setField("quanSoQncn", e.target.value)}
-              />
-            </Field>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-              disabled={saving}
-            >
-              Hủy
-            </Button>
-            <Button onClick={handleSubmit} disabled={saving}>
-              {saving
-                ? "Đang lưu..."
-                : editingId
-                  ? "Lưu thay đổi"
-                  : "Tạo đơn vị"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mb-3 px-2">
-      <label className="mb-1 block text-sm font-medium">{label}</label>
-      {children}
+      <UnitFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        editingUnit={editingUnit}
+        units={units}
+        onCreated={() => setPage(1)}
+      />
     </div>
   );
 }
