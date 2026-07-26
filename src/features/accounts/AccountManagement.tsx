@@ -8,7 +8,14 @@ import {
   MoreHorizontal,
   Key,
   SlidersHorizontal,
-} from "lucide-react";  
+  X,
+  Users,
+  UserCheck,
+  UserX,
+  ShieldCheck,
+} from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,8 +74,24 @@ export default function AccountManagement() {
 
   const [search, setSearch] = useState("");
   const [filterVaiTro, setFilterVaiTro] = useState("ALL");
+  const [filterDonVi, setFilterDonVi] = useState("ALL");
+  const [filterStatus, setFilterStatus] = useState("ALL"); // ALL | active | locked
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const hasFilter =
+    search.trim() !== "" ||
+    filterVaiTro !== "ALL" ||
+    filterDonVi !== "ALL" ||
+    filterStatus !== "ALL";
+
+  const clearFilter = () => {
+    setSearch("");
+    setFilterVaiTro("ALL");
+    setFilterDonVi("ALL");
+    setFilterStatus("ALL");
+    setPage(1);
+  };
 
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -88,9 +111,22 @@ export default function AccountManagement() {
       }
       if (filterVaiTro !== "ALL" && a.vaiTro?.idVaiTro !== filterVaiTro)
         return false;
+      if (filterDonVi !== "ALL" && a.donVi?.maDonVi !== filterDonVi)
+        return false;
+      if (filterStatus === "active" && a.khoa) return false;
+      if (filterStatus === "locked" && !a.khoa) return false;
       return true;
     });
-  }, [accounts, search, filterVaiTro]);
+  }, [accounts, search, filterVaiTro, filterDonVi, filterStatus]);
+
+  const stats = useMemo(() => {
+    const total = accounts.length;
+    const locked = accounts.filter((a) => a.khoa).length;
+    const roleCount = new Set(
+      accounts.map((a) => a.vaiTro?.idVaiTro).filter(Boolean),
+    ).size;
+    return { total, active: total - locked, locked, roleCount };
+  }, [accounts]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -115,13 +151,13 @@ export default function AccountManagement() {
     setDialogOpen(true);
   };
 
-    function getPageList(current: number, total: number): (number | "…")[] {
-      if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-      if (current <= 4) return [1, 2, 3, 4, 5, "…", total];
-      if (current >= total - 3)
-        return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
-      return [1, "…", current - 1, current, current + 1, "…", total];
-    }
+  function getPageList(current: number, total: number): (number | "…")[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 4) return [1, 2, 3, 4, 5, "…", total];
+    if (current >= total - 3)
+      return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
+    return [1, "…", current - 1, current, current + 1, "…", total];
+  }
 
   const handleDelete = async (acc: Account) => {
     if (!window.confirm(`Xóa tài khoản "${acc.tenTaiKhoan}"?`)) return;
@@ -152,6 +188,42 @@ export default function AccountManagement() {
         </Button>
       </div>
 
+      {/* Stat cards */}
+      <div className="-mx-1.5 mb-4 flex flex-wrap">
+        <div className="w-full p-1.5 sm:w-1/2 lg:w-1/4">
+          <StatCard
+            tone="blue"
+            icon={<Users />}
+            title="Tổng tài khoản"
+            value={stats.total}
+          />
+        </div>
+        <div className="w-full p-1.5 sm:w-1/2 lg:w-1/4">
+          <StatCard
+            tone="emerald"
+            icon={<UserCheck />}
+            title="Đang hoạt động"
+            value={stats.active}
+          />
+        </div>
+        <div className="w-full p-1.5 sm:w-1/2 lg:w-1/4">
+          <StatCard
+            tone="rose"
+            icon={<UserX />}
+            title="Đã khóa"
+            value={stats.locked}
+          />
+        </div>
+        <div className="w-full p-1.5 sm:w-1/2 lg:w-1/4">
+          <StatCard
+            tone="violet"
+            icon={<ShieldCheck />}
+            title="Số vai trò"
+            value={stats.roleCount}
+          />
+        </div>
+      </div>
+
       <div className="mb-4 flex flex-wrap items-center">
         <SearchBar
           value={search}
@@ -169,7 +241,7 @@ export default function AccountManagement() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="mb-2 w-56">
+          <SelectTrigger className="mb-2 mr-3 w-56">
             <SelectValue placeholder="Tất cả vai trò" />
           </SelectTrigger>
           <SelectContent>
@@ -183,6 +255,46 @@ export default function AccountManagement() {
               ))}
           </SelectContent>
         </Select>
+        <Select
+          value={filterDonVi}
+          onValueChange={(v) => {
+            setFilterDonVi(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="mb-2 mr-3 w-56">
+            <SelectValue placeholder="Tất cả đơn vị" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Tất cả đơn vị</SelectItem>
+            {donViList.map((d) => (
+              <SelectItem key={d.maDonVi} value={d.maDonVi}>
+                {d.tenDonvi}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filterStatus}
+          onValueChange={(v) => {
+            setFilterStatus(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="mb-2 mr-3 w-44">
+            <SelectValue placeholder="Tất cả trạng thái" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
+            <SelectItem value="active">Hoạt động</SelectItem>
+            <SelectItem value="locked">Đã khóa</SelectItem>
+          </SelectContent>
+        </Select>
+        {hasFilter && (
+          <Button variant="outline" className="mb-2" onClick={clearFilter}>
+            <X className="mr-2 size-4" /> Xóa lọc
+          </Button>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-lg border bg-background">
@@ -202,23 +314,24 @@ export default function AccountManagement() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Đang tải...
-                </TableCell>
-              </TableRow>
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map(
+                (_, i) => (
+                  <TableRow key={`sk-${i}`}>
+                    {Array.from({ length: 7 }).map((__, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-5 w-full" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ),
+              )
             ) : paginated.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={7}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  {search || filterVaiTro !== "ALL"
-                    ? "Không tìm thấy tài khoản"
-                    : "Chưa có tài khoản"}
+                  {hasFilter ? "Không tìm thấy tài khoản" : "Chưa có tài khoản"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -289,7 +402,6 @@ export default function AccountManagement() {
                           <Trash2 />
                           Xóa
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

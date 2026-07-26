@@ -10,7 +10,8 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -52,42 +53,16 @@ const CAP_OPTIONS = Object.entries(CAP_LABELS).map(([value, label]) => ({
   label,
 }));
 
-const TOTAL_STAT = {
-  label: "Tổng đơn vị",
-  icon: Building2,
-  color: "bg-emerald-500",
-};
-
 const STAT_CAPS: {
   cap: string;
   label: string;
   icon: typeof Building2;
-  color: string;
+  tone: StatCardTone;
 }[] = [
-  {
-    cap: "PHONG",
-    label: "Phòng",
-    icon: Briefcase,
-    color: "bg-blue-500",
-  },
-  {
-    cap: "TRUNG_DOAN",
-    label: "Trung đoàn",
-    icon: ShieldCheck,
-    color: "bg-amber-500",
-  },
-  {
-    cap: "TIEU_DOAN",
-    label: "Tiểu đoàn",
-    icon: Flag,
-    color: "bg-rose-500",
-  },
-  {
-    cap: "DAI_DOI",
-    label: "Đại đội",
-    icon: Users,
-    color: "bg-violet-500",
-  },
+  { cap: "PHONG", label: "Phòng", icon: Briefcase, tone: "blue" },
+  { cap: "TRUNG_DOAN", label: "Trung đoàn", icon: ShieldCheck, tone: "amber" },
+  { cap: "TIEU_DOAN", label: "Tiểu đoàn", icon: Flag, tone: "rose" },
+  { cap: "DAI_DOI", label: "Đại đội", icon: Users, tone: "violet" },
 ];
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -183,53 +158,31 @@ export default function UnitManagement() {
   return (
     <div ref={topRef}>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Quản lý đơn vị</h1>
+        <h1 className="text-xl font-bold">Quản lý đơn vị</h1>
         <Button onClick={openCreate}>
           <Plus className="mr-2 size-4" />
           Thêm đơn vị
         </Button>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        <div className="p-1.5">
-          <Card className="h-full shadow-md transition-shadow hover:shadow-lg">
-            <CardContent className="flex min-h-[84px] items-center p-5">
-              <div
-                className={`mr-4 grid size-12 shrink-0 place-items-center rounded-xl text-white ${TOTAL_STAT.color}`}
-              >
-                <TOTAL_STAT.icon className="size-6" />
-              </div>
-              <div className="min-w-0">
-                <p className="mb-1 truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  {TOTAL_STAT.label}
-                </p>
-                <strong className="block text-2xl font-extrabold leading-none tabular-nums">
-                  {directChildren.length}
-                </strong>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Stat cards */}
+      <div className="mb-4 -mx-1.5 flex flex-wrap">
+        <div className="w-full p-1.5 sm:w-1/2 lg:w-1/5">
+          <StatCard
+            tone="emerald"
+            icon={<Building2 />}
+            title="Tổng đơn vị"
+            value={directChildren.length}
+          />
         </div>
-
-        {STAT_CAPS.map(({ cap, label, icon: Icon, color }) => (
-          <div key={cap} className="p-1.5">
-            <Card className="h-full shadow-md transition-shadow hover:shadow-lg">
-              <CardContent className="flex min-h-[84px] items-center p-5">
-                <div
-                  className={`mr-4 grid size-12 shrink-0 place-items-center rounded-xl text-white ${color}`}
-                >
-                  <Icon className="size-6" />
-                </div>
-                <div className="min-w-0">
-                  <p className="mb-1 truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    {label}
-                  </p>
-                  <strong className="block text-2xl font-extrabold leading-none tabular-nums">
-                    {capCounts[cap] ?? 0}
-                  </strong>
-                </div>
-              </CardContent>
-            </Card>
+        {STAT_CAPS.map(({ cap, label, icon: Icon, tone }) => (
+          <div key={cap} className="w-full p-1.5 sm:w-1/2 lg:w-1/5">
+            <StatCard
+              tone={tone}
+              icon={<Icon />}
+              title={label}
+              value={capCounts[cap] ?? 0}
+            />
           </div>
         ))}
       </div>
@@ -296,13 +249,52 @@ export default function UnitManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginated.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map(
+                (_, i) => (
+                  <TableRow key={`sk-${i}`}>
+                    <TableCell className="text-center">
+                      <Skeleton className="mx-auto h-4 w-6" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-12" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="mx-auto h-4 w-10" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="mx-auto h-4 w-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="mx-auto h-4 w-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="mx-auto h-4 w-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="mx-auto size-8 rounded-md" />
+                    </TableCell>
+                  </TableRow>
+                ),
+              )
+            ) : paginated.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={10}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  Không có đơn vị nào
+                  {search || filterCap
+                    ? "Không tìm thấy đơn vị"
+                    : "Chưa có đơn vị"}
                 </TableCell>
               </TableRow>
             ) : (
