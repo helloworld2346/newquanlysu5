@@ -98,10 +98,9 @@ export default function UnitManagement() {
   const [search, setSearch] = useState("");
   const [filterCap, setFilterCap] = useState("");
   const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    
-    const topRef = useRef<HTMLDivElement>(null);
+  const [pageSize, setPageSize] = useState(10);
 
+  const topRef = useRef<HTMLDivElement>(null);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -155,13 +154,13 @@ export default function UnitManagement() {
     (safePage - 1) * pageSize,
     safePage * pageSize,
   );
-    
-    const goToPage = (updater: number | ((p: number) => number)) => {
-      setPage(updater);
-      topRef.current
-        ?.closest(".overflow-y-auto")
-        ?.scrollTo({ top: 0, behavior: "smooth" });
-    };
+
+  const goToPage = (updater: number | ((p: number) => number)) => {
+    setPage(updater);
+    topRef.current
+      ?.closest(".overflow-y-auto")
+      ?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const openCreate = () => {
     setEditingId(null);

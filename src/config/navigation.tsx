@@ -54,6 +54,9 @@ const Placeholder = lazy(
 
 const UnitManagement = lazy(() => import("@/features/units/UnitManagement"));
 
+const AccountManagement = lazy(
+  () => import("@/features/accounts/AccountManagement"),
+);
 
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
@@ -144,7 +147,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "account-management",
     label: "Quản lý tài khoản",
     path: "/account-management",
-    component: Placeholder,
+    component: AccountManagement,
     icon: UserCog,
     group: "admin",
     allowedRoles: ADMIN_ONLY,
@@ -269,3 +272,6 @@ export function canAccessNavId(
     (i) => i.id === id,
   );
 }
+
+export const CHUC_NANG_OPTIONS: { value: NavItemId; label: string }[] =
+  ALL_NAV_ITEMS.map((i) => ({ value: i.id, label: i.label }));
