@@ -2,6 +2,8 @@ import { NavLink } from "react-router-dom";
 import { useAuthInfo } from "@/features/auth/queries";
 import { getNavGroupsByRole } from "@/config/navigation";
 import logo from "@/assets/images/logo-su5.png";
+import waveline from "@/assets/images/waveline.jpg";
+
 import {
   Tooltip,
   TooltipTrigger,
@@ -63,7 +65,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                     key={path}
                     to={path}
                     className={({ isActive }) =>
-                      `flex items-center rounded-lg py-2 text-sm transition-colors ${
+                      `relative flex items-center overflow-hidden rounded-lg py-2 text-sm transition-colors ${
                         collapsed ? "justify-center px-2" : "pl-6 pr-3"
                       } ${
                         isActive
@@ -72,8 +74,26 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                       }`
                     }
                   >
-                    <Icon className="size-5 shrink-0" />
-                    <span className={`truncate ${textAnim}`}>{label}</span>
+                    {({ isActive }) => (
+                      <>
+                        {isActive && (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 opacity-20"
+                            style={{
+                              backgroundImage: `url(${waveline})`,
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                              backgroundRepeat: "no-repeat",
+                            }}
+                          />
+                        )}
+                        <Icon className="relative z-10 size-5 shrink-0" />
+                        <span className={`relative z-10 truncate ${textAnim}`}>
+                          {label}
+                        </span>
+                      </>
+                    )}
                   </NavLink>
                 );
 
