@@ -88,7 +88,7 @@ export default function PasswordForm() {
                 </button>
               </div>
               {newPassword !== "" && (
-                <ul className="mt-2 space-y-1 text-xs">
+                <ul className="mt-2 space-y-1 text-sm">
                   {checks.map((c) => (
                     <li
                       key={c.label}
@@ -132,7 +132,7 @@ export default function PasswordForm() {
               </div>
               {confirmPassword !== "" && (
                 <p
-                  className={`mt-1 text-xs ${isMatch ? "text-emerald-600" : "text-red-500"}`}
+                  className={`mt-1 text-sm ${isMatch ? "text-emerald-600" : "text-red-500"}`}
                 >
                   {isMatch ? "Mật khẩu khớp" : "Mật khẩu xác nhận không khớp"}
                 </p>

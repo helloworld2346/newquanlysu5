@@ -187,7 +187,7 @@ export default function LoginPage() {
                   id="username-error"
                   role="alert"
                   aria-live="assertive"
-                  className="mt-1.5 text-xs font-medium text-destructive"
+                  className="mt-1.5 text-sm font-medium text-destructive"
                 >
                   {fieldError?.message}
                 </p>
@@ -246,7 +246,7 @@ export default function LoginPage() {
                   id="password-error"
                   role="alert"
                   aria-live="assertive"
-                  className="mt-1.5 text-xs font-medium text-destructive"
+                  className="mt-1.5 text-sm font-medium text-destructive"
                 >
                   {fieldError?.message}
                 </p>
@@ -254,7 +254,7 @@ export default function LoginPage() {
               {capsOn && !passwordHasError && (
                 <p
                   role="alert"
-                  className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400"
+                  className="mt-2 text-sm font-medium text-amber-600 dark:text-amber-400"
                 >
                   Đang bật Caps Lock
                 </p>
@@ -271,7 +271,7 @@ export default function LoginPage() {
             </Button>
           </form>
         </section>
-        <p className="mt-4 select-none text-center text-xs text-white/70">
+        <p className="mt-4 select-none text-center text-sm text-white/70">
           {APP_VERSION}
         </p>
       </div>

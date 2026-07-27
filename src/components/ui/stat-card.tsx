@@ -47,7 +47,7 @@ export function StatCard({
         {icon}
       </span>
       <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
           {title}
         </p>
         <strong className="text-2xl font-extrabold tabular-nums">

@@ -59,7 +59,7 @@ function NumberField({
 }) {
   return (
     <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
-      <label className="mb-1 block text-xs text-muted-foreground truncate">
+      <label className="mb-1 block text-sm text-muted-foreground truncate">
         {label}
       </label>
       <NumberInput
@@ -221,7 +221,7 @@ export default function QuanSoForm({
                 readOnly={disabled}
               />
               <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
-                <label className="mb-1 block text-xs text-muted-foreground truncate">
+                <label className="mb-1 block text-sm text-muted-foreground truncate">
                   Tổng biên chế
                 </label>
                 <div className="flex items-center rounded-md bg-primary px-3 text-primary-foreground h-10">
@@ -269,7 +269,7 @@ export default function QuanSoForm({
               <NumberField label="Quân số QNCN" value={aggQncn} readOnly />
               <NumberField label="Quân số HSQ-BS" value={aggHsqBs} readOnly />
               <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
-                <label className="mb-1 block text-xs text-muted-foreground truncate">
+                <label className="mb-1 block text-sm text-muted-foreground truncate">
                   Tổng toàn {capLabel}
                 </label>
                 <div className="flex items-center rounded-md bg-primary px-3 text-primary-foreground h-10">

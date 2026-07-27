@@ -34,7 +34,7 @@ function Badge({
   } as const;
   return (
     <span
-      className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${map[tone]}`}
+      className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${map[tone]}`}
     >
       {children}
     </span>

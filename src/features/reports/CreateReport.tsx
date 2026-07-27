@@ -138,7 +138,7 @@ type Errors = Record<string, string>;
 function FieldError({ msg }: { msg?: string }) {  
   if (!msg) return null;  
   return (  
-    <p className="mt-1 flex items-center text-xs text-red-600">  
+    <p className="mt-1 flex items-center text-sm text-red-600">  
       <AlertTriangle className="mr-1 size-3.5 shrink-0" />  
       {msg}  
     </p>  
@@ -153,7 +153,7 @@ function ReqLabel({
   required?: boolean;  
 }) {  
   return (  
-    <label className="mb-1 block text-xs text-muted-foreground">  
+    <label className="mb-1 block text-sm text-muted-foreground">  
       {children}  
       {required && <span className="text-red-500"> *</span>}  
     </label>  
@@ -545,25 +545,25 @@ export default function CreateReport() {
         </CardHeader>
         <CardContent className="-mx-1.5 flex flex-wrap">
           <div className="w-1/2 px-1.5 mb-3 sm:w-1/4">
-            <label className="text-xs text-muted-foreground">
+            <label className="text-sm text-muted-foreground">
               Ngày báo cáo
             </label>
             <Input type="date" value={ngayBaoCao} disabled />
           </div>
           <div className="w-1/2 px-1.5 mb-3 sm:w-1/4">
-            <label className="text-xs text-muted-foreground">
+            <label className="text-sm text-muted-foreground">
               Tổng quân số biên chế
             </label>
             <Input value={tongQuanSo} disabled />
           </div>
           <div className="w-1/2 px-1.5 mb-3 sm:w-1/4">
-            <label className="text-xs text-muted-foreground">
+            <label className="text-sm text-muted-foreground">
               Quân số hiện diện
             </label>
             <Input value={quanSoHienDien} disabled />
           </div>
           <div className="w-1/2 px-1.5 mb-3 sm:w-1/4">
-            <label className="text-xs text-muted-foreground">Tổng vắng</label>
+            <label className="text-sm text-muted-foreground">Tổng vắng</label>
             <Input value={quanSoVang} disabled />
             <FieldError msg={errors["tongVang"]} />
           </div>

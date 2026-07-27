@@ -32,7 +32,7 @@ export default function ProfileCard({ account }: { account: Account }) {
             </AvatarFallback>
           </Avatar>
           <p className="mb-2 text-lg font-semibold">{displayName}</p>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
             {account.vaiTro?.tenVaiTro || "Chưa phân vai trò"}
           </span>
         </div>

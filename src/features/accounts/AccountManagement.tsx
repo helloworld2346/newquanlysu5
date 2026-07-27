@@ -348,11 +348,11 @@ export default function AccountManagement() {
                   <TableCell>{a.donVi?.tenDonvi ?? "—"}</TableCell>
                   <TableCell className="text-center">
                     {a.khoa ? (
-                      <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-600">
+                      <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-sm font-medium text-red-600">
                         Đã khóa
                       </span>
                     ) : (
-                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-sm font-medium text-emerald-600">
                         Hoạt động
                       </span>
                     )}
