@@ -35,11 +35,11 @@ export default function ReportTableHeader() {
         <TableHead colSpan={14} className={th}>
           Quân số vắng
         </TableHead>
-        <TableHead rowSpan={3} className={thV}>
+        <TableHead rowSpan={3} className={`${thV} w-[90px]`}>
           <V>Trạng thái</V>
         </TableHead>
-        <TableHead rowSpan={3} className={th}>
-          <V>Ký số</V>
+        <TableHead rowSpan={3} className={`${th} w-[90px]`}>
+          Ký số
         </TableHead>
         <TableHead rowSpan={3} className={th}>
           Ghi chú

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { DateInputVi } from "@/components/ui/date-input-vi";
 import { useAuthInfo } from "@/features/auth/queries";
-import { useChildrenReports } from "./queries";
+import { useChildrenReportsMerged } from "./queries";
 import { useUnits } from "@/features/units/queries";
 import {
   mapItemToRow,
@@ -62,8 +62,22 @@ export default function DailyReport() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
 
-  const { data: items = [], isLoading } = useChildrenReports(maDonVi, ngay);
   const { data: units = [] } = useUnits();
+
+  const capByUnit = useMemo(
+    () =>
+      Object.fromEntries(units.map((u) => [u.maDonVi, u.capDonVi])) as Record<
+        string,
+        string | null | undefined
+      >,
+    [units],
+  );
+
+  const { data: items = [], isLoading } = useChildrenReportsMerged(
+    maDonVi,
+    ngay,
+    capByUnit,
+  );
 
   const rows = useMemo(() => {
     const reportByUnit = new Map(
@@ -256,7 +270,7 @@ export default function DailyReport() {
             ) : filteredRows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={21}
+                  colSpan={22}
                   className="h-24 text-center text-muted-foreground"
                 >
                   {hasFilter
