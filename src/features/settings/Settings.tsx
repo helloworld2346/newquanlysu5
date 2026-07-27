@@ -27,11 +27,23 @@ export default function Settings() {
   return (
     <div className="space-y-4 pb-10">
       <h1 className="text-xl font-semibold">Cài đặt</h1>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {account && <ProfileCard account={account} />}
-        <PasswordForm />
+
+      <div className="flex flex-wrap -mx-2 items-start">
+        {account && (
+          <div className="w-full lg:w-1/3 px-2 mb-4 lg:mb-0 sticky top-0">
+            <ProfileCard account={account} />
+          </div>
+        )}
+
+        <div className="w-full lg:w-2/3 px-2">
+          <div className="space-y-4">
+            {fullDonVi && (
+              <QuanSoForm donVi={fullDonVi} childUnits={childUnits} />
+            )}
+            <PasswordForm />
+          </div>
+        </div>
       </div>
-      {fullDonVi && <QuanSoForm donVi={fullDonVi} childUnits={childUnits} />}
     </div>
   );
 }

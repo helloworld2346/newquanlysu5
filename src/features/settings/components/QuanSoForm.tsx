@@ -23,8 +23,8 @@ function NumberField({
   readOnly?: boolean;
 }) {
   return (
-    <div>
-      <label className="mb-1 block text-xs text-muted-foreground">
+    <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
+      <label className="mb-1 block text-xs text-muted-foreground truncate">
         {label}
       </label>
       <Input
@@ -153,7 +153,7 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="flex flex-wrap -mx-2">
               <NumberField
                 label="Quân số Sĩ quan"
                 value={siQuan}
@@ -172,11 +172,15 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
                 onChange={setHsqBs}
                 readOnly={disabled}
               />
-              <div className="flex flex-col justify-end rounded-md bg-slate-700 p-3 text-white">
-                <span className="text-xs">Tổng quân số biên chế</span>
-                <span className="text-2xl font-extrabold tabular-nums">
-                  {num(tong)}
-                </span>
+              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
+                <label className="mb-1 block text-xs text-muted-foreground truncate">
+                  Tổng biên chế
+                </label>
+                <div className="flex items-center rounded-md bg-primary px-3 text-primary-foreground h-10">
+                  <span className="text-sm font-bold tabular-nums">
+                    {num(tong)}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -207,19 +211,38 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Layers className="size-4" />
-              Quân số cộng dồn toàn {capLabel} (gồm {chLabel})
+              Quân số toàn {capLabel} (gồm {chLabel})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <NumberField label="Quân số Sĩ quan" value={aggSiQuan} readOnly />
-              <NumberField label="Quân số QNCN" value={aggQncn} readOnly />
-              <NumberField label="Quân số HSQ-BS" value={aggHsqBs} readOnly />
-              <div className="flex flex-col justify-end rounded-md bg-slate-700 p-3 text-white">
-                <span className="text-xs">Tổng quân số toàn {capLabel}</span>
-                <span className="text-2xl font-extrabold tabular-nums">
-                  {num(aggTong)}
-                </span>
+            <div className="flex flex-wrap -mx-2">
+              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
+                <label className="mb-1 block text-xs text-muted-foreground truncate">
+                  Quân số Sĩ quan
+                </label>
+                <Input value={num(aggSiQuan)} readOnly disabled />
+              </div>
+              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
+                <label className="mb-1 block text-xs text-muted-foreground truncate">
+                  Quân số QNCN
+                </label>
+                <Input value={num(aggQncn)} readOnly disabled />
+              </div>
+              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
+                <label className="mb-1 block text-xs text-muted-foreground truncate">
+                  Quân số HSQ-BS
+                </label>
+                <Input value={num(aggHsqBs)} readOnly disabled />
+              </div>
+              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
+                <label className="mb-1 block text-xs text-muted-foreground truncate">
+                  Tổng toàn {capLabel}
+                </label>
+                <div className="flex items-center rounded-md bg-primary px-3 text-primary-foreground h-10">
+                  <span className="text-sm font-bold tabular-nums">
+                    {num(aggTong)}
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
