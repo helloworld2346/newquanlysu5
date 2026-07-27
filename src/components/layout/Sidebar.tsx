@@ -49,7 +49,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
         {sections.map((sec, i) => (
           <div key={sec.id} className={i === 0 ? "" : "mt-4"}>
             <p
-              className={`pb-2 text-sm font-semibold uppercase tracking-wide text-primary-foreground/60 transition-all duration-300 ease-in-out ${
+              className={`pb-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground/60 transition-all duration-300 ease-in-out ${
                 collapsed
                   ? "px-1 text-center text-[10px] leading-tight"
                   : "px-3"
