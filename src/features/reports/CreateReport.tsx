@@ -1,7 +1,15 @@
 import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Trash2, ArrowLeft, Plus, Save, AlertTriangle } from "lucide-react";
+import {
+  Trash2,
+  ArrowLeft,
+  Plus,
+  Save,
+  Copy,
+  AlertTriangle,
+} from "lucide-react";
+import { reportApi } from "./api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -202,7 +210,9 @@ export default function CreateReport() {
   const createReport = useCreateReport();
   const updateReport = useUpdateReport();
 
-  const [ngayBaoCao] = useState(todayIso());
+  const [searchParams] = useSearchParams();
+  const ngayParam = searchParams.get("ngay");
+  const [ngayBaoCao] = useState(ngayParam || todayIso());
   const tongQuanSo = donVi?.quanSoTong ?? 0;
   const [trucChiHuy, setTrucChiHuy] = useState<TrucNguoiInfo>({
     ...EMPTY_TRUC,
@@ -212,6 +222,7 @@ export default function CreateReport() {
   });
   const [absentRows, setAbsentRows] = useState<AbsentRow[]>([]);
   const [detail, setDetail] = useState<DetailStepData>({ ...EMPTY_DETAIL });
+  const [copying, setCopying] = useState(false);
 
   const [errors, setErrors] = useState<Errors>({});
   const clearError = (key: string) =>
@@ -289,6 +300,76 @@ export default function CreateReport() {
     return e;
   };
 
+  const handleCopyYesterday = async () => {
+    if (!donVi?.maDonVi) return;
+
+    const d = new Date(ngayBaoCao);
+    d.setDate(d.getDate() - 1);
+    const yesterday = [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, "0"),
+      String(d.getDate()).padStart(2, "0"),
+    ].join("-");
+
+    setCopying(true);
+    try {
+      const res = await reportApi.searchByUnitAndDate(
+        donVi.maDonVi,
+        yesterday,
+        "DON_VI",
+      );
+      if (!res.success || !res.Result) {
+        toast.warning(`Không tìm thấy báo cáo ngày ${yesterday}.`);
+        return;
+      }
+      const r = res.Result;
+
+      console.log("copy-yesterday raw:", {
+        tinhHinhHoatDong: r.tinhHinhHoatDong,
+        trucBanChiHuy: r.trucBanChiHuy,
+        trucBanTacChien: r.trucBanTacChien,
+        chiTietVang: r.chiTietVang,
+      });
+
+      try {
+        if (r.trucBanChiHuy)
+          setTrucChiHuy({ ...EMPTY_TRUC, ...JSON.parse(r.trucBanChiHuy) });
+      } catch {
+        /* ignore */
+      }
+      try {
+        if (r.trucBanTacChien)
+          setTrucBanTacChien({
+            ...EMPTY_TRUC,
+            ...JSON.parse(r.trucBanTacChien),
+          });
+      } catch {
+        /* ignore */
+      }
+
+      try {
+        if (r.chiTietVang) {
+          const rows = JSON.parse(r.chiTietVang) as AbsentRow[];
+          setAbsentRows(rows.map((row) => ({ ...row, id: genId() })));
+        }
+      } catch {
+        /* ignore */
+      }
+      try {
+        if (r.tinhHinhHoatDong)
+          setDetail({ ...EMPTY_DETAIL, ...JSON.parse(r.tinhHinhHoatDong) });
+      } catch {
+        /* ignore */
+      }
+
+      toast.success("Đã sao chép báo cáo hôm qua");
+    } catch {
+      toast.warning(`Không tìm thấy báo cáo ngày ${yesterday}.`);
+    } finally {
+      setCopying(false);
+    }
+  };
+
   const handleSave = async () => {
     const e = validate();
     setErrors(e);
@@ -349,10 +430,20 @@ export default function CreateReport() {
               : "Tạo báo cáo quân số hằng ngày"}
           </h1>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          <Save className="mr-2 size-4" />{" "}
-          {saving ? "Đang lưu..." : "Lưu báo cáo"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleCopyYesterday}
+            disabled={copying || saving}
+          >
+            <Copy className="mr-2 size-4" />
+            {copying ? "Đang tải..." : "Sao chép từ hôm qua"}
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="mr-2 size-4" />{" "}
+            {saving ? "Đang lưu..." : "Lưu báo cáo"}
+          </Button>
+        </div>
       </div>
 
       <Card>

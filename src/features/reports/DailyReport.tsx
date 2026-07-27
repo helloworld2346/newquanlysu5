@@ -151,7 +151,7 @@ export default function DailyReport() {
 
   const goEditOrCreate = (row: ReportRow) => {
     if (row.notSubmitted) {
-      navigate(`/daily-report/create?donVi=${row.donVi}`);
+      navigate(`/daily-report/create?donVi=${row.donVi}&ngay=${ngay}`);
     } else {
       navigate(`/daily-report/edit/${row.idDonBaoCao}`);
     }
@@ -206,7 +206,7 @@ export default function DailyReport() {
             onChange={setNgay}
             className="w-[280px]"
           />
-          <Button onClick={() => navigate("/daily-report/create")}>
+          <Button onClick={() => navigate(`/daily-report/create?ngay=${ngay}`)}>
             <Plus className="mr-2 size-4" /> Thêm báo cáo
           </Button>
         </div>
