@@ -1,4 +1,4 @@
-import { MoreVertical, Eye, Pencil } from "lucide-react";
+import { MoreVertical, Eye, Pencil, FilePlus } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +13,9 @@ import { formatNum } from "../utils";
 const td = "border text-center tabular-nums whitespace-nowrap px-2";
 
 const STATUS_LABEL: Record<string, string> = {
-  Nháp: "Nháp",
-  Da_Nop: "Đã nộp",
-  "Đã nộp": "Đã nộp",
+  Chờ_Duyệt: "Chờ duyệt",
+  "Chờ duyệt": "Chờ duyệt",
+  Đã_Duyệt: "Đã duyệt",
   Da_Duyet: "Đã duyệt",
   Tu_Choi: "Từ chối",
   Từ_Chối: "Từ chối",
@@ -33,9 +33,16 @@ export default function ReportTableRow({
   onEdit: (r: ReportRow) => void;
 }) {
   const v = row.vang;
+  const notSubmitted = row.notSubmitted;
   return (
-    <TableRow>
-      <TableCell className={`${td} text-center font-medium`}>
+    <TableRow
+      className={notSubmitted ? "bg-rose-50 hover:bg-rose-100" : undefined}
+    >
+      <TableCell
+        className={`${td} text-center font-medium ${
+          notSubmitted ? "text-rose-700" : ""
+        }`}
+      >
         {row.kyhieuDonVi || row.tenDonVi}
       </TableCell>
       <TableCell className={td}>{formatNum(row.quanSoTong)}</TableCell>
@@ -56,7 +63,11 @@ export default function ReportTableRow({
       <TableCell className={td}>{formatNum(v.hocCS)}</TableCell>
       <TableCell className={td}>{formatNum(v.lyDoVangKhac)}</TableCell>
       <TableCell className={td}>
-        {STATUS_LABEL[row.status] ?? row.status}
+        {notSubmitted ? (
+          <span className="font-semibold text-rose-600">Chưa nộp</span>
+        ) : (
+          (STATUS_LABEL[row.status] ?? row.status)
+        )}
       </TableCell>
       <TableCell className={`${td} text-left`}>{row.ghiChu}</TableCell>
       <TableCell className={td}>
@@ -67,13 +78,21 @@ export default function ReportTableRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewDetail(row)}>
-              <Eye className="mr-2 size-4" /> Xem chi tiết
-            </DropdownMenuItem>
-            {canEdit && (
-              <DropdownMenuItem onClick={() => onEdit(row)}>
-                <Pencil className="mr-2 size-4" /> Chỉnh sửa
+            {notSubmitted ? (
+              <DropdownMenuItem onClick={() => onViewDetail(row)}>
+                <FilePlus className="mr-2 size-4" /> Thêm báo cáo
               </DropdownMenuItem>
+            ) : (
+              <>
+                <DropdownMenuItem onClick={() => onViewDetail(row)}>
+                  <Eye className="mr-2 size-4" /> Xem chi tiết
+                </DropdownMenuItem>
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(row)}>
+                    <Pencil className="mr-2 size-4" /> Chỉnh sửa
+                  </DropdownMenuItem>
+                )}
+              </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>

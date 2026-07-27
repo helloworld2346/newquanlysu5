@@ -104,5 +104,6 @@ export interface ReportRow {
   chiTietVangList: AbsentRow[];
   status: string;
   ghiChu: string;
-  raw: ReportItemDTO;
+  notSubmitted?: boolean;
+  raw: ReportItemDTO | null;
 }

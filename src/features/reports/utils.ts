@@ -135,6 +135,29 @@ export type DisplayTotals = VangChiTiet & {
   vangHSQBS: number;
 };
 
+export function createEmptyReportRow(unit: {
+  maDonVi: string;
+  tenDonVi: string;
+  kyhieuDonVi?: string;
+  quanSoTong?: number;
+}): ReportRow {
+  return {
+    idDonBaoCao: unit.maDonVi,
+    donVi: unit.maDonVi,
+    tenDonVi: unit.tenDonVi,
+    kyhieuDonVi: unit.kyhieuDonVi,
+    quanSoTong: unit.quanSoTong ?? 0,
+    quanSoHienDien: 0,
+    quanSoVang: 0,
+    vang: { ...EMPTY_VANG },
+    chiTietVangList: [],
+    status: "Chua_Nop",
+    ghiChu: "",
+    notSubmitted: true,
+    raw: null,
+  };
+}
+
 export function buildDisplayTotals(rows: ReportRow[]): DisplayTotals {
   const base: DisplayTotals = {
     ...EMPTY_VANG,
@@ -145,18 +168,20 @@ export function buildDisplayTotals(rows: ReportRow[]): DisplayTotals {
     vangQNCN: 0,
     vangHSQBS: 0,
   };
-  return rows.reduce((acc, r) => {
-    acc.quanSoTong += r.quanSoTong;
-    acc.quanSoHienDien += r.quanSoHienDien;
-    acc.quanSoVang += r.quanSoVang;
-    VANG_KEYS.forEach((k) => (acc[k] += r.vang[k] ?? 0));
-    r.chiTietVangList.forEach((qn) => {
-      if (!qn.capBac?.trim()) return;
-      const loai = classifyCapBac(qn.capBac);
-      if (loai === "siQuan") acc.vangSQ++;
-      else if (loai === "qncn") acc.vangQNCN++;
-      else acc.vangHSQBS++;
-    });
-    return acc;
-  }, base);
+  return rows
+    .filter((r) => !r.notSubmitted)
+    .reduce((acc, r) => {
+      acc.quanSoTong += r.quanSoTong;
+      acc.quanSoHienDien += r.quanSoHienDien;
+      acc.quanSoVang += r.quanSoVang;
+      VANG_KEYS.forEach((k) => (acc[k] += r.vang[k] ?? 0));
+      r.chiTietVangList.forEach((qn) => {
+        if (!qn.capBac?.trim()) return;
+        const loai = classifyCapBac(qn.capBac);
+        if (loai === "siQuan") acc.vangSQ++;
+        else if (loai === "qncn") acc.vangQNCN++;
+        else acc.vangHSQBS++;
+      });
+      return acc;
+    }, base);
 }
