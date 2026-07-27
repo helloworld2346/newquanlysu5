@@ -74,10 +74,23 @@ export default function DailyReport() {
     [units],
   );
 
+  const hasChildren = useMemo(() => {
+    if (!maDonVi) return false;
+    return units.some((u) => {
+      if (!u.maDonVi.startsWith(maDonVi + ".")) return false;
+      const suffix = u.maDonVi.slice(maDonVi.length + 1);
+      return !suffix.includes(".");
+    });
+  }, [units, maDonVi]);
+
+  const unitsReady = units.length > 0;
+
   const { data: items = [], isLoading } = useChildrenReportsMerged(
     maDonVi,
     ngay,
     capByUnit,
+    hasChildren,
+    unitsReady,
   );
 
   const rows = useMemo(() => {

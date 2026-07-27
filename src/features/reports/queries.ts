@@ -1,6 +1,11 @@
+// src/features/reports/queries.ts
 import { useMemo } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useQueries } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { reportApi } from "./api";
 import type { CreateReportRequest, ReportItemDTO } from "@/types/dailyReport";
 
@@ -22,22 +27,37 @@ export function useChildrenReportsMerged(
   maDonVi: string | undefined,
   ngay: string,
   capByUnit: Record<string, string | null | undefined>,
+  hasChildren = true,
+  ready = true,
 ) {
+  const baseEnabled = !!maDonVi && !!ngay && ready;
+
+  const selfQuery = useQuery({
+    queryKey: [...reportsKey(maDonVi ?? "", ngay), "SELF"],
+    queryFn: () => reportApi.searchByUnitAndDate(maDonVi!, ngay, "DON_VI"),
+    enabled: baseEnabled && !hasChildren,
+    select: (res) => (res.Result ? [res.Result] : []),
+  });
+
   const donViQuery = useQuery({
     queryKey: [...reportsKey(maDonVi ?? "", ngay), "DON_VI"],
     queryFn: () => reportApi.searchChildren(maDonVi!, ngay, "DON_VI"),
-    enabled: !!maDonVi && !!ngay,
+    enabled: baseEnabled && hasChildren,
     select: (res) => res.Result ?? [],
   });
 
   const tongHopQuery = useQuery({
     queryKey: [...reportsKey(maDonVi ?? "", ngay), "TONG_HOP"],
     queryFn: () => reportApi.searchChildren(maDonVi!, ngay, "TONG_HOP"),
-    enabled: !!maDonVi && !!ngay,
+    enabled: baseEnabled && hasChildren,
     select: (res) => res.Result ?? [],
   });
 
   const data = useMemo(() => {
+    if (!hasChildren) {
+      return selfQuery.data ?? [];
+    }
+
     const map = new Map<string, ReportItemDTO>();
     for (const item of donViQuery.data ?? []) {
       const ma = item.donVi.maDonVi;
@@ -56,11 +76,19 @@ export function useChildrenReportsMerged(
     }
 
     return Array.from(map.values());
-  }, [donViQuery.data, tongHopQuery.data, capByUnit]);
+  }, [
+    hasChildren,
+    selfQuery.data,
+    donViQuery.data,
+    tongHopQuery.data,
+    capByUnit,
+  ]);
 
   return {
     data,
-    isLoading: donViQuery.isLoading || tongHopQuery.isLoading,
+    isLoading: hasChildren
+      ? donViQuery.isLoading || tongHopQuery.isLoading
+      : selfQuery.isLoading,
   };
 }
 
