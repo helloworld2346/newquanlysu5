@@ -35,6 +35,7 @@ import ReportTableHeader from "./components/ReportTableHeader";
 import ReportTableRow from "./components/ReportTableRow";
 import ReportTotalRow from "./components/ReportTotalRow";
 import type { ReportRow } from "@/types/dailyReport";
+import ReportColGroup from "./components/ReportColGroup";
 
 const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
 
@@ -211,7 +212,6 @@ export default function DailyReport() {
         ))}
       </div>
 
-      {/* Search + filter */}
       <div className="mb-4 flex flex-wrap items-center">
         <SearchBar
           value={search}
@@ -240,13 +240,14 @@ export default function DailyReport() {
       </div>
 
       <div className="overflow-x-auto rounded-lg border bg-background">
-        <Table className="min-w-[1600px]">
+        <Table className="w-full table-fixed min-w-[960px]">
+          <ReportColGroup />
           <ReportTableHeader />
           <TableBody>
             {isLoading ? (
               <TableRow>
                 <TableCell
-                  colSpan={21}
+                  colSpan={22}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Đang tải...

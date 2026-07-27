@@ -1,8 +1,7 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-// 1 màu duy nhất cho toàn header: nền slate-700, chữ trắng
 const th =
-  "border border-white/20 bg-slate-700 text-center align-middle whitespace-nowrap px-2 text-xs font-semibold text-white";
+  "border border-white/20 bg-slate-700 text-center align-middle px-1 text-xs font-semibold text-white";
 const thV =
   "border border-white/20 bg-slate-700 text-center align-middle px-1 py-2 text-xs font-semibold text-white";
 
@@ -38,6 +37,9 @@ export default function ReportTableHeader() {
         </TableHead>
         <TableHead rowSpan={3} className={thV}>
           <V>Trạng thái</V>
+        </TableHead>
+        <TableHead rowSpan={3} className={th}>
+          <V>Ký số</V>
         </TableHead>
         <TableHead rowSpan={3} className={th}>
           Ghi chú

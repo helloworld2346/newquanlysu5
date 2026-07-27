@@ -10,7 +10,7 @@ import {
 import type { ReportRow } from "@/types/dailyReport";
 import { formatNum } from "../utils";
 
-const td = "border text-center tabular-nums whitespace-nowrap px-2";
+const td = "border text-center tabular-nums break-words px-1";  
 
 const STATUS_LABEL: Record<string, string> = {
   Chờ_Duyệt: "Chờ duyệt",
@@ -67,6 +67,13 @@ export default function ReportTableRow({
           <span className="font-semibold text-rose-600">Chưa nộp</span>
         ) : (
           (STATUS_LABEL[row.status] ?? row.status)
+        )}
+      </TableCell>
+      <TableCell className={td}>
+        {notSubmitted ? (
+          "—"
+        ) : (
+          <span className="text-muted-foreground">Chưa ký</span>
         )}
       </TableCell>
       <TableCell className={`${td} text-left`}>{row.ghiChu}</TableCell>

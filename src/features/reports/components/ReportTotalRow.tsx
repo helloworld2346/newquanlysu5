@@ -2,7 +2,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import type { DisplayTotals } from "../utils";
 import { formatNum } from "../utils";
 
-const td = "border text-center font-bold tabular-nums whitespace-nowrap px-2";
+const td = "border text-center font-bold tabular-nums break-words px-1";
 
 export default function ReportTotalRow({ t }: { t: DisplayTotals }) {
   return (
@@ -25,6 +25,7 @@ export default function ReportTotalRow({ t }: { t: DisplayTotals }) {
       <TableCell className={td}>{formatNum(t.hocSQ)}</TableCell>
       <TableCell className={td}>{formatNum(t.hocCS)}</TableCell>
       <TableCell className={td}>{formatNum(t.lyDoVangKhac)}</TableCell>
+      <TableCell className={td} />
       <TableCell className={td} />
       <TableCell className={td} />
       <TableCell className={td} />
