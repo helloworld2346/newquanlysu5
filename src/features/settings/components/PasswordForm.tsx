@@ -4,6 +4,7 @@ import { Lock, Eye, EyeOff, Check, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useChangePassword } from "@/features/auth/queries";
 
 const MIN_LEN = 8;
@@ -14,6 +15,7 @@ export default function PasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const checks = [
     { label: `Ít nhất ${MIN_LEN} ký tự`, ok: newPassword.length >= MIN_LEN },
@@ -29,12 +31,17 @@ export default function PasswordForm() {
   const isValid =
     newPassword.length >= MIN_LEN && newPassword === confirmPassword;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Chỉ mở dialog xác nhận sau khi validate
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword.trim()) return toast.warning("Vui lòng nhập mật khẩu mới");
     if (newPassword !== confirmPassword)
       return toast.warning("Mật khẩu xác nhận không khớp");
+    setConfirmOpen(true);
+  };
 
+  // Thực sự đổi mật khẩu khi xác nhận trong dialog
+  const doChange = async () => {
     try {
       const res = await changePassword.mutateAsync(newPassword);
       if (res.success) {
@@ -143,6 +150,16 @@ export default function PasswordForm() {
           </div>
         </form>
       </CardContent>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Đổi mật khẩu"
+        description="Bạn có chắc muốn đổi mật khẩu? Bạn sẽ dùng mật khẩu mới cho các lần đăng nhập sau."
+        confirmText="Đổi mật khẩu"
+        loading={changePassword.isPending}
+        onConfirm={doChange}
+      />
     </Card>
   );
 }

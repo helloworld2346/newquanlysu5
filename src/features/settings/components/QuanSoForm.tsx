@@ -3,7 +3,8 @@ import { toast } from "sonner";
 import { Users, TriangleAlert, Layers } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useAuthInfo } from "@/features/auth/queries";
 import { useUpdateUnit } from "@/features/units/queries";
 import { normalizeRoleName } from "@/lib/roles";
@@ -27,13 +28,11 @@ function NumberField({
       <label className="mb-1 block text-xs text-muted-foreground truncate">
         {label}
       </label>
-      <Input
-        type="number"
+      <NumberInput
         min={0}
         value={Number.isNaN(value) ? 0 : value}
-        readOnly={readOnly}
+        onValueChange={(n) => onChange?.(n)}
         disabled={readOnly}
-        onChange={(e) => onChange?.(Number(e.target.value) || 0)}
       />
     </div>
   );
@@ -47,6 +46,7 @@ type Props = {
 export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
   const { account } = useAuthInfo();
   const updateUnit = useUpdateUnit();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const role = normalizeRoleName(account?.vaiTro?.tenVaiTro ?? undefined);
   const isTacChienParent =
@@ -103,8 +103,15 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
 
   const disabled = isAggregatedOnly;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Chỉ mở dialog xác nhận, không gọi API ngay
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!changed || updateUnit.isPending) return;
+    setConfirmOpen(true);
+  };
+
+  // Thực sự lưu khi người dùng xác nhận trong dialog
+  const doSave = async () => {
     try {
       const res = await updateUnit.mutateAsync({
         id: donVi.maDonVi,
@@ -216,24 +223,9 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap -mx-2">
-              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
-                <label className="mb-1 block text-xs text-muted-foreground truncate">
-                  Quân số Sĩ quan
-                </label>
-                <Input value={num(aggSiQuan)} readOnly disabled />
-              </div>
-              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
-                <label className="mb-1 block text-xs text-muted-foreground truncate">
-                  Quân số QNCN
-                </label>
-                <Input value={num(aggQncn)} readOnly disabled />
-              </div>
-              <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
-                <label className="mb-1 block text-xs text-muted-foreground truncate">
-                  Quân số HSQ-BS
-                </label>
-                <Input value={num(aggHsqBs)} readOnly disabled />
-              </div>
+              <NumberField label="Quân số Sĩ quan" value={aggSiQuan} readOnly />
+              <NumberField label="Quân số QNCN" value={aggQncn} readOnly />
+              <NumberField label="Quân số HSQ-BS" value={aggHsqBs} readOnly />
               <div className="w-full px-2 mb-3 sm:w-1/2 lg:w-1/4">
                 <label className="mb-1 block text-xs text-muted-foreground truncate">
                   Tổng toàn {capLabel}
@@ -248,6 +240,16 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Cập nhật quân số biên chế"
+        description={`Bạn có chắc muốn lưu quân số biên chế mới cho "${donVi.tenDonvi}"? Tổng biên chế: ${num(tong)}.`}
+        confirmText="Lưu thay đổi"
+        loading={updateUnit.isPending}
+        onConfirm={doSave}
+      />
     </>
   );
 }

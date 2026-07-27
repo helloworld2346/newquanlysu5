@@ -30,7 +30,7 @@ export default function Settings() {
 
       <div className="flex flex-wrap -mx-2 items-start">
         {account && (
-          <div className="w-full lg:w-1/3 px-2 mb-4 lg:mb-0 sticky top-0">
+          <div className="w-full lg:w-1/3 px-2 mb-4 lg:mb-0">
             <ProfileCard account={account} />
           </div>
         )}
