@@ -38,7 +38,11 @@ export default function Settings() {
         <div className="w-full lg:w-2/3 px-2">
           <div className="space-y-4">
             {fullDonVi && (
-              <QuanSoForm donVi={fullDonVi} childUnits={childUnits} />
+              <QuanSoForm
+                donVi={fullDonVi}
+                childUnits={childUnits}
+                allUnits={units}
+              />
             )}
             <PasswordForm />
           </div>

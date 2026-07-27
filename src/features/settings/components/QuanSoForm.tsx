@@ -12,6 +12,40 @@ import type { DonVi } from "@/types/account";
 
 const num = (v: number | null | undefined) => (v ?? 0).toLocaleString("vi-VN");
 
+const COMMAND_KYHIEU = ["CH/e", "CH/f"];
+const EXPAND_CAPS = ["SU_DOAN", "TRUNG_DOAN"];
+
+type Agg = { siQuan: number; qncn: number; hsqBs: number };
+
+function getDirectChildren(maDonVi: string, all: DonVi[]): DonVi[] {
+  return all.filter((u) => {
+    if (!u.maDonVi.startsWith(maDonVi + ".")) return false;
+    const suffix = u.maDonVi.slice(maDonVi.length + 1);
+    return !suffix.includes(".");
+  });
+}
+
+function unitFullAgg(unit: DonVi, all: DonVi[]): Agg {
+  const own: Agg = {
+    siQuan: unit.quanSoSiQuan ?? 0,
+    qncn: unit.quanSoQncn ?? 0,
+    hsqBs: unit.quanSoHsqBs ?? 0,
+  };
+  if (!EXPAND_CAPS.includes(unit.capDonVi ?? "")) return own;
+
+  const children = getDirectChildren(unit.maDonVi, all).filter(
+    (u) => !COMMAND_KYHIEU.includes(u.kyhieuDonvi),
+  );
+  return children.reduce((acc, c) => {
+    const t = unitFullAgg(c, all);
+    return {
+      siQuan: acc.siQuan + t.siQuan,
+      qncn: acc.qncn + t.qncn,
+      hsqBs: acc.hsqBs + t.hsqBs,
+    };
+  }, own);
+}
+
 function NumberField({
   label,
   value,
@@ -41,9 +75,14 @@ function NumberField({
 type Props = {
   donVi: DonVi;
   childUnits?: DonVi[];
+  allUnits?: DonVi[];
 };
 
-export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
+export default function QuanSoForm({
+  donVi,
+  childUnits = [],
+  allUnits = [],
+}: Props) {
   const { account } = useAuthInfo();
   const updateUnit = useUpdateUnit();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -58,18 +97,22 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
   const chLabel = donVi.capDonVi === "TRUNG_DOAN" ? "CH/e" : "CH/f";
   const capLabel = donVi.capDonVi === "TRUNG_DOAN" ? "Trung đoàn" : "Sư đoàn";
 
-  const childAgg = useMemo(
-    () =>
-      childUnits.reduce(
-        (acc, c) => ({
-          siQuan: acc.siQuan + (c.quanSoSiQuan ?? 0),
-          qncn: acc.qncn + (c.quanSoQncn ?? 0),
-          hsqBs: acc.hsqBs + (c.quanSoHsqBs ?? 0),
-        }),
+  const childAgg = useMemo<Agg>(() => {
+    const base = allUnits.length > 0 ? allUnits : childUnits;
+    return childUnits
+      .filter((u) => !COMMAND_KYHIEU.includes(u.kyhieuDonvi))
+      .reduce<Agg>(
+        (acc, c) => {
+          const t = unitFullAgg(c, base);
+          return {
+            siQuan: acc.siQuan + t.siQuan,
+            qncn: acc.qncn + t.qncn,
+            hsqBs: acc.hsqBs + t.hsqBs,
+          };
+        },
         { siQuan: 0, qncn: 0, hsqBs: 0 },
-      ),
-    [childUnits],
-  );
+      );
+  }, [childUnits, allUnits]);
 
   const initSiQuan = isAggregatedOnly
     ? childAgg.siQuan
@@ -103,14 +146,12 @@ export default function QuanSoForm({ donVi, childUnits = [] }: Props) {
 
   const disabled = isAggregatedOnly;
 
-  // Chỉ mở dialog xác nhận, không gọi API ngay
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!changed || updateUnit.isPending) return;
     setConfirmOpen(true);
   };
 
-  // Thực sự lưu khi người dùng xác nhận trong dialog
   const doSave = async () => {
     try {
       const res = await updateUnit.mutateAsync({
