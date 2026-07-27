@@ -1,10 +1,17 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Users, UserCheck, UserMinus, Percent } from "lucide-react";
+import {
+  Plus,
+  Users,
+  UserCheck,
+  UserRound,
+  UserCog,
+  UsersRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
 import { useAuthInfo } from "@/features/auth/queries";
 import { useChildrenReports } from "./queries";
 import { mapItemToRow, buildDisplayTotals, todayIso, formatNum } from "./utils";
@@ -24,34 +31,42 @@ export default function DailyReport() {
 
   const rows = useMemo(() => items.map(mapItemToRow), [items]);
   const totals = useMemo(() => buildDisplayTotals(rows), [rows]);
-  const tyLe = totals.quanSoTong
-    ? Math.round((totals.quanSoHienDien / totals.quanSoTong) * 100)
-    : 0;
 
-  const stats = [
+  const stats: {
+    tone: StatCardTone;
+    icon: React.ReactNode;
+    title: string;
+    value: string;
+  }[] = [
     {
-      label: "Tổng quân số",
+      tone: "emerald",
+      icon: <Users />,
+      title: "Tổng quân số",
       value: formatNum(totals.quanSoTong),
-      icon: Users,
-      color: "bg-emerald-500",
     },
     {
-      label: "Hiện diện",
+      tone: "blue",
+      icon: <UserCheck />,
+      title: "Hiện diện",
       value: formatNum(totals.quanSoHienDien),
-      icon: UserCheck,
-      color: "bg-blue-500",
     },
     {
-      label: "Vắng mặt",
-      value: formatNum(totals.quanSoVang),
-      icon: UserMinus,
-      color: "bg-rose-500",
+      tone: "amber",
+      icon: <UserRound />,
+      title: "Vắng (SQ)",
+      value: formatNum(totals.vangSQ),
     },
     {
-      label: "Tỷ lệ quân số",
-      value: `${tyLe}%`,
-      icon: Percent,
-      color: "bg-violet-500",
+      tone: "rose",
+      icon: <UserCog />,
+      title: "Vắng (QNCN)",
+      value: formatNum(totals.vangQNCN),
+    },
+    {
+      tone: "violet",
+      icon: <UsersRound />,
+      title: "Vắng (HSQ-BS)",
+      value: formatNum(totals.vangHSQBS),
     },
   ];
 
@@ -72,26 +87,16 @@ export default function DailyReport() {
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 lg:grid-cols-4">
+      <div className="-mx-1.5 mb-4 flex flex-wrap">
         {stats.map((s) => (
-          <div key={s.label} className="p-1.5">
-            <Card className="h-full shadow-md transition-shadow hover:shadow-lg">
-              <CardContent className="flex min-h-[84px] items-center p-5">
-                <div
-                  className={`mr-4 grid size-12 shrink-0 place-items-center rounded-xl text-white ${s.color}`}
-                >
-                  <s.icon className="size-6" />
-                </div>
-                <div className="min-w-0">
-                  <p className="mb-1 truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    {s.label}
-                  </p>
-                  <strong className="block text-2xl font-extrabold leading-none tabular-nums">
-                    {s.value}
-                  </strong>
-                </div>
-              </CardContent>
-            </Card>
+          <div key={s.title} className="w-full p-1.5 sm:w-1/2 lg:w-1/5">
+            <StatCard
+              tone={s.tone}
+              icon={s.icon}
+              title={s.title}
+              value={s.value}
+              className="h-full"
+            />
           </div>
         ))}
       </div>

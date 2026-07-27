@@ -101,6 +101,15 @@ export function mapItemToRow(item: ReportItemDTO): ReportRow {
   } catch {
     /* ignore */
   }
+
+  let chiTietVangList: AbsentRow[] = [];
+  try {
+    if (item.chiTietVang)
+      chiTietVangList = JSON.parse(item.chiTietVang) as AbsentRow[];
+  } catch {
+    chiTietVangList = [];
+  }
+
   return {
     idDonBaoCao: item.idDonBaoCao,
     donVi: item.donVi.maDonVi,
@@ -110,6 +119,7 @@ export function mapItemToRow(item: ReportItemDTO): ReportRow {
     quanSoHienDien: item.quanSoHienDien,
     quanSoVang: item.quanSoVang,
     vang,
+    chiTietVangList,
     status: item.status,
     ghiChu: item.ghiChu ?? "",
     raw: item,
@@ -120,6 +130,9 @@ export type DisplayTotals = VangChiTiet & {
   quanSoTong: number;
   quanSoHienDien: number;
   quanSoVang: number;
+  vangSQ: number;
+  vangQNCN: number;
+  vangHSQBS: number;
 };
 
 export function buildDisplayTotals(rows: ReportRow[]): DisplayTotals {
@@ -128,12 +141,22 @@ export function buildDisplayTotals(rows: ReportRow[]): DisplayTotals {
     quanSoTong: 0,
     quanSoHienDien: 0,
     quanSoVang: 0,
+    vangSQ: 0,
+    vangQNCN: 0,
+    vangHSQBS: 0,
   };
   return rows.reduce((acc, r) => {
     acc.quanSoTong += r.quanSoTong;
     acc.quanSoHienDien += r.quanSoHienDien;
     acc.quanSoVang += r.quanSoVang;
     VANG_KEYS.forEach((k) => (acc[k] += r.vang[k] ?? 0));
+    r.chiTietVangList.forEach((qn) => {
+      if (!qn.capBac?.trim()) return;
+      const loai = classifyCapBac(qn.capBac);
+      if (loai === "siQuan") acc.vangSQ++;
+      else if (loai === "qncn") acc.vangQNCN++;
+      else acc.vangHSQBS++;
+    });
     return acc;
   }, base);
 }

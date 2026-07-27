@@ -101,6 +101,7 @@ export interface ReportRow {
   quanSoHienDien: number;
   quanSoVang: number;
   vang: VangChiTiet;
+  chiTietVangList: AbsentRow[];
   status: string;
   ghiChu: string;
   raw: ReportItemDTO;
