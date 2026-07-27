@@ -58,6 +58,9 @@ const AccountManagement = lazy(
   () => import("@/features/accounts/AccountManagement"),
 );
 
+const DailyReport = lazy(
+  () => import("@/features/reports/DailyReport"),
+);
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
   "Trực ban tác chiến",
@@ -73,7 +76,7 @@ export const NAV_GROUPS: {
   collapsedLabel?: string;
 }[] = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "reports", label: "Thống kê trong ngày", collapsedLabel: "Thống kê" },
+  { id: "reports", label: "Cập nhật thống kê", collapsedLabel: "Thống kê" },
   { id: "duty", label: "Ca trực" },
   { id: "admin", label: "Quản trị" },
   { id: "settings", label: "Hệ thống" },
@@ -102,9 +105,9 @@ export const ALL_NAV_ITEMS: NavItem[] = [
   // --- Cập nhật thống kê / Báo ban ---
   {
     id: "report-troop",
-    label: "Thống kê quân số trong ngày",
+    label: "Thống kê quân số",
     path: "/daily-report",
-    component: Placeholder,
+    component: DailyReport,
     icon: ClipboardList,
     group: "reports",
     allowedRoles: ALL_REPORT_ROLES,
