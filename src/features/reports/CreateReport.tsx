@@ -1,90 +1,197 @@
-import { useMemo, useState } from "react";  
-import { useNavigate, useParams } from "react-router-dom";  
-import { toast } from "sonner";  
-import { Trash2, ArrowLeft, Plus, Save } from "lucide-react";  
-import { Button } from "@/components/ui/button";  
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";  
-import { Input } from "@/components/ui/input";  
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { Trash2, ArrowLeft, Plus, Save, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {  
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  
-} from "@/components/ui/select";  
-import { useAuthInfo } from "@/features/auth/queries";  
-import { useCreateReport, useUpdateReport } from "./queries";  
-import {  
-  LY_DO_OPTIONS, CAP_BAC_OPTIONS, EMPTY_VANG, classifyCapBac,  
-  todayIso,  
-} from "./utils";  
-import type {  
-  AbsentRow, TrucNguoiInfo, DetailStepData, CreateReportRequest, VangChiTiet,  
-} from "@/types/dailyReport";  
-  
-const genId = () => Math.random().toString(36).slice(2);  
-const EMPTY_TRUC: TrucNguoiInfo = {  
-  tenNguoitruc: "", capbacNguoitruc: "", chucvuNguoitruc: "", sodienthoai: "",  
-};  
-const EMPTY_DETAIL: DetailStepData = {  
-  securityStatus: "safe", incidentStatus: "no", incidentDetail: "",  
-  advantageStatus: "yes", advantageDetail: "", disadvantageStatus: "no",  
-  disadvantageDetail: "", pendingTaskStatus: "no", pendingDetail: "",  
-};  
-  
-function TrucSection({  
-  title, value, onChange,  
-}: {  
-  title: string;  
-  value: TrucNguoiInfo;  
-  onChange: (v: TrucNguoiInfo) => void;  
-}) {  
-  return (  
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">  
-      <div className="lg:col-span-4 text-sm font-semibold">{title}</div>  
-      <Input placeholder="Họ và tên *" value={value.tenNguoitruc}  
-        onChange={(e) => onChange({ ...value, tenNguoitruc: e.target.value })} />  
-      <Select value={value.capbacNguoitruc}  
-        onValueChange={(v) => onChange({ ...value, capbacNguoitruc: v })}>  
-        <SelectTrigger><SelectValue placeholder="Cấp bậc *" /></SelectTrigger>  
-        <SelectContent>  
-          {CAP_BAC_OPTIONS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}  
-        </SelectContent>  
-      </Select>  
-      <Input placeholder="Chức vụ *" value={value.chucvuNguoitruc}  
-        onChange={(e) => onChange({ ...value, chucvuNguoitruc: e.target.value })} />  
-      <Input placeholder="Số điện thoại" value={value.sodienthoai}  
-        onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })} />  
-    </div>  
-  );  
-}  
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuthInfo } from "@/features/auth/queries";
+import { useCreateReport, useUpdateReport } from "./queries";
+import {
+  LY_DO_OPTIONS,
+  CAP_BAC_OPTIONS,
+  EMPTY_VANG,
+  classifyCapBac,
+  todayIso,
+} from "./utils";
+import type {
+  AbsentRow,
+  TrucNguoiInfo,
+  DetailStepData,
+  CreateReportRequest,
+  VangChiTiet,
+} from "@/types/dailyReport";
+
+const genId = () => Math.random().toString(36).slice(2);
+const EMPTY_TRUC: TrucNguoiInfo = {
+  tenNguoitruc: "",
+  capbacNguoitruc: "",
+  chucvuNguoitruc: "",
+  sodienthoai: "",
+};
+const EMPTY_DETAIL: DetailStepData = {
+  securityStatus: "safe",
+  incidentStatus: "no",
+  incidentDetail: "",
+  advantageStatus: "yes",
+  advantageDetail: "",
+  disadvantageStatus: "no",
+  disadvantageDetail: "",
+  pendingTaskStatus: "no",
+  pendingDetail: "",
+};
+
+type Errors = Record<string, string>;
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
+      <AlertTriangle className="size-3.5 shrink-0" />
+      {msg}
+    </p>
+  );
+}
+
+function ReqLabel({
+  children,
+  required,
+}: {
+  children: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="mb-1 block text-xs text-muted-foreground">
+      {children}
+      {required && <span className="text-red-500"> *</span>}
+    </label>
+  );
+}
+
+function TrucSection({
+  title,
+  value,
+  onChange,
+  prefix,
+  errors,
+  clearError,
+}: {
+  title: string;
+  value: TrucNguoiInfo;
+  onChange: (v: TrucNguoiInfo) => void;
+  prefix: string;
+  errors: Errors;
+  clearError: (key: string) => void;
+}) {
+  const errClass = (key: string) =>
+    errors[`${prefix}.${key}`]
+      ? "border-red-500 focus-visible:ring-red-500"
+      : "";
+
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="lg:col-span-4 text-sm font-semibold">{title}</div>
+      <div>
+        <ReqLabel required>Họ và tên</ReqLabel>
+        <Input
+          className={errClass("ten")}
+          placeholder="Nhập họ và tên..."
+          value={value.tenNguoitruc}
+          onChange={(e) => {
+            onChange({ ...value, tenNguoitruc: e.target.value });
+            clearError(`${prefix}.ten`);
+          }}
+        />
+        <FieldError msg={errors[`${prefix}.ten`]} />
+      </div>
+      <div>
+        <ReqLabel required>Cấp bậc</ReqLabel>
+        <Select
+          value={value.capbacNguoitruc}
+          onValueChange={(v) => {
+            onChange({ ...value, capbacNguoitruc: v });
+            clearError(`${prefix}.capBac`);
+          }}
+        >
+          <SelectTrigger className={errClass("capBac")}>
+            <SelectValue placeholder="-- Cấp bậc --" />
+          </SelectTrigger>
+          <SelectContent>
+            {CAP_BAC_OPTIONS.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldError msg={errors[`${prefix}.capBac`]} />
+      </div>
+      <div>
+        <ReqLabel required>Chức vụ</ReqLabel>
+        <Input
+          className={errClass("chucVu")}
+          placeholder="Nhập chức vụ..."
+          value={value.chucvuNguoitruc}
+          onChange={(e) => {
+            onChange({ ...value, chucvuNguoitruc: e.target.value });
+            clearError(`${prefix}.chucVu`);
+          }}
+        />
+        <FieldError msg={errors[`${prefix}.chucVu`]} />
+      </div>
+      <div>
+        <ReqLabel>Số điện thoại</ReqLabel>
+        <Input
+          placeholder="Nhập số điện thoại..."
+          value={value.sodienthoai}
+          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
 
 function RadioRow({
-  name,
   value,
   options,
   onChange,
 }: {
-  name: string;
   value: string;
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-4">
-      {options.map((o) => (
-        <label key={o.value} className="flex items-center gap-2 text-sm">
-          <input
-            type="radio"
-            name={name}
-            value={o.value}
-            checked={value === o.value}
-            onChange={(e) => onChange(e.target.value)}
-          />
-          {o.label}
-        </label>
-      ))}
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={
+              "select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
+              (active
+                ? "border-slate-700 bg-slate-700 text-white"
+                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")
+            }
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
-  
+
 export default function CreateReport() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -96,7 +203,7 @@ export default function CreateReport() {
   const updateReport = useUpdateReport();
 
   const [ngayBaoCao] = useState(todayIso());
-  const [tongQuanSo] = useState(donVi?.quanSoTong ?? 0);
+  const tongQuanSo = donVi?.quanSoTong ?? 0;
   const [trucChiHuy, setTrucChiHuy] = useState<TrucNguoiInfo>({
     ...EMPTY_TRUC,
   });
@@ -105,6 +212,15 @@ export default function CreateReport() {
   });
   const [absentRows, setAbsentRows] = useState<AbsentRow[]>([]);
   const [detail, setDetail] = useState<DetailStepData>({ ...EMPTY_DETAIL });
+
+  const [errors, setErrors] = useState<Errors>({});
+  const clearError = (key: string) =>
+    setErrors((p) => {
+      if (!p[key]) return p;
+      const n = { ...p };
+      delete n[key];
+      return n;
+    });
 
   const quanSoVang = absentRows.length;
   const quanSoHienDien = Math.max(0, tongQuanSo - quanSoVang);
@@ -140,36 +256,43 @@ export default function CreateReport() {
         ghiChu: "",
       },
     ]);
-  const updateRow = (rid: string, field: keyof AbsentRow, v: string) =>
+  const updateRow = (rid: string, field: keyof AbsentRow, v: string) => {
     setAbsentRows((p) =>
       p.map((r) => (r.id === rid ? { ...r, [field]: v } : r)),
     );
+    clearError(`row.${rid}.${field}`);
+  };
   const removeRow = (rid: string) =>
     setAbsentRows((p) => p.filter((r) => r.id !== rid));
 
-  const validate = (): string => {
+  const validate = (): Errors => {
+    const e: Errors = {};
     const t = trucChiHuy;
-    if (
-      !t.tenNguoitruc.trim() ||
-      !t.capbacNguoitruc.trim() ||
-      !t.chucvuNguoitruc.trim()
-    )
-      return "Điền đầy đủ Trực chỉ huy.";
-    const bad = absentRows.findIndex(
-      (r) => !r.hoTen.trim() || !r.capBac.trim() || !r.lyDoVang,
-    );
-    if (bad !== -1)
-      return `Dòng ${bad + 1} quân nhân vắng chưa điền đủ thông tin.`;
+    if (!t.tenNguoitruc.trim())
+      e["chiHuy.ten"] = "Nhập họ và tên trực chỉ huy.";
+    if (!t.capbacNguoitruc.trim()) e["chiHuy.capBac"] = "Chọn cấp bậc.";
+    if (!t.chucvuNguoitruc.trim()) e["chiHuy.chucVu"] = "Nhập chức vụ.";
+
+    absentRows.forEach((r) => {
+      if (!r.hoTen.trim()) e[`row.${r.id}.hoTen`] = "Nhập họ và tên.";
+      if (!r.capBac.trim()) e[`row.${r.id}.capBac`] = "Chọn cấp bậc.";
+      if (!r.lyDoVang) e[`row.${r.id}.lyDoVang`] = "Chọn lý do vắng.";
+    });
+
     if (tongQuanSo > 0 && quanSoVang > tongQuanSo)
-      return `Tổng vắng (${quanSoVang}) vượt tổng quân số (${tongQuanSo}).`;
+      e["tongVang"] =
+        `Tổng vắng (${quanSoVang}) vượt tổng quân số (${tongQuanSo}).`;
+
     if (detail.incidentStatus === "yes" && !detail.incidentDetail.trim())
-      return "Mục II cần nhập chi tiết khi chọn Có.";
-    return "";
+      e["incidentDetail"] = "Nhập chi tiết khi chọn Có.";
+
+    return e;
   };
 
   const handleSave = async () => {
-    const err = validate();
-    if (err) return toast.warning(err);
+    const e = validate();
+    setErrors(e);
+    if (Object.keys(e).length > 0) return;
 
     const vang: VangChiTiet = { ...EMPTY_VANG };
     absentRows.forEach((r) => {
@@ -258,6 +381,7 @@ export default function CreateReport() {
           <div>
             <label className="text-xs text-muted-foreground">Tổng vắng</label>
             <Input value={quanSoVang} disabled />
+            <FieldError msg={errors["tongVang"]} />
           </div>
         </CardContent>
       </Card>
@@ -271,11 +395,17 @@ export default function CreateReport() {
             title="Trực chỉ huy"
             value={trucChiHuy}
             onChange={setTrucChiHuy}
+            prefix="chiHuy"
+            errors={errors}
+            clearError={clearError}
           />
           <TrucSection
             title="Trực ban tác chiến / nội vụ"
             value={trucBanTacChien}
             onChange={setTrucBanTacChien}
+            prefix="tacChien"
+            errors={errors}
+            clearError={clearError}
           />
         </CardContent>
       </Card>
@@ -285,7 +415,11 @@ export default function CreateReport() {
           <CardTitle className="text-base">
             Danh sách quân nhân vắng mặt
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={addRow}>
+          <Button
+            size="sm"
+            onClick={addRow}
+            className="bg-slate-700 text-white hover:bg-slate-800"
+          >
             <Plus className="mr-2 size-4" /> Thêm quân nhân vắng
           </Button>
         </CardHeader>
@@ -307,11 +441,15 @@ export default function CreateReport() {
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="w-[52px] border p-2 text-center">STT</th>
-                    <th className="border p-2 text-left">Họ và tên</th>
-                    <th className="w-[160px] border p-2 text-left">Cấp bậc</th>
+                    <th className="border p-2 text-left">
+                      Họ và tên <span className="text-red-500">*</span>
+                    </th>
+                    <th className="w-[160px] border p-2 text-left">
+                      Cấp bậc <span className="text-red-500">*</span>
+                    </th>
                     <th className="w-[170px] border p-2 text-left">Chức vụ</th>
                     <th className="w-[240px] border p-2 text-left">
-                      Lý do vắng
+                      Lý do vắng <span className="text-red-500">*</span>
                     </th>
                     <th className="border p-2 text-left">Ghi chú chi tiết</th>
                     <th className="w-[56px] border p-2 text-center">Xóa</th>
@@ -320,22 +458,36 @@ export default function CreateReport() {
                 <tbody>
                   {absentRows.map((row, index) => (
                     <tr key={row.id}>
-                      <td className="border p-2 text-center">{index + 1}</td>
-                      <td className="border p-1.5">
+                      <td className="border p-2 text-center align-top pt-3.5">
+                        {index + 1}
+                      </td>
+                      <td className="border p-1.5 align-top">
                         <Input
+                          className={
+                            errors[`row.${row.id}.hoTen`]
+                              ? "border-red-500 focus-visible:ring-red-500"
+                              : ""
+                          }
                           value={row.hoTen}
                           onChange={(e) =>
                             updateRow(row.id, "hoTen", e.target.value)
                           }
                           placeholder="Nhập họ và tên..."
                         />
+                        <FieldError msg={errors[`row.${row.id}.hoTen`]} />
                       </td>
-                      <td className="border p-1.5">
+                      <td className="border p-1.5 align-top">
                         <Select
                           value={row.capBac}
                           onValueChange={(v) => updateRow(row.id, "capBac", v)}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger
+                            className={
+                              errors[`row.${row.id}.capBac`]
+                                ? "border-red-500 focus-visible:ring-red-500"
+                                : ""
+                            }
+                          >
                             <SelectValue placeholder="-- Cấp bậc --" />
                           </SelectTrigger>
                           <SelectContent>
@@ -346,8 +498,9 @@ export default function CreateReport() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <FieldError msg={errors[`row.${row.id}.capBac`]} />
                       </td>
-                      <td className="border p-1.5">
+                      <td className="border p-1.5 align-top">
                         <Input
                           value={row.chucVu}
                           onChange={(e) =>
@@ -356,14 +509,20 @@ export default function CreateReport() {
                           placeholder="Nhập chức vụ..."
                         />
                       </td>
-                      <td className="border p-1.5">
+                      <td className="border p-1.5 align-top">
                         <Select
                           value={row.lyDoVang}
                           onValueChange={(v) =>
                             updateRow(row.id, "lyDoVang", v)
                           }
                         >
-                          <SelectTrigger>
+                          <SelectTrigger
+                            className={
+                              errors[`row.${row.id}.lyDoVang`]
+                                ? "border-red-500 focus-visible:ring-red-500"
+                                : ""
+                            }
+                          >
                             <SelectValue placeholder="-- Lý do vắng --" />
                           </SelectTrigger>
                           <SelectContent>
@@ -374,8 +533,9 @@ export default function CreateReport() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <FieldError msg={errors[`row.${row.id}.lyDoVang`]} />
                       </td>
-                      <td className="border p-1.5">
+                      <td className="border p-1.5 align-top">
                         <Input
                           value={row.ghiChu}
                           onChange={(e) =>
@@ -384,7 +544,7 @@ export default function CreateReport() {
                           placeholder="Nơi công tác, bệnh xá, học viện..."
                         />
                       </td>
-                      <td className="border p-1.5 text-center">
+                      <td className="border p-1.5 text-center align-top">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -403,7 +563,6 @@ export default function CreateReport() {
         </CardContent>
       </Card>
 
-      {/* Tình hình nhiệm vụ trong ngày (I–IV) */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -411,13 +570,11 @@ export default function CreateReport() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {/* I. An toàn canh phòng */}
           <div className="space-y-2 rounded-md border p-3">
             <p className="text-sm font-semibold">
               I. Nhiệm vụ các phân đội đóng quân canh phòng
             </p>
             <RadioRow
-              name="security"
               value={detail.securityStatus}
               options={[
                 { value: "safe", label: "Đảm bảo an toàn" },
@@ -427,45 +584,54 @@ export default function CreateReport() {
             />
           </div>
 
-          {/* II. Việc đột xuất */}
           <div className="space-y-2 rounded-md border p-3">
             <p className="text-sm font-semibold">
               II. Những việc đột xuất xảy ra
             </p>
             <RadioRow
-              name="incident"
               value={detail.incidentStatus}
               options={[
                 { value: "yes", label: "Có" },
                 { value: "no", label: "Không" },
               ]}
-              onChange={(v) =>
+              onChange={(v) => {
                 setDetail((d) => ({
                   ...d,
                   incidentStatus: v,
                   incidentDetail: v === "no" ? "" : d.incidentDetail,
-                }))
-              }
+                }));
+                if (v === "no") clearError("incidentDetail");
+              }}
             />
             {detail.incidentStatus === "yes" && (
-              <Textarea
-                rows={3}
-                placeholder="Nhập nội dung đột xuất..."
-                value={detail.incidentDetail}
-                onChange={(e) =>
-                  setDetail((d) => ({ ...d, incidentDetail: e.target.value }))
-                }
-              />
+              <>
+                <Textarea
+                  rows={3}
+                  className={
+                    errors["incidentDetail"]
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
+                  placeholder="Nhập nội dung đột xuất..."
+                  value={detail.incidentDetail}
+                  onChange={(e) => {
+                    setDetail((d) => ({
+                      ...d,
+                      incidentDetail: e.target.value,
+                    }));
+                    clearError("incidentDetail");
+                  }}
+                />
+                <FieldError msg={errors["incidentDetail"]} />
+              </>
             )}
           </div>
 
-          {/* III. Ưu / khuyết điểm */}
           <div className="space-y-3 rounded-md border p-3">
             <p className="text-sm font-semibold">III. Ưu điểm và khuyết điểm</p>
             <div className="space-y-2">
               <label className="text-xs text-muted-foreground">Ưu điểm</label>
               <RadioRow
-                name="advantage"
                 value={detail.advantageStatus}
                 options={[
                   { value: "yes", label: "Có" },
@@ -489,7 +655,6 @@ export default function CreateReport() {
                 Khuyết điểm
               </label>
               <RadioRow
-                name="disadvantage"
                 value={detail.disadvantageStatus}
                 options={[
                   { value: "yes", label: "Có" },
@@ -519,13 +684,11 @@ export default function CreateReport() {
             </div>
           </div>
 
-          {/* IV. Việc cần tiếp tục giải quyết */}
           <div className="space-y-2 rounded-md border p-3">
             <p className="text-sm font-semibold">
               IV. Những việc cần tiếp tục giải quyết
             </p>
             <RadioRow
-              name="pending"
               value={detail.pendingTaskStatus}
               options={[
                 { value: "yes", label: "Có" },

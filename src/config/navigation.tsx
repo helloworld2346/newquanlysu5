@@ -61,6 +61,7 @@ const AccountManagement = lazy(
 const DailyReport = lazy(
   () => import("@/features/reports/DailyReport"),
 );
+
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
   "Trực ban tác chiến",
@@ -199,7 +200,10 @@ export const ALL_NAV_ITEMS: NavItem[] = [
 ];
 
 export function getIdByPath(path: string): NavItemId {
-  return ALL_NAV_ITEMS.find((i) => i.path === path)?.id ?? "executive";
+  const exact = ALL_NAV_ITEMS.find((i) => i.path === path);
+  if (exact) return exact.id;
+  const prefix = ALL_NAV_ITEMS.find((i) => path.startsWith(i.path + "/"));
+  return prefix?.id ?? "executive";
 }
 
 export function getPathById(id: NavItemId): string {
