@@ -107,3 +107,21 @@ export interface ReportRow {
   notSubmitted?: boolean;
   raw: ReportItemDTO | null;
 }
+
+export interface NhiemVuNgay {  
+  idNhiemvuNgay: string;  
+  nhiemVuPhandoi: string;  
+  noiDungDotXuat: string;  
+  noiDungUuDiem: string;  
+  noiDungKhuyetDiem: string;  
+  noiDungCanGiaiQuyet: string;  
+}  
+  
+export interface NhiemVuNgayPayload {  
+  nhiemVuPhandoi: string;  
+  noiDungDotXuat: string;  
+  noiDungUuDiem: string;  
+  noiDungKhuyetDiem: string;  
+  noiDungCanGiaiQuyet: string;  
+  donBaoCao: string;  
+}

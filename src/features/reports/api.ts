@@ -3,6 +3,8 @@ import type {
   CreateReportRequest,
   ReportResponse,
   SearchChildrenResponse,
+  NhiemVuNgay,
+  NhiemVuNgayPayload,
 } from "@/types/dailyReport";
 
 export const reportApi = {
@@ -40,6 +42,25 @@ export const reportApi = {
     payload: CreateReportRequest,
   ): Promise<ReportResponse> => {
     const res = await api.put<ReportResponse>(`/donbaocao/${id}`, payload);
+    return res.data;
+  },
+
+  getNhiemVuByDonBaoCao: async (
+    idDonBaoCao: string,
+  ): Promise<{ success: boolean; Result: NhiemVuNgay | null }> => {
+    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {
+      skipErrorToast: true,
+    });
+    return res.data;
+  },
+
+  createNhiemVu: async (payload: NhiemVuNgayPayload) => {
+    const res = await api.post(`/nhiemvungay`, payload);
+    return res.data;
+  },
+
+  updateNhiemVu: async (id: string, payload: NhiemVuNgayPayload) => {
+    const res = await api.put(`/nhiemvungay/${id}`, payload);
     return res.data;
   },
 };

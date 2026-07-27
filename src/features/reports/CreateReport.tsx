@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -9,6 +9,7 @@ import {
   Copy,
   AlertTriangle,
 } from "lucide-react";
+import api from "@/lib/api";
 import { reportApi } from "./api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +57,79 @@ const EMPTY_DETAIL: DetailStepData = {
   pendingTaskStatus: "no",
   pendingDetail: "",
 };
+
+type NhiemVuNgayPayload = {
+  nhiemVuPhandoi: string;
+  noiDungDotXuat: string;
+  noiDungUuDiem: string;
+  noiDungKhuyetDiem: string;
+  noiDungCanGiaiQuyet: string;
+  donBaoCao: string;
+};
+type NhiemVuNgay = {
+  idNhiemvuNgay?: string;
+  nhiemVuPhandoi?: string;
+  noiDungDotXuat?: string;
+  noiDungUuDiem?: string;
+  noiDungKhuyetDiem?: string;
+  noiDungCanGiaiQuyet?: string;
+};
+
+async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {
+  try {
+    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {
+      skipErrorToast: true,
+    });
+    return (res.data?.Result as NhiemVuNgay) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {
+  const payload = detailToNhiemVu(detail, idDonBaoCao);
+  const existing = await fetchNhiemVu(idDonBaoCao);
+  try {
+    if (existing?.idNhiemvuNgay) {
+      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {
+        skipErrorToast: true,
+      });
+    } else {
+      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });
+    }
+  } catch {
+    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */
+  }
+}
+
+function detailToNhiemVu(
+  d: DetailStepData,
+  donBaoCao: string,
+): NhiemVuNgayPayload {
+  return {
+    nhiemVuPhandoi: d.securityStatus,
+    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",
+    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",
+    noiDungKhuyetDiem:
+      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",
+    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",
+    donBaoCao,
+  };
+}
+
+function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {
+  return {
+    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",
+    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",
+    incidentDetail: nv.noiDungDotXuat ?? "",
+    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",
+    advantageDetail: nv.noiDungUuDiem ?? "",
+    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",
+    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",
+    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",
+    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",
+  };
+}
 
 type Errors = Record<string, string>;
 
@@ -233,6 +307,17 @@ export default function CreateReport() {
       return n;
     });
 
+  useEffect(() => {
+    if (!isEdit || !id) return;
+    let ignore = false;
+    fetchNhiemVu(id).then((nv) => {
+      if (!ignore && nv) setDetail(nhiemVuToDetail(nv));
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [isEdit, id]);
+
   const quanSoVang = absentRows.length;
   const quanSoHienDien = Math.max(0, tongQuanSo - quanSoVang);
 
@@ -324,13 +409,6 @@ export default function CreateReport() {
       }
       const r = res.Result;
 
-      console.log("copy-yesterday raw:", {
-        tinhHinhHoatDong: r.tinhHinhHoatDong,
-        trucBanChiHuy: r.trucBanChiHuy,
-        trucBanTacChien: r.trucBanTacChien,
-        chiTietVang: r.chiTietVang,
-      });
-
       try {
         if (r.trucBanChiHuy)
           setTrucChiHuy({ ...EMPTY_TRUC, ...JSON.parse(r.trucBanChiHuy) });
@@ -355,12 +433,9 @@ export default function CreateReport() {
       } catch {
         /* ignore */
       }
-      try {
-        if (r.tinhHinhHoatDong)
-          setDetail({ ...EMPTY_DETAIL, ...JSON.parse(r.tinhHinhHoatDong) });
-      } catch {
-        /* ignore */
-      }
+
+      const nv = await fetchNhiemVu(r.idDonBaoCao);
+      if (nv) setDetail(nhiemVuToDetail(nv));
 
       toast.success("Đã sao chép báo cáo hôm qua");
     } catch {
@@ -391,20 +466,25 @@ export default function CreateReport() {
       donVi: donVi?.maDonVi ?? "",
       trucBanChiHuy: JSON.stringify(trucChiHuy),
       trucBanTacChien: JSON.stringify(trucBanTacChien),
-      tinhHinhHoatDong: JSON.stringify(detail),
       loaiDonBaoCao: "DON_VI",
     };
 
     try {
+      let idDonBaoCao = id ?? "";
       if (isEdit) {
         const res = await updateReport.mutateAsync({ id: id!, data: payload });
         if (!res.success) throw new Error(res.message);
+        idDonBaoCao = res.Result?.idDonBaoCao ?? id!;
         toast.success("Cập nhật báo cáo thành công");
       } else {
         const res = await createReport.mutateAsync(payload);
         if (!res.success) throw new Error(res.message);
+        idDonBaoCao = res.Result?.idDonBaoCao ?? "";
         toast.success("Lưu báo cáo thành công");
       }
+
+      if (idDonBaoCao) await saveNhiemVu(idDonBaoCao, detail);
+
       navigate("/daily-report");
     } catch {
       toast.error("Không thể lưu báo cáo");
