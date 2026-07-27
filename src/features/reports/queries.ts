@@ -38,9 +38,11 @@ export function useChildrenReportsMerged(
 
   const data = useMemo(() => {
     const map = new Map<string, ReportItemDTO>();
-
     for (const item of donViQuery.data ?? []) {
-      map.set(item.donVi.maDonVi, item);
+      const ma = item.donVi.maDonVi;
+      const cap = capByUnit[ma] ?? "";
+      if (TONG_HOP_CAPS.includes(cap)) continue;
+      map.set(ma, item);
     }
 
     for (const item of tongHopQuery.data ?? []) {

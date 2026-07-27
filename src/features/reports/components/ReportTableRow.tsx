@@ -21,6 +21,12 @@ const STATUS_LABEL: Record<string, string> = {
   Từ_Chối: "Từ chối",
 };
 
+const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];
+
+function isApproved(status: string): boolean {
+  return APPROVED_STATUSES.includes(status);
+}
+
 export default function ReportTableRow({
   row,
   canEdit,
@@ -33,6 +39,9 @@ export default function ReportTableRow({
   onEdit: (r: ReportRow) => void;
 }) {
   const v = row.vang;
+  const approved = !row.notSubmitted && isApproved(row.status);
+  const num = (val: number | null | undefined) =>
+    approved ? formatNum(val) : "—";
   const notSubmitted = row.notSubmitted;
   return (
     <TableRow
@@ -45,23 +54,23 @@ export default function ReportTableRow({
       >
         {row.kyhieuDonVi || row.tenDonVi}
       </TableCell>
-      <TableCell className={td}>{formatNum(row.quanSoTong)}</TableCell>
-      <TableCell className={td}>{formatNum(row.quanSoHienDien)}</TableCell>
-      <TableCell className={td}>{formatNum(row.quanSoVang)}</TableCell>
-      <TableCell className={td}>{formatNum(v.hoiThaiNgoaiSuDoan)}</TableCell>
-      <TableCell className={td}>{formatNum(v.hoiThaiEF)}</TableCell>
-      <TableCell className={td}>{formatNum(v.xayDungNgoaiSuDoan)}</TableCell>
-      <TableCell className={td}>{formatNum(v.xayDungEF)}</TableCell>
-      <TableCell className={td}>{formatNum(v.choHuu)}</TableCell>
-      <TableCell className={td}>{formatNum(v.nghiTranhThu)}</TableCell>
-      <TableCell className={td}>{formatNum(v.phep)}</TableCell>
-      <TableCell className={td}>{formatNum(v.vienNgoaiSuDoan)}</TableCell>
-      <TableCell className={td}>{formatNum(v.vienEF)}</TableCell>
-      <TableCell className={td}>{formatNum(v.congTacNgoaiSuDoan)}</TableCell>
-      <TableCell className={td}>{formatNum(v.congTacSuDoan)}</TableCell>
-      <TableCell className={td}>{formatNum(v.hocSQ)}</TableCell>
-      <TableCell className={td}>{formatNum(v.hocCS)}</TableCell>
-      <TableCell className={td}>{formatNum(v.lyDoVangKhac)}</TableCell>
+      <TableCell className={td}>{num(row.quanSoTong)}</TableCell>  
+      <TableCell className={td}>{num(row.quanSoHienDien)}</TableCell>  
+      <TableCell className={td}>{num(row.quanSoVang)}</TableCell>  
+      <TableCell className={td}>{num(v.hoiThaiNgoaiSuDoan)}</TableCell>  
+      <TableCell className={td}>{num(v.hoiThaiEF)}</TableCell>  
+      <TableCell className={td}>{num(v.xayDungNgoaiSuDoan)}</TableCell>  
+      <TableCell className={td}>{num(v.xayDungEF)}</TableCell>  
+      <TableCell className={td}>{num(v.choHuu)}</TableCell>  
+      <TableCell className={td}>{num(v.nghiTranhThu)}</TableCell>  
+      <TableCell className={td}>{num(v.phep)}</TableCell>  
+      <TableCell className={td}>{num(v.vienNgoaiSuDoan)}</TableCell>  
+      <TableCell className={td}>{num(v.vienEF)}</TableCell>  
+      <TableCell className={td}>{num(v.congTacNgoaiSuDoan)}</TableCell>  
+      <TableCell className={td}>{num(v.congTacSuDoan)}</TableCell>  
+      <TableCell className={td}>{num(v.hocSQ)}</TableCell>  
+      <TableCell className={td}>{num(v.hocCS)}</TableCell>  
+      <TableCell className={td}>{num(v.lyDoVangKhac)}</TableCell>
       <TableCell className={td}>
         {notSubmitted ? (
           <span className="font-semibold text-rose-600">Chưa nộp</span>
