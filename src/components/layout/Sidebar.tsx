@@ -55,7 +55,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                   : "px-3"
               }`}
             >
-              {sec.label}
+              {collapsed ? (sec.collapsedLabel ?? sec.label) : sec.label}
             </p>
 
             <div className="space-y-1">

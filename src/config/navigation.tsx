@@ -67,9 +67,13 @@ const ALL_REPORT_ROLES = [
 const ADMIN_ONLY = ["Quản Trị Viên"];
 const TAC_CHIEN = ["Quản Trị Viên", "Trực ban tác chiến"];
 
-export const NAV_GROUPS: { id: NavGroupId; label: string }[] = [
+export const NAV_GROUPS: {
+  id: NavGroupId;
+  label: string;
+  collapsedLabel?: string;
+}[] = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "reports", label: "Báo ban" },
+  { id: "reports", label: "Thống kê trong ngày", collapsedLabel: "Thống kê" },
   { id: "duty", label: "Ca trực" },
   { id: "admin", label: "Quản trị" },
   { id: "settings", label: "Hệ thống" },
@@ -253,7 +257,12 @@ export function getNavGroupsByRole(
   userRole: string | null,
   capDonVi: string | null = null,
   tenChucnang: string[] | null = null,
-): { id: NavGroupId; label: string; items: NavItem[] }[] {
+): {
+  id: NavGroupId;
+  label: string;
+  collapsedLabel?: string;
+  items: NavItem[];
+}[] {
   const items = getNavItemsByRole(userRole, capDonVi, tenChucnang);
   return NAV_GROUPS.map((g) => ({
     ...g,
