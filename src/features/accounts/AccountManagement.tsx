@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef } from "react";
 import {
   Plus,
-  Pencil,
+  SquarePen,
   Trash2,
   Lock,
   LockOpen,
@@ -58,6 +58,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import AccountFormDialog from "./AccountFormDialog";
 import type { Account } from "@/types/account";
 import ResetPasswordDialog from "./ResetPasswordDialog";
@@ -99,6 +100,8 @@ export default function AccountManagement() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [resetAccount, setResetAccount] = useState<Account | null>(null);
   const [chucNangAccount, setChucNangAccount] = useState<Account | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Account | null>(null);
+  const [confirmLock, setConfirmLock] = useState<Account | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -159,8 +162,7 @@ export default function AccountManagement() {
     return [1, "…", current - 1, current, current + 1, "…", total];
   }
 
-  const handleDelete = async (acc: Account) => {
-    if (!window.confirm(`Xóa tài khoản "${acc.tenTaiKhoan}"?`)) return;
+  const doDelete = async (acc: Account) => {
     try {
       await deleteAccount.mutateAsync(acc.idTaiKhoan);
       toast.success("Xóa tài khoản thành công");
@@ -169,7 +171,7 @@ export default function AccountManagement() {
     }
   };
 
-  const handleToggleLock = async (acc: Account) => {
+  const doToggleLock = async (acc: Account) => {
     try {
       await toggleLock.mutateAsync({ id: acc.idTaiKhoan, locked: acc.khoa });
       toast.success(acc.khoa ? "Đã mở khóa" : "Đã khóa tài khoản");
@@ -369,10 +371,15 @@ export default function AccountManagement() {
                             setTimeout(() => openEdit(a), 0);
                           }}
                         >
-                          <Pencil />
+                          <SquarePen />
                           Sửa
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleLock(a)}>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setTimeout(() => setConfirmLock(a), 0);
+                          }}
+                        >
                           {a.khoa ? <LockOpen /> : <Lock />}
                           {a.khoa ? "Mở khóa" : "Khóa"}
                         </DropdownMenuItem>
@@ -396,7 +403,10 @@ export default function AccountManagement() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => handleDelete(a)}
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setTimeout(() => setConfirmDelete(a), 0);
+                          }}
                           className="text-red-600 focus:text-red-600"
                         >
                           <Trash2 />
@@ -491,6 +501,40 @@ export default function AccountManagement() {
         open={!!chucNangAccount}
         onOpenChange={(v) => !v && setChucNangAccount(null)}
         account={chucNangAccount}
+      />
+
+      <ConfirmDialog
+        key={`del-${confirmDelete?.idTaiKhoan ?? "none"}`}
+        open={!!confirmDelete}
+        onOpenChange={(v) => !v && setConfirmDelete(null)}
+        title="Xóa tài khoản"
+        description={
+          confirmDelete
+            ? `Bạn có chắc muốn xóa tài khoản "${confirmDelete.tenTaiKhoan}"? Hành động này không thể hoàn tác.`
+            : ""
+        }
+        confirmText="Xóa"
+        destructive
+        onConfirm={() => {
+          if (confirmDelete) doDelete(confirmDelete);
+        }}
+      />
+
+      <ConfirmDialog
+        key={`lock-${confirmLock?.idTaiKhoan ?? "none"}`}
+        open={!!confirmLock}
+        onOpenChange={(v) => !v && setConfirmLock(null)}
+        title={confirmLock?.khoa ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+        description={
+          confirmLock
+            ? `Bạn có chắc muốn ${confirmLock.khoa ? "mở khóa" : "khóa"} tài khoản "${confirmLock.tenTaiKhoan}"?`
+            : ""
+        }
+        confirmText={confirmLock?.khoa ? "Mở khóa" : "Khóa"}
+        destructive={!confirmLock?.khoa}
+        onConfirm={() => {
+          if (confirmLock) doToggleLock(confirmLock);
+        }}
       />
     </div>
   );
