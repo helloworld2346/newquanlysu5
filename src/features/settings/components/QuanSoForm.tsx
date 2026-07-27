@@ -182,8 +182,8 @@ export default function QuanSoForm({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="size-4" />
+          <CardTitle className="flex items-center text-base">
+            <Users className="mr-2 size-4" />
             {isTacChienParent
               ? `Quân số biên chế ${chLabel} — ${donVi.tenDonvi}`
               : `Quân số biên chế — ${donVi.tenDonvi}`}
@@ -191,8 +191,8 @@ export default function QuanSoForm({
         </CardHeader>
         <CardContent>
           {tong === 0 && !isAggregatedOnly && (
-            <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <div className="mb-3 flex items-start rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+              <TriangleAlert className="mr-2 mt-0.5 size-4 shrink-0" />
               <div>
                 <strong>Chưa nhập quân số biên chế.</strong> Vui lòng nhập quân
                 số bên dưới để dùng các tính năng báo cáo.
@@ -233,12 +233,13 @@ export default function QuanSoForm({
             </div>
 
             {!isAggregatedOnly && (
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={reset}
                   disabled={!changed || updateUnit.isPending}
+                  className="mr-2"
                 >
                   Hoàn tác
                 </Button>
@@ -257,8 +258,8 @@ export default function QuanSoForm({
       {isTacChienParent && hasChildren && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Layers className="size-4" />
+            <CardTitle className="flex items-center text-base">
+              <Layers className="mr-2 size-4" />
               Quân số toàn {capLabel} (gồm {chLabel})
             </CardTitle>
           </CardHeader>

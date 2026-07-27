@@ -36,7 +36,7 @@ import ReportTableRow from "./components/ReportTableRow";
 import ReportTotalRow from "./components/ReportTotalRow";
 import type { ReportRow } from "@/types/dailyReport";
 import ReportColGroup from "./components/ReportColGroup";
-import NhiemVuNgaySection from "./components/NhiemVuNgaySection";  
+import NhiemVuNgaySection from "./components/NhiemVuNgaySection";
 
 const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
 
@@ -198,21 +198,22 @@ export default function DailyReport() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Thống kê quân số trong ngày</h1>
-        <div className="flex items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center justify-between">
+        <h1 className="mb-2 mr-2 text-xl font-semibold">
+          Thống kê quân số trong ngày
+        </h1>
+        <div className="flex items-center">
           <DateInputVi
             value={ngay}
             max={todayIso()}
             onChange={setNgay}
-            className="w-[280px]"
+            className="mr-2 w-[280px]"
           />
-          <Button onClick={() => navigate(`/daily-report/create?ngay=${ngay}`)}>
+          <Button onClick={() => navigate("/daily-report/create")}>
             <Plus className="mr-2 size-4" /> Thêm báo cáo
           </Button>
         </div>
       </div>
-
       <div className="-mx-1.5 mb-4 flex flex-wrap">
         {stats.map((s) => (
           <div key={s.title} className="w-full p-1.5 sm:w-1/2 lg:w-1/5">
@@ -226,7 +227,6 @@ export default function DailyReport() {
           </div>
         ))}
       </div>
-
       <div className="mb-4 flex flex-wrap items-center">
         <SearchBar
           value={search}
@@ -253,7 +253,6 @@ export default function DailyReport() {
           </Button>
         )}
       </div>
-
       <div className="overflow-x-auto rounded-lg border bg-background">
         <Table className="w-full table-fixed min-w-[960px]">
           <ReportColGroup />

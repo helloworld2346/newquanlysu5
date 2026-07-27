@@ -56,14 +56,14 @@ export default function PasswordForm() {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center gap-2">
-        <Lock className="size-5 text-primary" />
+      <CardHeader className="flex-row items-center">
+        <Lock className="mr-2 size-5 text-primary" />
         <CardTitle className="text-base">Đổi mật khẩu</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
+          <div className="-mx-2 flex flex-wrap">
+            <div className="w-full px-2 mb-4 sm:mb-0 sm:w-1/2">
               <label className="mb-1 block text-sm font-medium">
                 Mật khẩu mới
               </label>
@@ -92,12 +92,12 @@ export default function PasswordForm() {
                   {checks.map((c) => (
                     <li
                       key={c.label}
-                      className={`flex items-center gap-1.5 ${c.ok ? "text-emerald-600" : "text-muted-foreground"}`}
+                      className={`flex items-center ${c.ok ? "text-emerald-600" : "text-muted-foreground"}`}
                     >
                       {c.ok ? (
-                        <Check className="size-3.5" />
+                        <Check className="mr-1.5 size-3.5" />
                       ) : (
-                        <X className="size-3.5" />
+                        <X className="mr-1.5 size-3.5" />
                       )}
                       {c.label}
                     </li>
@@ -106,7 +106,7 @@ export default function PasswordForm() {
               )}
             </div>
 
-            <div>
+            <div className="w-full px-2 sm:w-1/2">
               <label className="mb-1 block text-sm font-medium">
                 Xác nhận mật khẩu
               </label>
