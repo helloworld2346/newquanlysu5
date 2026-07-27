@@ -31,7 +31,6 @@ export default function PasswordForm() {
   const isValid =
     newPassword.length >= MIN_LEN && newPassword === confirmPassword;
 
-  // Chỉ mở dialog xác nhận sau khi validate
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword.trim()) return toast.warning("Vui lòng nhập mật khẩu mới");
@@ -40,7 +39,6 @@ export default function PasswordForm() {
     setConfirmOpen(true);
   };
 
-  // Thực sự đổi mật khẩu khi xác nhận trong dialog
   const doChange = async () => {
     try {
       const res = await changePassword.mutateAsync(newPassword);
@@ -64,80 +62,82 @@ export default function PasswordForm() {
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Mật khẩu mới
-            </label>
-            <div className="relative">
-              <Input
-                type={showNew ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nhập mật khẩu mới"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowNew((p) => !p)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
-                {showNew ? (
-                  <EyeOff className="size-4" />
-                ) : (
-                  <Eye className="size-4" />
-                )}
-              </button>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Mật khẩu mới
+              </label>
+              <div className="relative">
+                <Input
+                  type={showNew ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu mới"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNew((p) => !p)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showNew ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
+              </div>
+              {newPassword !== "" && (
+                <ul className="mt-2 space-y-1 text-xs">
+                  {checks.map((c) => (
+                    <li
+                      key={c.label}
+                      className={`flex items-center gap-1.5 ${c.ok ? "text-emerald-600" : "text-muted-foreground"}`}
+                    >
+                      {c.ok ? (
+                        <Check className="size-3.5" />
+                      ) : (
+                        <X className="size-3.5" />
+                      )}
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            {newPassword !== "" && (
-              <ul className="mt-2 space-y-1 text-xs">
-                {checks.map((c) => (
-                  <li
-                    key={c.label}
-                    className={`flex items-center gap-1.5 ${c.ok ? "text-emerald-600" : "text-muted-foreground"}`}
-                  >
-                    {c.ok ? (
-                      <Check className="size-3.5" />
-                    ) : (
-                      <X className="size-3.5" />
-                    )}
-                    {c.label}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Xác nhận mật khẩu
-            </label>
-            <div className="relative">
-              <Input
-                type={showConfirm ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Nhập lại mật khẩu mới"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm((p) => !p)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
-                {showConfirm ? (
-                  <EyeOff className="size-4" />
-                ) : (
-                  <Eye className="size-4" />
-                )}
-              </button>
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Xác nhận mật khẩu
+              </label>
+              <div className="relative">
+                <Input
+                  type={showConfirm ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Nhập lại mật khẩu mới"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((p) => !p)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showConfirm ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
+              </div>
+              {confirmPassword !== "" && (
+                <p
+                  className={`mt-1 text-xs ${isMatch ? "text-emerald-600" : "text-red-500"}`}
+                >
+                  {isMatch ? "Mật khẩu khớp" : "Mật khẩu xác nhận không khớp"}
+                </p>
+              )}
             </div>
-            {confirmPassword !== "" && (
-              <p
-                className={`mt-1 text-xs ${isMatch ? "text-emerald-600" : "text-red-500"}`}
-              >
-                {isMatch ? "Mật khẩu khớp" : "Mật khẩu xác nhận không khớp"}
-              </p>
-            )}
           </div>
 
           <div className="flex justify-end">

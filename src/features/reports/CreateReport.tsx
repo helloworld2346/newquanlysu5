@@ -1,3 +1,4 @@
+// src/features/reports/CreateReport.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ import type {
   CreateReportRequest,
   VangChiTiet,
 } from "@/types/dailyReport";
+import { useUnits } from "@/features/units/queries";
 
 const genId = () => Math.random().toString(36).slice(2);
 const EMPTY_TRUC: TrucNguoiInfo = {
@@ -281,13 +283,19 @@ export default function CreateReport() {
   const { account } = useAuthInfo();
   const donVi = account?.donVi;
 
+  const { data: units = [] } = useUnits();
+  const fullDonVi = useMemo(
+    () => units.find((u) => u.maDonVi === donVi?.maDonVi) ?? null,
+    [units, donVi?.maDonVi],
+  );
+
   const createReport = useCreateReport();
   const updateReport = useUpdateReport();
 
   const [searchParams] = useSearchParams();
   const ngayParam = searchParams.get("ngay");
   const [ngayBaoCao] = useState(ngayParam || todayIso());
-  const tongQuanSo = donVi?.quanSoTong ?? 0;
+  const tongQuanSo = fullDonVi?.quanSoTong ?? 0;
   const [trucChiHuy, setTrucChiHuy] = useState<TrucNguoiInfo>({
     ...EMPTY_TRUC,
   });
@@ -327,18 +335,23 @@ export default function CreateReport() {
       (r) => r.capBac.trim() && by[classifyCapBac(r.capBac)]++,
     );
     const w: string[] = [];
-    if ((donVi?.quanSoSiQuan ?? 0) > 0 && by.siQuan > donVi!.quanSoSiQuan)
+    if (
+      (fullDonVi?.quanSoSiQuan ?? 0) > 0 &&
+      by.siQuan > fullDonVi!.quanSoSiQuan
+    )
       w.push(
-        `Vắng Sĩ quan (${by.siQuan}) vượt biên chế (${donVi!.quanSoSiQuan}).`,
+        `Vắng Sĩ quan (${by.siQuan}) vượt biên chế (${fullDonVi!.quanSoSiQuan}).`,
       );
-    if ((donVi?.quanSoQncn ?? 0) > 0 && by.qncn > donVi!.quanSoQncn)
-      w.push(`Vắng QNCN (${by.qncn}) vượt biên chế (${donVi!.quanSoQncn}).`);
-    if ((donVi?.quanSoHsqBs ?? 0) > 0 && by.hsqBs > donVi!.quanSoHsqBs)
+    if ((fullDonVi?.quanSoQncn ?? 0) > 0 && by.qncn > fullDonVi!.quanSoQncn)
       w.push(
-        `Vắng HSQ-BS (${by.hsqBs}) vượt biên chế (${donVi!.quanSoHsqBs}).`,
+        `Vắng QNCN (${by.qncn}) vượt biên chế (${fullDonVi!.quanSoQncn}).`,
+      );
+    if ((fullDonVi?.quanSoHsqBs ?? 0) > 0 && by.hsqBs > fullDonVi!.quanSoHsqBs)
+      w.push(
+        `Vắng HSQ-BS (${by.hsqBs}) vượt biên chế (${fullDonVi!.quanSoHsqBs}).`,
       );
     return w;
-  }, [absentRows, donVi]);
+  }, [absentRows, fullDonVi]);
 
   const addRow = () =>
     setAbsentRows((p) => [
