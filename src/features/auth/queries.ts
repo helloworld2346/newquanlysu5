@@ -54,3 +54,9 @@ export function useAuthInfo() {
   ).filter((c) => c && c.trim() !== "");
   return { account, role, capDonVi, tenChucnang, isLoading };
 }
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (matKhau: string) => authApi.changePassword(matKhau),
+  });
+}

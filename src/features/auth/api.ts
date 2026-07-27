@@ -7,4 +7,10 @@ export const authApi = {
     api.post<LoginResponse>("/auth/login", body).then((r) => r.data),
   logout: (token: string) => api.post("/auth/logout", { token }),
   getAccount: () => api.get<AccountResponse>("/account").then((r) => r.data),
+  changePassword: (matKhau: string) =>
+    api
+      .put<{ success: boolean; message: string }>("/auth/change-password", {
+        matKhau,
+      })
+      .then((r) => r.data),
 };

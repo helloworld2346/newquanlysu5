@@ -62,6 +62,9 @@ const DailyReport = lazy(
   () => import("@/features/reports/DailyReport"),
 );
 
+const SettingsPage = lazy(() => import("@/features/settings/Settings"));
+
+
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
   "Trực ban tác chiến",
@@ -192,7 +195,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "settings",
     label: "Cài đặt",
     path: "/settings",
-    component: Placeholder,
+    component: SettingsPage,
     icon: Settings,
     group: "settings",
     allowedRoles: ALL_REPORT_ROLES,
