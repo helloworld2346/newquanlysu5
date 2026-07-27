@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { reportApi } from "./api";
 import type { CreateReportRequest, ReportItemDTO } from "@/types/dailyReport";
 
@@ -77,5 +78,16 @@ export function useUpdateReport() {
     mutationFn: ({ id, data }: { id: string; data: CreateReportRequest }) =>
       reportApi.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
+export function useNhiemVuNgayByReports(ids: string[]) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: ["nhiemvungay", id],
+      queryFn: () => reportApi.getNhiemVuByDonBaoCao(id),
+      enabled: !!id,
+      staleTime: 60_000,
+    })),
   });
 }

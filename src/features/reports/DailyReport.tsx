@@ -36,6 +36,7 @@ import ReportTableRow from "./components/ReportTableRow";
 import ReportTotalRow from "./components/ReportTotalRow";
 import type { ReportRow } from "@/types/dailyReport";
 import ReportColGroup from "./components/ReportColGroup";
+import NhiemVuNgaySection from "./components/NhiemVuNgaySection";  
 
 const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
 
@@ -295,6 +296,9 @@ export default function DailyReport() {
           </TableBody>
         </Table>
       </div>
+      {!isLoading && filteredRows.length > 0 && (
+        <NhiemVuNgaySection rows={filteredRows} />
+      )}
     </div>
   );
 }
