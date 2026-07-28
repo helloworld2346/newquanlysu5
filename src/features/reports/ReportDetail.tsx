@@ -37,13 +37,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { useReportDetail } from "./queries";
+import { useReportDetail, useNhiemVuNgayDetail } from "./queries";
 import { LY_DO_OPTIONS, formatNum } from "./utils";
-import type {
-  AbsentRow,
-  DetailStepData,
-  TrucNguoiInfo,
-} from "@/types/dailyReport";
+import type { AbsentRow, TrucNguoiInfo } from "@/types/dailyReport";
 
 const LY_DO_LABEL: Record<string, string> = Object.fromEntries(
   LY_DO_OPTIONS.map((o) => [o.value, o.label]),
@@ -110,46 +106,46 @@ function InfoField({
   );
 }
 
-function TrucRow({ label, value }: { label: string; value: string }) {  
-  return (  
-    <div className="flex items-start justify-between px-3 py-2 text-sm">  
-      <span className="mr-3 shrink-0 text-muted-foreground">{label}</span>  
-      <span className="min-w-0 break-words text-right font-medium">  
-        {value || "—"}  
-      </span>  
-    </div>  
-  );  
-}  
-  
-function TrucCard({  
-  label,  
-  data,  
-  accent,  
-}: {  
-  label: string;  
-  data: TrucNguoiInfo | null;  
-  accent: string;  
-}) {  
-  return (  
-    <div className="w-full px-2 mb-4 lg:w-1/2">  
-      <div className={`h-full rounded-md border border-l-4 p-4 ${accent}`}>  
-        <div className="mb-3 flex items-center">  
-          <User className="mr-2 size-4 text-primary" />  
-          <span className="text-sm font-semibold">{label}</span>  
-        </div>  
-        {data && data.tenNguoitruc ? (  
-          <div className="divide-y rounded-md border bg-background/70">  
-            <TrucRow label="Họ và tên" value={data.tenNguoitruc} />  
-            <TrucRow label="Cấp bậc" value={data.capbacNguoitruc} />  
-            <TrucRow label="Chức vụ" value={data.chucvuNguoitruc} />  
-            <TrucRow label="Số điện thoại" value={data.sodienthoai} />  
-          </div>  
-        ) : (  
-          <p className="text-sm text-muted-foreground">— Chưa có thông tin —</p>  
-        )}  
-      </div>  
-    </div>  
-  );  
+function TrucRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between px-3 py-2 text-sm">
+      <span className="mr-3 shrink-0 text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-words text-right font-medium">
+        {value || "—"}
+      </span>
+    </div>
+  );
+}
+
+function TrucCard({
+  label,
+  data,
+  accent,
+}: {
+  label: string;
+  data: TrucNguoiInfo | null;
+  accent: string;
+}) {
+  return (
+    <div className="w-full px-2 mb-4 lg:w-1/2">
+      <div className={`h-full rounded-md border border-l-4 p-4 ${accent}`}>
+        <div className="mb-3 flex items-center">
+          <User className="mr-2 size-4 text-primary" />
+          <span className="text-sm font-semibold">{label}</span>
+        </div>
+        {data && data.tenNguoitruc ? (
+          <div className="divide-y rounded-md border bg-background/70">
+            <TrucRow label="Họ và tên" value={data.tenNguoitruc} />
+            <TrucRow label="Cấp bậc" value={data.capbacNguoitruc} />
+            <TrucRow label="Chức vụ" value={data.chucvuNguoitruc} />
+            <TrucRow label="Số điện thoại" value={data.sodienthoai} />
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">— Chưa có thông tin —</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function NhiemVuItem({
@@ -203,6 +199,7 @@ export default function ReportDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { data, isLoading } = useReportDetail(id);
+  const { data: nhiemVu, isLoading: nhiemVuLoading } = useNhiemVuNgayDetail(id);
 
   const topRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
@@ -219,10 +216,6 @@ export default function ReportDetail() {
   const absentRows = useMemo(
     () => parseJson<AbsentRow[]>(data?.chiTietVang, []),
     [data?.chiTietVang],
-  );
-  const detail = useMemo(
-    () => parseJson<DetailStepData | null>(data?.tinhHinhHoatDong, null),
-    [data?.tinhHinhHoatDong],
   );
 
   const totalPages = Math.max(1, Math.ceil(absentRows.length / pageSize));
@@ -255,6 +248,12 @@ export default function ReportDetail() {
 
   const ngay = data.thoiGianBaoCao?.split("T")[0] ?? "";
   const unitLabel = data.donVi.kyhieuDonvi || data.donVi.tenDonvi;
+
+  const hasDotXuat = Boolean(nhiemVu?.noiDungDotXuat?.trim());
+  const hasUuDiem = Boolean(nhiemVu?.noiDungUuDiem?.trim());
+  const hasKhuyetDiem = Boolean(nhiemVu?.noiDungKhuyetDiem?.trim());
+  const hasCanGiaiQuyet = Boolean(nhiemVu?.noiDungCanGiaiQuyet?.trim());
+  const isSafe = nhiemVu?.nhiemVuPhandoi === "safe";
 
   return (
     <div ref={topRef} className="space-y-4 pb-10">
@@ -478,55 +477,49 @@ export default function ReportDetail() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {detail ? (
+          {nhiemVuLoading ? (
+            <p className="text-sm text-muted-foreground">Đang tải...</p>
+          ) : nhiemVu ? (
             <>
               <NhiemVuItem
                 index={1}
                 label="Nhiệm vụ các phân đội đóng quân canh phòng"
-                status={
-                  detail.securityStatus === "safe"
-                    ? "Đảm bảo an toàn"
-                    : "Không đảm bảo an toàn"
-                }
-                accent={detail.securityStatus === "safe" ? "success" : "danger"}
+                status={isSafe ? "Đảm bảo an toàn" : "Không đảm bảo an toàn"}
+                accent={isSafe ? "success" : "danger"}
               />
               <NhiemVuItem
                 index={2}
                 label="Tình hình đột xuất"
-                status={detail.incidentStatus === "yes" ? "Có" : "Không"}
-                detail={detail.incidentDetail}
-                accent={detail.incidentStatus === "yes" ? "warning" : "neutral"}
+                status={hasDotXuat ? "Có" : "Không"}
+                detail={nhiemVu.noiDungDotXuat}
+                accent={hasDotXuat ? "warning" : "neutral"}
               />
               <NhiemVuItem
                 index={3}
                 label="Ưu điểm trong ngày"
-                status={detail.advantageStatus === "yes" ? "Có" : "Không"}
-                detail={detail.advantageDetail}
-                accent={
-                  detail.advantageStatus === "yes" ? "success" : "neutral"
-                }
+                status={hasUuDiem ? "Có" : "Không"}
+                detail={nhiemVu.noiDungUuDiem}
+                accent={hasUuDiem ? "success" : "neutral"}
               />
               <NhiemVuItem
                 index={4}
                 label="Khuyết điểm trong ngày"
-                status={detail.disadvantageStatus === "yes" ? "Có" : "Không"}
-                detail={detail.disadvantageDetail}
-                accent={
-                  detail.disadvantageStatus === "yes" ? "danger" : "neutral"
-                }
+                status={hasKhuyetDiem ? "Có" : "Không"}
+                detail={nhiemVu.noiDungKhuyetDiem}
+                accent={hasKhuyetDiem ? "danger" : "neutral"}
               />
               <NhiemVuItem
                 index={5}
                 label="Nhiệm vụ cần giải quyết"
-                status={detail.pendingTaskStatus === "yes" ? "Có" : "Không"}
-                detail={detail.pendingDetail}
-                accent={
-                  detail.pendingTaskStatus === "yes" ? "warning" : "neutral"
-                }
+                status={hasCanGiaiQuyet ? "Có" : "Không"}
+                detail={nhiemVu.noiDungCanGiaiQuyet}
+                accent={hasCanGiaiQuyet ? "warning" : "neutral"}
               />
             </>
           ) : (
-            ((<></>) as never)
+            <p className="text-sm text-muted-foreground">
+              Chưa có nội dung nhiệm vụ ngày.
+            </p>
           )}
         </CardContent>
       </Card>

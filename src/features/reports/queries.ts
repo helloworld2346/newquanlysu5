@@ -127,3 +127,13 @@ export function useReportDetail(id: string | undefined) {
     select: (res) => res.Result ?? null,
   });
 }
+
+export function useNhiemVuNgayDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: ["nhiemvungay", id],
+    queryFn: () => reportApi.getNhiemVuByDonBaoCao(id!),
+    enabled: !!id,
+    staleTime: 60_000,
+    select: (res) => res.Result ?? null,
+  });
+}
