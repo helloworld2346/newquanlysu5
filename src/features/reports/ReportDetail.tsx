@@ -1,7 +1,16 @@
 // src/features/reports/ReportDetail.tsx
 import { useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, User, ClipboardList, UsersRound } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  ClipboardList,
+  UsersRound,
+  Info,
+  Users,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -49,6 +58,15 @@ const STATUS_LABEL: Record<string, string> = {
   Từ_Chối: "Từ chối",
 };
 
+const STATUS_TONE: Record<string, string> = {
+  Chờ_Duyệt: "bg-amber-100 text-amber-700",
+  "Chờ duyệt": "bg-amber-100 text-amber-700",
+  Đã_Duyệt: "bg-emerald-100 text-emerald-700",
+  Da_Duyet: "bg-emerald-100 text-emerald-700",
+  Tu_Choi: "bg-rose-100 text-rose-700",
+  Từ_Chối: "bg-rose-100 text-rose-700",
+};
+
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 function parseJson<T>(raw: string | undefined | null, fallback: T): T {
@@ -68,57 +86,70 @@ function getPageList(current: number, total: number): (number | "…")[] {
   return [1, "…", current - 1, current, current + 1, "…", total];
 }
 
-function InfoField({ label, value }: { label: string; value: string }) {
+function InfoField({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tone: string;
+}) {
   return (
     <div className="min-w-0 flex-1 px-2 mb-3">
-      <p className="mb-1 text-sm text-muted-foreground">{label}</p>
-      <p className="text-base font-semibold tabular-nums">{value}</p>
+      <div className={`rounded-md border p-3 ${tone}`}>
+        <div className="mb-1 flex items-center">
+          <Icon className="mr-1.5 size-4 opacity-70" />
+          <p className="text-sm text-muted-foreground">{label}</p>
+        </div>
+        <p className="text-base font-semibold tabular-nums">{value}</p>
+      </div>
     </div>
   );
 }
 
-function TrucCard({
-  label,
-  data,
-}: {
-  label: string;
-  data: TrucNguoiInfo | null;
-}) {
-  return (
-    <div className="w-full px-2 mb-4 lg:w-1/2">
-      <div className="h-full rounded-md border p-4">
-        <div className="mb-2 flex items-center">
-          <User className="mr-2 size-4 text-muted-foreground" />
-          <span className="text-sm font-semibold">{label}</span>
-        </div>
-        {data && data.tenNguoitruc ? (
-          <div className="space-y-1 text-sm">
-            <p className="text-base font-semibold">{data.tenNguoitruc}</p>
-            {data.capbacNguoitruc && (
-              <p>
-                <span className="text-muted-foreground">Cấp bậc: </span>
-                {data.capbacNguoitruc}
-              </p>
-            )}
-            {data.chucvuNguoitruc && (
-              <p>
-                <span className="text-muted-foreground">Chức vụ: </span>
-                {data.chucvuNguoitruc}
-              </p>
-            )}
-            {data.sodienthoai && (
-              <p>
-                <span className="text-muted-foreground">Sđt: </span>
-                {data.sodienthoai}
-              </p>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">— Chưa có thông tin —</p>
-        )}
-      </div>
-    </div>
-  );
+function TrucRow({ label, value }: { label: string; value: string }) {  
+  return (  
+    <div className="flex items-start justify-between px-3 py-2 text-sm">  
+      <span className="mr-3 shrink-0 text-muted-foreground">{label}</span>  
+      <span className="min-w-0 break-words text-right font-medium">  
+        {value || "—"}  
+      </span>  
+    </div>  
+  );  
+}  
+  
+function TrucCard({  
+  label,  
+  data,  
+  accent,  
+}: {  
+  label: string;  
+  data: TrucNguoiInfo | null;  
+  accent: string;  
+}) {  
+  return (  
+    <div className="w-full px-2 mb-4 lg:w-1/2">  
+      <div className={`h-full rounded-md border border-l-4 p-4 ${accent}`}>  
+        <div className="mb-3 flex items-center">  
+          <User className="mr-2 size-4 text-primary" />  
+          <span className="text-sm font-semibold">{label}</span>  
+        </div>  
+        {data && data.tenNguoitruc ? (  
+          <div className="divide-y rounded-md border bg-background/70">  
+            <TrucRow label="Họ và tên" value={data.tenNguoitruc} />  
+            <TrucRow label="Cấp bậc" value={data.capbacNguoitruc} />  
+            <TrucRow label="Chức vụ" value={data.chucvuNguoitruc} />  
+            <TrucRow label="Số điện thoại" value={data.sodienthoai} />  
+          </div>  
+        ) : (  
+          <p className="text-sm text-muted-foreground">— Chưa có thông tin —</p>  
+        )}  
+      </div>  
+    </div>  
+  );  
 }
 
 function NhiemVuItem({
@@ -135,9 +166,9 @@ function NhiemVuItem({
   accent: "success" | "danger" | "warning" | "neutral";
 }) {
   const accentBorder = {
-    success: "border-l-emerald-500",
-    danger: "border-l-rose-500",
-    warning: "border-l-amber-500",
+    success: "border-l-emerald-500 bg-emerald-50/40",
+    danger: "border-l-rose-500 bg-rose-50/40",
+    warning: "border-l-amber-500 bg-amber-50/40",
     neutral: "border-l-slate-300",
   }[accent];
   const badgeTone = {
@@ -241,23 +272,59 @@ export default function ReportDetail() {
             Chi tiết báo cáo — {unitLabel}
           </h1>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-medium ${
+            STATUS_TONE[data.status] ?? "bg-slate-100 text-slate-700"
+          }`}
+        >
           {STATUS_LABEL[data.status] ?? data.status}
         </span>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Thông tin chung</CardTitle>
+          <CardTitle className="flex items-center text-base">
+            <Info className="mr-2 size-4 text-sky-500" /> Thông tin chung
+          </CardTitle>
         </CardHeader>
-        <CardContent className="-mx-2 flex">
-          <InfoField label="Đơn vị" value={data.donVi.tenDonvi} />
-          <InfoField label="Ngày báo cáo" value={ngay} />
-          <InfoField label="Tổng quân số" value={formatNum(data.quanSoTong)} />
-          <InfoField label="Hiện diện" value={formatNum(data.quanSoHienDien)} />
-          <InfoField label="Tổng vắng" value={formatNum(data.quanSoVang)} />
+        <CardContent className="-mx-2 flex flex-wrap">
+          <InfoField
+            label="Đơn vị"
+            value={data.donVi.tenDonvi}
+            icon={Info}
+            tone="bg-sky-50 text-sky-700"
+          />
+          <InfoField
+            label="Ngày báo cáo"
+            value={ngay}
+            icon={ClipboardList}
+            tone="bg-violet-50 text-violet-700"
+          />
+          <InfoField
+            label="Tổng quân số"
+            value={formatNum(data.quanSoTong)}
+            icon={Users}
+            tone="bg-blue-50 text-blue-700"
+          />
+          <InfoField
+            label="Hiện diện"
+            value={formatNum(data.quanSoHienDien)}
+            icon={UserCheck}
+            tone="bg-emerald-50 text-emerald-700"
+          />
+          <InfoField
+            label="Tổng vắng"
+            value={formatNum(data.quanSoVang)}
+            icon={UserX}
+            tone="bg-rose-50 text-rose-700"
+          />
           {data.ghiChu ? (
-            <InfoField label="Ghi chú" value={data.ghiChu} />
+            <InfoField
+              label="Ghi chú"
+              value={data.ghiChu}
+              icon={ClipboardList}
+              tone="bg-slate-50 text-slate-700"
+            />
           ) : null}
         </CardContent>
       </Card>
@@ -265,20 +332,28 @@ export default function ReportDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-base">
-            <User className="mr-2 size-4" /> Trực ban
+            <User className="mr-2 size-4 text-blue-500" /> Trực ban
           </CardTitle>
         </CardHeader>
         <CardContent className="-mx-2 flex flex-wrap">
-          <TrucCard label="Trực chỉ huy" data={trucChiHuy} />
-          <TrucCard label="Trực ban tác chiến / nội vụ" data={trucTacChien} />
+          <TrucCard
+            label="Trực chỉ huy"
+            data={trucChiHuy}
+            accent="border-l-blue-500"
+          />
+          <TrucCard
+            label="Trực ban tác chiến / nội vụ"
+            data={trucTacChien}
+            accent="border-l-emerald-500"
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-base">
-            <UsersRound className="mr-2 size-4" /> Danh sách quân nhân vắng (
-            {absentRows.length})
+            <UsersRound className="mr-2 size-4 text-rose-500" /> Danh sách quân
+            nhân vắng ({absentRows.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -291,7 +366,7 @@ export default function ReportDetail() {
               <div className="overflow-x-auto rounded-lg border">
                 <Table className="min-w-[720px]">
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-muted/50">
                       <TableHead className="w-12 text-center">STT</TableHead>
                       <TableHead>Họ và tên</TableHead>
                       <TableHead>Cấp bậc</TableHead>
@@ -310,7 +385,9 @@ export default function ReportDetail() {
                         <TableCell>{m.capBac || "—"}</TableCell>
                         <TableCell>{m.chucVu || "—"}</TableCell>
                         <TableCell>
-                          {LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "—"}
+                          <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-sm font-medium text-amber-700">
+                            {LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "—"}
+                          </span>
                         </TableCell>
                         <TableCell>{m.ghiChu || "—"}</TableCell>
                       </TableRow>
@@ -396,8 +473,8 @@ export default function ReportDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-base">
-            <ClipboardList className="mr-2 size-4" /> Tình hình nhiệm vụ trong
-            ngày
+            <ClipboardList className="mr-2 size-4 text-violet-500" /> Tình hình
+            nhiệm vụ trong ngày
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -449,9 +526,7 @@ export default function ReportDetail() {
               />
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Chưa có nội dung nhiệm vụ ngày.
-            </p>
+            ((<></>) as never)
           )}
         </CardContent>
       </Card>
