@@ -68,6 +68,8 @@ const SettingsPage = lazy(() => import("@/features/settings/Settings"));
 
 const RoleManagement = lazy(() => import("@/features/roles/RoleManagement"));
 
+const DutyPersonnel = lazy(() => import("@/features/duty/DutyPersonnel"));
+
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
   "Trực ban tác chiến",
@@ -133,7 +135,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "duty-personnel",
     label: "Quản lý ca trực",
     path: "/duty/personnel",
-    component: Placeholder,
+    component: DutyPersonnel,
     icon: UsersRound,
     group: "duty",
     allowedRoles: TAC_CHIEN,
