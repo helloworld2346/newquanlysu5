@@ -281,14 +281,13 @@ export default function DutyPersonnel() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between">
-        <h1 className="mb-2 text-xl font-semibold">Quản lý ca trực</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold">Quản lý ca trực</h1>
         <span className="mb-2 rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
           {filteredChiHuy.length + filteredTacChien.length} người trực
         </span>
       </div>
 
-      {/* form thêm */}
       <Card className="mb-4">
         <CardHeader>
           <CardTitle className="text-base">Thêm người trực</CardTitle>

@@ -34,3 +34,38 @@ export interface NguoiTrucListResponse {
   message: string;
   Result: NguoiTrucWithCaTruc[];
 }
+
+export interface CaTrucDetail {  
+  idCatruc: string;  
+  ngaytruc: string;  
+  matkhau: string;  
+  ghichu: string | null;  
+  trucChiHuy: NguoiTrucDetail | null;  
+  trucBanTacChien: NguoiTrucDetail | null;  
+  isDeleted: boolean;  
+  createdAt: string;  
+  updatedAt: string | null;  
+  deletedAt: string | null;  
+}  
+  
+export interface CaTrucListResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: CaTrucDetail[];  
+}  
+  
+export interface UpdateCaTrucPayload {  
+  ngaytruc: string;  
+  matkhau: string;  
+  ghichu: string;  
+  trucChiHuy: string;  
+  trucBanTacChien: string;  
+}  
+  
+export interface UpdateCaTrucResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: CaTrucDetail;  
+}

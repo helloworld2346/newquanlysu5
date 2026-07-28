@@ -3,6 +3,9 @@ import type {
   TrucNguoiPayload,
   TrucNguoiResponse,
   NguoiTrucListResponse,
+  CaTrucListResponse,
+  UpdateCaTrucPayload,
+  UpdateCaTrucResponse,
 } from "@/types/duty";
 
 export const dutyApi = {
@@ -41,4 +44,12 @@ export const dutyApi = {
 
   deleteTrucBanTacChien: (id: string) =>
     api.delete(`/truc-ban-tac-chien/${id}`).then((r) => r.data),
+
+  getAllCaTruc: () =>
+    api.get<CaTrucListResponse>("/ca-truc").then((r) => r.data.Result ?? []),
+
+  updateCaTruc: (id: string, body: UpdateCaTrucPayload) =>
+    api
+      .put<UpdateCaTrucResponse>(`/ca-truc/${id}`, body)
+      .then((r) => r.data.Result),
 };

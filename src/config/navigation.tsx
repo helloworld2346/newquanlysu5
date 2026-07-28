@@ -70,6 +70,9 @@ const RoleManagement = lazy(() => import("@/features/roles/RoleManagement"));
 
 const DutyPersonnel = lazy(() => import("@/features/duty/DutyPersonnel"));
 
+const DutyShifts = lazy(() => import("@/features/duty/DutyShifts"));  
+
+
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
   "Trực ban tác chiến",
@@ -144,7 +147,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "duty-shifts",
     label: "Lịch sử ca trực",
     path: "/duty/shifts",
-    component: Placeholder,
+    component: DutyShifts,
     icon: History,
     group: "duty",
     allowedRoles: TAC_CHIEN,
