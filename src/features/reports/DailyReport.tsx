@@ -207,7 +207,15 @@ export default function DailyReport() {
       title: "Vắng (HSQ-BS)",
       value: formatNum(totals.vangHSQBS),
     },
-  ];
+    ];
+  
+  const goDetail = (row: ReportRow) => {
+    if (row.notSubmitted) {
+      navigate(`/daily-report/create?donVi=${row.donVi}`);
+    } else {
+      navigate(`/daily-report/detail/${row.idDonBaoCao}`);
+    }
+  };  
 
   return (
     <div>
@@ -298,7 +306,7 @@ export default function DailyReport() {
                     key={r.idDonBaoCao}
                     row={r}
                     canEdit={!r.notSubmitted && EDITABLE.includes(r.status)}
-                    onViewDetail={goEditOrCreate}
+                    onViewDetail={goDetail}
                     onEdit={goEditOrCreate}
                   />
                 ))}

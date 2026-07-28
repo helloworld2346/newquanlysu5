@@ -1,4 +1,3 @@
-// src/features/reports/queries.ts
 import { useMemo } from "react";
 import {
   useMutation,
@@ -117,5 +116,14 @@ export function useNhiemVuNgayByReports(ids: string[]) {
       enabled: !!id,
       staleTime: 60_000,
     })),
+  });
+}
+
+export function useReportDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: ["report-detail", id],
+    queryFn: () => reportApi.getById(id!),
+    enabled: !!id,
+    select: (res) => res.Result ?? null,
   });
 }

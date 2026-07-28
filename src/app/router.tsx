@@ -8,6 +8,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import LoginPage from "@/features/auth/LoginPage";
 
 const CreateReport = lazy(() => import("@/features/reports/CreateReport"));
+const ReportDetail = lazy(() => import("@/features/reports/ReportDetail"));
 
 function Protected({ children }: { children: React.ReactNode }) {
   return (
@@ -46,6 +47,14 @@ export function AppRouter() {
         element={
           <Protected>
             <CreateReport />
+          </Protected>
+        }
+      />
+      <Route
+        path="/daily-report/detail/:id"
+        element={
+          <Protected>
+            <ReportDetail />
           </Protected>
         }
       />

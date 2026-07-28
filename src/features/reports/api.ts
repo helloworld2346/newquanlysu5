@@ -5,6 +5,7 @@ import type {
   SearchChildrenResponse,
   NhiemVuNgay,
   NhiemVuNgayPayload,
+  ReportDetailResponse,
 } from "@/types/dailyReport";
 
 export const reportApi = {
@@ -61,6 +62,13 @@ export const reportApi = {
 
   updateNhiemVu: async (id: string, payload: NhiemVuNgayPayload) => {
     const res = await api.put(`/nhiemvungay/${id}`, payload);
+    return res.data;
+  },
+
+  getById: async (id: string): Promise<ReportDetailResponse> => {
+    const res = await api.get<ReportDetailResponse>(`/donbaocao/${id}`, {
+      skipErrorToast: true,
+    });
     return res.data;
   },
 };
