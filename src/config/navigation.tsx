@@ -64,10 +64,9 @@ const DailyReport = lazy(
 
 const AuditLog = lazy(() => import("@/features/audit-log/AuditLog"));
 
-
-
 const SettingsPage = lazy(() => import("@/features/settings/Settings"));
 
+const RoleManagement = lazy(() => import("@/features/roles/RoleManagement"));
 
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
@@ -180,7 +179,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "role-management",
     label: "Quản lý vai trò",
     path: "/role-management",
-    component: Placeholder,
+    component: RoleManagement,
     icon: ShieldCheck,
     group: "admin",
     allowedRoles: ADMIN_ONLY,
