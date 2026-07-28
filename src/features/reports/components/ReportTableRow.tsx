@@ -1,4 +1,4 @@
-import { MoreVertical, Eye, Pencil, FilePlus } from "lucide-react";
+import { MoreVertical, Eye, Pencil } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,7 @@ import {
 import type { ReportRow } from "@/types/dailyReport";
 import { formatNum } from "../utils";
 
-const td = "border text-center tabular-nums break-words px-1";  
+const td = "border text-center tabular-nums break-words px-1";
 
 const STATUS_LABEL: Record<string, string> = {
   Chờ_Duyệt: "Chờ duyệt",
@@ -54,22 +54,22 @@ export default function ReportTableRow({
       >
         {row.kyhieuDonVi || row.tenDonVi}
       </TableCell>
-      <TableCell className={td}>{num(row.quanSoTong)}</TableCell>  
-      <TableCell className={td}>{num(row.quanSoHienDien)}</TableCell>  
-      <TableCell className={td}>{num(row.quanSoVang)}</TableCell>  
-      <TableCell className={td}>{num(v.hoiThaiNgoaiSuDoan)}</TableCell>  
-      <TableCell className={td}>{num(v.hoiThaiEF)}</TableCell>  
-      <TableCell className={td}>{num(v.xayDungNgoaiSuDoan)}</TableCell>  
-      <TableCell className={td}>{num(v.xayDungEF)}</TableCell>  
-      <TableCell className={td}>{num(v.choHuu)}</TableCell>  
-      <TableCell className={td}>{num(v.nghiTranhThu)}</TableCell>  
-      <TableCell className={td}>{num(v.phep)}</TableCell>  
-      <TableCell className={td}>{num(v.vienNgoaiSuDoan)}</TableCell>  
-      <TableCell className={td}>{num(v.vienEF)}</TableCell>  
-      <TableCell className={td}>{num(v.congTacNgoaiSuDoan)}</TableCell>  
-      <TableCell className={td}>{num(v.congTacSuDoan)}</TableCell>  
-      <TableCell className={td}>{num(v.hocSQ)}</TableCell>  
-      <TableCell className={td}>{num(v.hocCS)}</TableCell>  
+      <TableCell className={td}>{num(row.quanSoTong)}</TableCell>
+      <TableCell className={td}>{num(row.quanSoHienDien)}</TableCell>
+      <TableCell className={td}>{num(row.quanSoVang)}</TableCell>
+      <TableCell className={td}>{num(v.hoiThaiNgoaiSuDoan)}</TableCell>
+      <TableCell className={td}>{num(v.hoiThaiEF)}</TableCell>
+      <TableCell className={td}>{num(v.xayDungNgoaiSuDoan)}</TableCell>
+      <TableCell className={td}>{num(v.xayDungEF)}</TableCell>
+      <TableCell className={td}>{num(v.choHuu)}</TableCell>
+      <TableCell className={td}>{num(v.nghiTranhThu)}</TableCell>
+      <TableCell className={td}>{num(v.phep)}</TableCell>
+      <TableCell className={td}>{num(v.vienNgoaiSuDoan)}</TableCell>
+      <TableCell className={td}>{num(v.vienEF)}</TableCell>
+      <TableCell className={td}>{num(v.congTacNgoaiSuDoan)}</TableCell>
+      <TableCell className={td}>{num(v.congTacSuDoan)}</TableCell>
+      <TableCell className={td}>{num(v.hocSQ)}</TableCell>
+      <TableCell className={td}>{num(v.hocCS)}</TableCell>
       <TableCell className={td}>{num(v.lyDoVangKhac)}</TableCell>
       <TableCell className={td}>
         {notSubmitted ? (
@@ -87,31 +87,27 @@ export default function ReportTableRow({
       </TableCell>
       <TableCell className={`${td} text-left`}>{row.ghiChu}</TableCell>
       <TableCell className={td}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Thao tác">
-              <MoreVertical className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {notSubmitted ? (
+        {notSubmitted ? (
+          <span className="text-muted-foreground">—</span>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Thao tác">
+                <MoreVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onViewDetail(row)}>
-                <FilePlus className="mr-2 size-4" /> Thêm báo cáo
+                <Eye className="mr-2 size-4" /> Xem chi tiết
               </DropdownMenuItem>
-            ) : (
-              <>
-                <DropdownMenuItem onClick={() => onViewDetail(row)}>
-                  <Eye className="mr-2 size-4" /> Xem chi tiết
+              {canEdit && (
+                <DropdownMenuItem onClick={() => onEdit(row)}>
+                  <Pencil className="mr-2 size-4" /> Chỉnh sửa
                 </DropdownMenuItem>
-                {canEdit && (
-                  <DropdownMenuItem onClick={() => onEdit(row)}>
-                    <Pencil className="mr-2 size-4" /> Chỉnh sửa
-                  </DropdownMenuItem>
-                )}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </TableCell>
     </TableRow>
   );

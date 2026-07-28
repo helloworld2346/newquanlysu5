@@ -163,6 +163,19 @@ export default function DailyReport() {
     [filteredRows],
   );
 
+  const absentList = useMemo(
+    () =>
+      filteredRows
+        .filter((r) => !r.notSubmitted)
+        .flatMap((r) =>
+          r.chiTietVangList.map((qn) => ({
+            ...qn,
+            tenDonVi: r.kyhieuDonVi || r.tenDonVi,
+          })),
+        ),
+    [filteredRows],
+  );
+
   const goEditOrCreate = (row: ReportRow) => {
     if (row.notSubmitted) {
       navigate(`/daily-report/create?donVi=${row.donVi}&ngay=${ngay}`);
@@ -310,7 +323,7 @@ export default function DailyReport() {
                     onEdit={goEditOrCreate}
                   />
                 ))}
-                <ReportTotalRow t={totals} />
+                <ReportTotalRow t={totals} absentList={absentList} />{" "}
               </>
             )}
           </TableBody>
