@@ -62,6 +62,10 @@ const DailyReport = lazy(
   () => import("@/features/reports/DailyReport"),
 );
 
+const AuditLog = lazy(() => import("@/features/audit-log/AuditLog"));
+
+
+
 const SettingsPage = lazy(() => import("@/features/settings/Settings"));
 
 
@@ -185,7 +189,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "audit-log",
     label: "Nhật ký hệ thống",
     path: "/audit-log",
-    component: Placeholder,
+    component: AuditLog,
     icon: ScrollText,
     group: "admin",
     allowedRoles: ADMIN_ONLY,

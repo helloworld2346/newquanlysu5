@@ -165,7 +165,6 @@ export default function UnitManagement() {
         </Button>
       </div>
 
-      {/* Stat cards */}
       <div className="mb-4 -mx-1.5 flex flex-wrap">
         <div className="w-full p-1.5 sm:w-1/2 lg:w-1/5">
           <StatCard
