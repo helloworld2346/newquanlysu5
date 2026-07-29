@@ -1,3 +1,4 @@
+// src/features/reports/DailyReport.tsx
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ import {
   User,
   Award,
   Briefcase,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -181,17 +183,58 @@ export default function DailyReport() {
     );
   }, [items, units, maDonVi]);
 
-  // báo cáo nháp của chính đơn vị mình
   const ownDraft = useMemo(
     () => rows.find((r) => r.donVi === maDonVi && isDraft(r.status)) ?? null,
     [rows, maDonVi],
   );
 
-  // thông tin trực chỉ huy (người ký) của báo cáo nháp
+  const ownReport = useMemo(
+    () => rows.find((r) => r.donVi === maDonVi && !r.notSubmitted) ?? null,
+    [rows, maDonVi],
+  );
+
   const signer = useMemo(
     () => parseJson<TrucNguoiInfo | null>(ownDraft?.raw?.trucBanChiHuy, null),
     [ownDraft],
   );
+
+    const childRows = useMemo(
+    () => (hasChildren ? rows.filter((r) => r.donVi !== maDonVi) : []),
+    [hasChildren, rows, maDonVi],
+  );
+
+  const approvedChildRows = useMemo(
+    () =>
+      childRows.filter(
+        (r) => !r.notSubmitted && normalizeStatus(r.status) === "Đã_Duyệt",
+      ),
+    [childRows],
+  );
+
+  const totalRequiredCount = childRows.length;
+
+  const tongHopDone = useMemo(
+    () =>
+      items.some(
+        (it) => it.donVi.maDonVi === maDonVi && it.loaiDonBaoCao === "TONG_HOP",
+      ),
+    [items, maDonVi],
+  );
+
+  const canConsolidate =
+    hasChildren &&
+    !tongHopDone &&
+    totalRequiredCount > 0 &&
+    approvedChildRows.length === totalRequiredCount;
+
+  const handleConsolidate = () => {
+    if (!canConsolidate) return;
+    navigate(`/daily-report/create?ngay=${ngay}&tongHop=1`);
+  };
+
+  const consolidateLabel = tongHopDone
+    ? "Đã tổng hợp"
+    : `Tổng hợp (${approvedChildRows.length}/${totalRequiredCount})`;
 
   const visibleRows = useMemo(
     () => rows.filter((r) => !isDraft(r.status) || r.donVi === maDonVi),
@@ -274,7 +317,6 @@ export default function DailyReport() {
   const doSubmit = async () => {
     if (!ownDraft) return;
     try {
-      // lấy dữ liệu báo cáo nháp để giữ nguyên khi update kèm chữ ký
       const detail = (await reportApi.getById(ownDraft.idDonBaoCao)).Result;
       const payload: CreateReportRequest = {
         quanSoTong: detail.quanSoTong,
@@ -371,10 +413,18 @@ export default function DailyReport() {
             onChange={setNgay}
             className="mr-2 w-[280px]"
           />
-          {ownDraft ? (
+          {hasChildren ? (
+            <Button onClick={handleConsolidate} disabled={!canConsolidate}>
+              <Layers className="mr-2 size-4" /> {consolidateLabel}
+            </Button>
+          ) : ownDraft ? (
             <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
               <Send className="mr-2 size-4" /> Trình phê duyệt
             </Button>
+          ) : ownReport ? (
+            <span className="text-sm text-muted-foreground">
+              Đơn vị đã có báo cáo cho ngày này
+            </span>
           ) : (
             <Button onClick={() => navigate("/daily-report/create")}>
               <Plus className="mr-2 size-4" /> Thêm báo cáo

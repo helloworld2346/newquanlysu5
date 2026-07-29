@@ -1,281 +1,338 @@
-// src/features/reports/CreateReport.tsx
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
+import { useEffect, useMemo, useState } from "react";  
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";  
+import { toast } from "sonner";  
+import {  
+  Trash2,  
+  ArrowLeft,  
+  Plus,  
+  Save,  
+  Copy,  
+  AlertTriangle,  
+  Layers,  
+} from "lucide-react";  
+import api from "@/lib/api";  
+import { reportApi } from "./api";  
+import { Button } from "@/components/ui/button";  
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";  
+import { Input } from "@/components/ui/input";  
+import { Textarea } from "@/components/ui/textarea";  
+import {  
+  Select,  
+  SelectContent,  
+  SelectItem,  
+  SelectTrigger,  
+  SelectValue,  
+} from "@/components/ui/select";  
+import { useAuthInfo } from "@/features/auth/queries";  
+import { useCreateReport, useUpdateReport } from "./queries";  
+import {  
+  LY_DO_OPTIONS,  
+  CAP_BAC_OPTIONS,  
+  EMPTY_VANG,  
+  classifyCapBac,  
+  todayIso,  
+} from "./utils";  
+import type {  
+  AbsentRow,  
+  TrucNguoiInfo,  
+  DetailStepData,  
+  CreateReportRequest,  
+  VangChiTiet,  
+  ReportItemDTO,  
+} from "@/types/dailyReport";  
+import { useUnits } from "@/features/units/queries";  
 import {
-  Trash2,
-  ArrowLeft,
-  Plus,
-  Save,
-  Copy,
-  AlertTriangle,
-} from "lucide-react";
-import api from "@/lib/api";
-import { reportApi } from "./api";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useAuthInfo } from "@/features/auth/queries";
-import { useCreateReport, useUpdateReport } from "./queries";
-import {
-  LY_DO_OPTIONS,
-  CAP_BAC_OPTIONS,
-  EMPTY_VANG,
-  classifyCapBac,
-  todayIso,
-} from "./utils";
-import type {
-  AbsentRow,
-  TrucNguoiInfo,
-  DetailStepData,
-  CreateReportRequest,
-  VangChiTiet,
-} from "@/types/dailyReport";
-import { useUnits } from "@/features/units/queries";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import type { DonVi } from "@/types/account";
+  
+const genId = () => Math.random().toString(36).slice(2);  
 
-const genId = () => Math.random().toString(36).slice(2);
-const EMPTY_TRUC: TrucNguoiInfo = {
-  tenNguoitruc: "",
-  capbacNguoitruc: "",
-  chucvuNguoitruc: "",
-  sodienthoai: "",
-};
-const EMPTY_DETAIL: DetailStepData = {
-  securityStatus: "safe",
-  incidentStatus: "no",
-  incidentDetail: "",
-  advantageStatus: "yes",
-  advantageDetail: "",
-  disadvantageStatus: "no",
-  disadvantageDetail: "",
-  pendingTaskStatus: "no",
-  pendingDetail: "",
-};
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+const COMMAND_KYHIEU = ["CH/e", "CH/f"];
+const EXPAND_CAPS = ["SU_DOAN", "TRUNG_DOAN"];
 
-type NhiemVuNgayPayload = {
-  nhiemVuPhandoi: string;
-  noiDungDotXuat: string;
-  noiDungUuDiem: string;
-  noiDungKhuyetDiem: string;
-  noiDungCanGiaiQuyet: string;
-  donBaoCao: string;
-};
-type NhiemVuNgay = {
-  idNhiemvuNgay?: string;
-  nhiemVuPhandoi?: string;
-  noiDungDotXuat?: string;
-  noiDungUuDiem?: string;
-  noiDungKhuyetDiem?: string;
-  noiDungCanGiaiQuyet?: string;
-};
+type Agg = { siQuan: number; qncn: number; hsqBs: number };
 
-async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {
-  try {
-    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {
-      skipErrorToast: true,
-    });
-    return (res.data?.Result as NhiemVuNgay) ?? null;
-  } catch {
-    return null;
-  }
+function getDirectChildren(maDonVi: string, all: DonVi[]): DonVi[] {
+  return all.filter((u) => {
+    if (!u.maDonVi.startsWith(maDonVi + ".")) return false;
+    return !u.maDonVi.slice(maDonVi.length + 1).includes(".");
+  });
 }
 
-async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {
-  const payload = detailToNhiemVu(detail, idDonBaoCao);
-  const existing = await fetchNhiemVu(idDonBaoCao);
-  try {
-    if (existing?.idNhiemvuNgay) {
-      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {
-        skipErrorToast: true,
-      });
-    } else {
-      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });
-    }
-  } catch {
-    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */
-  }
-}
-
-function detailToNhiemVu(
-  d: DetailStepData,
-  donBaoCao: string,
-): NhiemVuNgayPayload {
-  return {
-    nhiemVuPhandoi: d.securityStatus,
-    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",
-    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",
-    noiDungKhuyetDiem:
-      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",
-    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",
-    donBaoCao,
+function unitFullAgg(unit: DonVi, all: DonVi[]): Agg {
+  const own: Agg = {
+    siQuan: unit.quanSoSiQuan ?? 0,
+    qncn: unit.quanSoQncn ?? 0,
+    hsqBs: unit.quanSoHsqBs ?? 0,
   };
-}
-
-function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {
-  return {
-    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",
-    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",
-    incidentDetail: nv.noiDungDotXuat ?? "",
-    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",
-    advantageDetail: nv.noiDungUuDiem ?? "",
-    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",
-    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",
-    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",
-    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",
-  };
-}
-
-type Errors = Record<string, string>;
-
-function FieldError({ msg }: { msg?: string }) {
-  if (!msg) return null;
-  return (
-    <p className="mt-1 flex items-center text-sm text-red-600">
-      <AlertTriangle className="mr-1 size-3.5 shrink-0" />
-      {msg}
-    </p>
+  if (!EXPAND_CAPS.includes(unit.capDonVi ?? "")) return own;
+  const children = getDirectChildren(unit.maDonVi, all).filter(
+    (u) => !COMMAND_KYHIEU.includes(u.kyhieuDonvi),
   );
+  return children.reduce((acc, c) => {
+    const t = unitFullAgg(c, all);
+    return {
+      siQuan: acc.siQuan + t.siQuan,
+      qncn: acc.qncn + t.qncn,
+      hsqBs: acc.hsqBs + t.hsqBs,
+    };
+  }, own);
 }
 
-function ReqLabel({
-  children,
-  required,
-}: {
-  children: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="mb-1 block text-sm text-muted-foreground">
-      {children}
-      {required && <span className="text-red-500"> *</span>}
-    </label>
-  );
+function getPageList(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, "…", total];
+  if (current >= total - 3)
+    return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
+  return [1, "…", current - 1, current, current + 1, "…", total];
 }
-
-function TrucSection({
-  title,
-  value,
-  onChange,
-  prefix,
-  errors,
-  clearError,
-}: {
-  title: string;
-  value: TrucNguoiInfo;
-  onChange: (v: TrucNguoiInfo) => void;
-  prefix: string;
-  errors: Errors;
-  clearError: (key: string) => void;
-}) {
-  const errClass = (key: string) =>
-    errors[`${prefix}.${key}`]
-      ? "border-red-500 focus-visible:ring-red-500"
-      : "";
-
-  return (
-    <div className="-mx-1.5 flex flex-wrap">
-      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel required>Họ và tên</ReqLabel>
-        <Input
-          className={errClass("ten")}
-          placeholder="Nhập họ và tên..."
-          value={value.tenNguoitruc}
-          onChange={(e) => {
-            onChange({ ...value, tenNguoitruc: e.target.value });
-            clearError(`${prefix}.ten`);
-          }}
-        />
-        <FieldError msg={errors[`${prefix}.ten`]} />
-      </div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel required>Cấp bậc</ReqLabel>
-        <Select
-          value={value.capbacNguoitruc}
-          onValueChange={(v) => {
-            onChange({ ...value, capbacNguoitruc: v });
-            clearError(`${prefix}.capBac`);
-          }}
-        >
-          <SelectTrigger className={errClass("capBac")}>
-            <SelectValue placeholder="-- Cấp bậc --" />
-          </SelectTrigger>
-          <SelectContent>
-            {CAP_BAC_OPTIONS.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <FieldError msg={errors[`${prefix}.capBac`]} />
-      </div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel required>Chức vụ</ReqLabel>
-        <Input
-          className={errClass("chucVu")}
-          placeholder="Nhập chức vụ..."
-          value={value.chucvuNguoitruc}
-          onChange={(e) => {
-            onChange({ ...value, chucvuNguoitruc: e.target.value });
-            clearError(`${prefix}.chucVu`);
-          }}
-        />
-        <FieldError msg={errors[`${prefix}.chucVu`]} />
-      </div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel>Số điện thoại</ReqLabel>
-        <Input
-          placeholder="Nhập số điện thoại..."
-          value={value.sodienthoai}
-          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}
-        />
-      </div>
-    </div>
-  );
-}
-
-function RadioRow({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="-mb-2 flex flex-wrap">
-      {options.map((o) => {
-        const active = value === o.value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => onChange(o.value)}
-            className={
-              "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
-              (active
-                ? "border-slate-700 bg-slate-700 text-white"
-                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")
-            }
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
+  
+const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];  
+const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];  
+const isApproved = (s: string) => APPROVED_STATUSES.includes(s);  
+  
+const EMPTY_TRUC: TrucNguoiInfo = {  
+  tenNguoitruc: "",  
+  capbacNguoitruc: "",  
+  chucvuNguoitruc: "",  
+  sodienthoai: "",  
+};  
+const EMPTY_DETAIL: DetailStepData = {  
+  securityStatus: "safe",  
+  incidentStatus: "no",  
+  incidentDetail: "",  
+  advantageStatus: "yes",  
+  advantageDetail: "",  
+  disadvantageStatus: "no",  
+  disadvantageDetail: "",  
+  pendingTaskStatus: "no",  
+  pendingDetail: "",  
+};  
+  
+type NhiemVuNgayPayload = {  
+  nhiemVuPhandoi: string;  
+  noiDungDotXuat: string;  
+  noiDungUuDiem: string;  
+  noiDungKhuyetDiem: string;  
+  noiDungCanGiaiQuyet: string;  
+  donBaoCao: string;  
+};  
+type NhiemVuNgay = {  
+  idNhiemvuNgay?: string;  
+  nhiemVuPhandoi?: string;  
+  noiDungDotXuat?: string;  
+  noiDungUuDiem?: string;  
+  noiDungKhuyetDiem?: string;  
+  noiDungCanGiaiQuyet?: string;  
+};  
+  
+async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {  
+  try {  
+    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {  
+      skipErrorToast: true,  
+    });  
+    return (res.data?.Result as NhiemVuNgay) ?? null;  
+  } catch {  
+    return null;  
+  }  
+}  
+  
+async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {  
+  const payload = detailToNhiemVu(detail, idDonBaoCao);  
+  const existing = await fetchNhiemVu(idDonBaoCao);  
+  try {  
+    if (existing?.idNhiemvuNgay) {  
+      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {  
+        skipErrorToast: true,  
+      });  
+    } else {  
+      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });  
+    }  
+  } catch {  
+    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */  
+  }  
+}  
+  
+function detailToNhiemVu(  
+  d: DetailStepData,  
+  donBaoCao: string,  
+): NhiemVuNgayPayload {  
+  return {  
+    nhiemVuPhandoi: d.securityStatus,  
+    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",  
+    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",  
+    noiDungKhuyetDiem:  
+      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",  
+    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",  
+    donBaoCao,  
+  };  
+}  
+  
+function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {  
+  return {  
+    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",  
+    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",  
+    incidentDetail: nv.noiDungDotXuat ?? "",  
+    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",  
+    advantageDetail: nv.noiDungUuDiem ?? "",  
+    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",  
+    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",  
+    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",  
+    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",  
+  };  
+}  
+  
+type Errors = Record<string, string>;  
+  
+function FieldError({ msg }: { msg?: string }) {  
+  if (!msg) return null;  
+  return (  
+    <p className="mt-1 flex items-center text-sm text-red-600">  
+      <AlertTriangle className="mr-1 size-3.5 shrink-0" />  
+      {msg}  
+    </p>  
+  );  
+}  
+  
+function ReqLabel({  
+  children,  
+  required,  
+}: {  
+  children: string;  
+  required?: boolean;  
+}) {  
+  return (  
+    <label className="mb-1 block text-sm text-muted-foreground">  
+      {children}  
+      {required && <span className="text-red-500"> *</span>}  
+    </label>  
+  );  
+}  
+  
+function TrucSection({  
+  title,  
+  value,  
+  onChange,  
+  prefix,  
+  errors,  
+  clearError,  
+}: {  
+  title: string;  
+  value: TrucNguoiInfo;  
+  onChange: (v: TrucNguoiInfo) => void;  
+  prefix: string;  
+  errors: Errors;  
+  clearError: (key: string) => void;  
+}) {  
+  const errClass = (key: string) =>  
+    errors[`${prefix}.${key}`]  
+      ? "border-red-500 focus-visible:ring-red-500"  
+      : "";  
+  
+  return (  
+    <div className="-mx-1.5 flex flex-wrap">  
+      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel required>Họ và tên</ReqLabel>  
+        <Input  
+          className={errClass("ten")}  
+          placeholder="Nhập họ và tên..."  
+          value={value.tenNguoitruc}  
+          onChange={(e) => {  
+            onChange({ ...value, tenNguoitruc: e.target.value });  
+            clearError(`${prefix}.ten`);  
+          }}  
+        />  
+        <FieldError msg={errors[`${prefix}.ten`]} />  
+      </div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel required>Cấp bậc</ReqLabel>  
+        <Select  
+          value={value.capbacNguoitruc}  
+          onValueChange={(v) => {  
+            onChange({ ...value, capbacNguoitruc: v });  
+            clearError(`${prefix}.capBac`);  
+          }}  
+        >  
+          <SelectTrigger className={errClass("capBac")}>  
+            <SelectValue placeholder="-- Cấp bậc --" />  
+          </SelectTrigger>  
+          <SelectContent>  
+            {CAP_BAC_OPTIONS.map((c) => (  
+              <SelectItem key={c} value={c}>  
+                {c}  
+              </SelectItem>  
+            ))}  
+          </SelectContent>  
+        </Select>  
+        <FieldError msg={errors[`${prefix}.capBac`]} />  
+      </div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel required>Chức vụ</ReqLabel>  
+        <Input  
+          className={errClass("chucVu")}  
+          placeholder="Nhập chức vụ..."  
+          value={value.chucvuNguoitruc}  
+          onChange={(e) => {  
+            onChange({ ...value, chucvuNguoitruc: e.target.value });  
+            clearError(`${prefix}.chucVu`);  
+          }}  
+        />  
+        <FieldError msg={errors[`${prefix}.chucVu`]} />  
+      </div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel>Số điện thoại</ReqLabel>  
+        <Input  
+          placeholder="Nhập số điện thoại..."  
+          value={value.sodienthoai}  
+          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}  
+        />  
+      </div>  
+    </div>  
+  );  
+}  
+  
+function RadioRow({  
+  value,  
+  options,  
+  onChange,  
+}: {  
+  value: string;  
+  options: { value: string; label: string }[];  
+  onChange: (v: string) => void;  
+}) {  
+  return (  
+    <div className="-mb-2 flex flex-wrap">  
+      {options.map((o) => {  
+        const active = value === o.value;  
+        return (  
+          <button  
+            key={o.value}  
+            type="button"  
+            onClick={() => onChange(o.value)}  
+            className={  
+              "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +  
+              (active  
+                ? "border-slate-700 bg-slate-700 text-white"  
+                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")  
+            }  
+          >  
+            {o.label}  
+          </button>  
+        );  
+      })}  
+    </div>  
+  );  
+}  
+  
 export default function CreateReport() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -289,13 +346,26 @@ export default function CreateReport() {
     [units, donVi?.maDonVi],
   );
 
+  // Bản đồ cấp đơn vị -> để merge DON_VI/TONG_HOP giống useChildrenReportsMerged
+  const capByUnit = useMemo(() => {
+    const m: Record<string, string> = {};
+    units.forEach((u) => {
+      m[u.maDonVi] = u.capDonVi ?? "";
+    });
+    return m;
+  }, [units]);
+
   const createReport = useCreateReport();
   const updateReport = useUpdateReport();
 
   const [searchParams] = useSearchParams();
   const ngayParam = searchParams.get("ngay");
+  const isTongHop = searchParams.get("tongHop") === "1" && !isEdit;
   const [ngayBaoCao] = useState(ngayParam || todayIso());
-  const tongQuanSo = fullDonVi?.quanSoTong ?? 0;
+
+  const [aggTongQuanSo, setAggTongQuanSo] = useState(0);
+  const tongQuanSo = isTongHop ? aggTongQuanSo : (fullDonVi?.quanSoTong ?? 0);
+
   const [trucChiHuy, setTrucChiHuy] = useState<TrucNguoiInfo>({
     ...EMPTY_TRUC,
   });
@@ -305,6 +375,10 @@ export default function CreateReport() {
   const [absentRows, setAbsentRows] = useState<AbsentRow[]>([]);
   const [detail, setDetail] = useState<DetailStepData>({ ...EMPTY_DETAIL });
   const [copying, setCopying] = useState(false);
+  const [aggLoading, setAggLoading] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const [errors, setErrors] = useState<Errors>({});
   const clearError = (key: string) =>
@@ -315,6 +389,7 @@ export default function CreateReport() {
       return n;
     });
 
+  // Chế độ chỉnh sửa: nạp lại dữ liệu báo cáo đã lưu
   useEffect(() => {
     if (!isEdit || !id) return;
     let ignore = false;
@@ -363,8 +438,77 @@ export default function CreateReport() {
     };
   }, [isEdit, id]);
 
+  // Chế độ tổng hợp: gộp quân nhân vắng + biên chế từ các đơn vị con ĐÃ DUYỆT
+  useEffect(() => {
+    if (!isTongHop || !donVi?.maDonVi || units.length === 0) return;
+    let ignore = false;
+
+    (async () => {
+      setAggLoading(true);
+      try {
+        const [donViRes, tongHopRes] = await Promise.all([
+          reportApi.searchChildren(donVi.maDonVi, ngayBaoCao, "DON_VI"),
+          reportApi.searchChildren(donVi.maDonVi, ngayBaoCao, "TONG_HOP"),
+        ]);
+
+        // Merge DON_VI/TONG_HOP theo cấp đơn vị (giống useChildrenReportsMerged)
+        const map = new Map<string, ReportItemDTO>();
+        for (const item of donViRes.Result ?? []) {
+          const ma = item.donVi.maDonVi;
+          const isAggregating = TONG_HOP_CAPS.includes(capByUnit[ma] ?? "");
+          if (!isAggregating || ma === donVi.maDonVi) map.set(ma, item);
+        }
+        for (const item of tongHopRes.Result ?? []) {
+          const ma = item.donVi.maDonVi;
+          const isAggregating = TONG_HOP_CAPS.includes(capByUnit[ma] ?? "");
+          if (isAggregating || ma === donVi.maDonVi || !map.has(ma))
+            map.set(ma, item);
+        }
+
+        // Chỉ lấy đơn vị con (khác chính mình) và đã được duyệt
+        const children = Array.from(map.values()).filter(
+          (it) => it.donVi.maDonVi !== donVi.maDonVi && isApproved(it.status),
+        );
+
+        const allAbsent: AbsentRow[] = [];
+        let sumTong = 0;
+        for (const it of children) {
+          sumTong += it.quanSoTong ?? 0;
+          try {
+            if (it.chiTietVang) {
+              const rows = JSON.parse(it.chiTietVang) as AbsentRow[];
+              rows.forEach((row) => allAbsent.push({ ...row, id: genId() }));
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
+        if (!ignore) {
+          setAbsentRows(allAbsent);
+          setAggTongQuanSo(sumTong);
+        }
+      } finally {
+        if (!ignore) setAggLoading(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [isTongHop, donVi?.maDonVi, ngayBaoCao, units.length, capByUnit]);
+
   const quanSoVang = absentRows.length;
   const quanSoHienDien = Math.max(0, tongQuanSo - quanSoVang);
+
+  const bienChe = useMemo<Agg>(() => {
+    if (isTongHop && fullDonVi) return unitFullAgg(fullDonVi, units);
+    return {
+      siQuan: fullDonVi?.quanSoSiQuan ?? 0,
+      qncn: fullDonVi?.quanSoQncn ?? 0,
+      hsqBs: fullDonVi?.quanSoHsqBs ?? 0,
+    };
+  }, [isTongHop, fullDonVi, units]);
 
   const warnings = useMemo(() => {
     const by = { siQuan: 0, qncn: 0, hsqBs: 0 };
@@ -372,23 +516,21 @@ export default function CreateReport() {
       (r) => r.capBac.trim() && by[classifyCapBac(r.capBac)]++,
     );
     const w: string[] = [];
-    if (
-      (fullDonVi?.quanSoSiQuan ?? 0) > 0 &&
-      by.siQuan > fullDonVi!.quanSoSiQuan
-    )
-      w.push(
-        `Vắng Sĩ quan (${by.siQuan}) vượt biên chế (${fullDonVi!.quanSoSiQuan}).`,
-      );
-    if ((fullDonVi?.quanSoQncn ?? 0) > 0 && by.qncn > fullDonVi!.quanSoQncn)
-      w.push(
-        `Vắng QNCN (${by.qncn}) vượt biên chế (${fullDonVi!.quanSoQncn}).`,
-      );
-    if ((fullDonVi?.quanSoHsqBs ?? 0) > 0 && by.hsqBs > fullDonVi!.quanSoHsqBs)
-      w.push(
-        `Vắng HSQ-BS (${by.hsqBs}) vượt biên chế (${fullDonVi!.quanSoHsqBs}).`,
-      );
+    if ((bienChe.siQuan ?? 0) > 0 && by.siQuan > bienChe.siQuan)
+      w.push(`Vắng Sĩ quan (${by.siQuan}) vượt biên chế (${bienChe.siQuan}).`);
+    if ((bienChe.qncn ?? 0) > 0 && by.qncn > bienChe.qncn)
+      w.push(`Vắng QNCN (${by.qncn}) vượt biên chế (${bienChe.qncn}).`);
+    if ((bienChe.hsqBs ?? 0) > 0 && by.hsqBs > bienChe.hsqBs)
+      w.push(`Vắng HSQ-BS (${by.hsqBs}) vượt biên chế (${bienChe.hsqBs}).`);
     return w;
-  }, [absentRows, fullDonVi]);
+  }, [absentRows, bienChe]);
+
+  const totalPages = Math.max(1, Math.ceil(absentRows.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const paginatedAbsent = absentRows.slice(
+    (safePage - 1) * pageSize,
+    safePage * pageSize,
+  );
 
   const addRow = () =>
     setAbsentRows((p) => [
@@ -516,7 +658,7 @@ export default function CreateReport() {
       donVi: donVi?.maDonVi ?? "",
       trucBanChiHuy: JSON.stringify(trucChiHuy),
       trucBanTacChien: JSON.stringify(trucBanTacChien),
-      loaiDonBaoCao: "DON_VI",
+      loaiDonBaoCao: isTongHop ? "TONG_HOP" : "DON_VI",
     };
 
     try {
@@ -530,7 +672,9 @@ export default function CreateReport() {
         const res = await createReport.mutateAsync(payload);
         if (!res.success) throw new Error(res.message);
         idDonBaoCao = res.Result?.idDonBaoCao ?? "";
-        toast.success("Lưu báo cáo thành công");
+        toast.success(
+          isTongHop ? "Tổng hợp báo cáo thành công" : "Lưu báo cáo thành công",
+        );
       }
 
       if (idDonBaoCao) await saveNhiemVu(idDonBaoCao, detail);
@@ -557,24 +701,37 @@ export default function CreateReport() {
           <h1 className="text-xl font-semibold">
             {isEdit
               ? "Cập nhật báo cáo quân số"
-              : "Tạo báo cáo quân số hằng ngày"}
+              : isTongHop
+                ? "Tổng hợp báo cáo quân số"
+                : "Tạo báo cáo quân số hằng ngày"}
           </h1>
         </div>
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={handleCopyYesterday}
-            disabled={copying || saving}
-          >
-            <Copy className="mr-2 size-4" />
-            {copying ? "Đang tải..." : "Sao chép từ hôm qua"}
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          {!isTongHop && (
+            <Button
+              variant="outline"
+              onClick={handleCopyYesterday}
+              disabled={copying || saving}
+            >
+              <Copy className="mr-2 size-4" />
+              {copying ? "Đang tải..." : "Sao chép từ hôm qua"}
+            </Button>
+          )}
+          <Button onClick={handleSave} disabled={saving || aggLoading}>
             <Save className="mr-2 size-4" />{" "}
             {saving ? "Đang lưu..." : "Lưu báo cáo"}
           </Button>
         </div>
       </div>
+
+      {isTongHop && (
+        <div className="flex items-center rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary">
+          <Layers className="mr-2 size-4 shrink-0" />
+          {aggLoading
+            ? "Đang tổng hợp số liệu từ các đơn vị con đã duyệt..."
+            : `Báo cáo tổng hợp: đã gộp ${quanSoVang} quân nhân vắng và tổng biên chế ${tongQuanSo} từ các đơn vị con đã duyệt.`}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -677,10 +834,10 @@ export default function CreateReport() {
                   </tr>
                 </thead>
                 <tbody>
-                  {absentRows.map((row, index) => (
+                  {paginatedAbsent.map((row, index) => (
                     <tr key={row.id}>
                       <td className="border p-2 text-center align-top pt-3.5">
-                        {index + 1}
+                        {(safePage - 1) * pageSize + index + 1}
                       </td>
                       <td className="border p-1.5 align-top">
                         <Input
@@ -781,6 +938,70 @@ export default function CreateReport() {
               </table>
             </div>
           )}
+          <div className="mt-4 flex flex-wrap items-center justify-between">
+            <div className="mb-2 flex items-center">
+              <span className="mr-2 text-sm text-muted-foreground">
+                Hiển thị
+              </span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => {
+                  setPageSize(Number(v));
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[80px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="ml-2 text-sm text-muted-foreground">dòng</span>
+            </div>
+            {totalPages > 1 && (
+              <div className="mb-2 rounded-lg border bg-background px-2 py-1">
+                <Pagination className="mx-0 w-auto justify-end">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        disabled={safePage <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      />
+                    </PaginationItem>
+                    {getPageList(safePage, totalPages).map((p, i) =>
+                      p === "…" ? (
+                        <PaginationItem key={`e-${i}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={p}>
+                          <PaginationLink
+                            isActive={p === safePage}
+                            onClick={() => setPage(p)}
+                          >
+                            {p}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ),
+                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        disabled={safePage >= totalPages}
+                        onClick={() =>
+                          setPage((p) => Math.min(totalPages, p + 1))
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -923,7 +1144,7 @@ export default function CreateReport() {
           <div className="w-full px-2 mb-4 lg:w-1/2">
             <div className="h-full space-y-2 rounded-md border p-3">
               <p className="text-sm font-semibold">
-                V. Nhiệm vụ cần giải quyết
+                V. Nội dung cần giải quyết
               </p>
               <RadioRow
                 value={detail.pendingTaskStatus}
