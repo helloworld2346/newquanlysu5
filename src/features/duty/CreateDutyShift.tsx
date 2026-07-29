@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectTrigger,
@@ -106,86 +106,121 @@ type FieldErrors = {
 
 type DateStatus = "idle" | "checking" | "available" | "existing";
 
-// Tách Row/Person ra module scope để không tạo lại component mỗi lần render
-function PreviewRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between px-4 py-2.5 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value || "—"}</span>
-    </div>
-  );
-}
-
-function PreviewPerson({
-  label,
-  p,
-  accent,
-  icon,
-}: {
-  label: string;
-  p?: NguoiTrucWithCaTruc | null;
-  accent: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <div className={`mb-3 rounded-lg border border-l-4 ${accent} p-3`}>
-      <div className="mb-1 flex items-center text-sm font-semibold">
-        <span className="mr-2 text-primary">{icon}</span>
-        {label}
-      </div>
-      {p ? (
-        <div className="text-sm">
-          <p className="font-medium">{p.tenNguoitruc}</p>
-          <p className="text-muted-foreground">
-            {[p.capbacNguoitruc, p.chucvuNguoitruc].filter(Boolean).join(" · ")}
-          </p>
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">— Chưa chọn —</p>
-      )}
-    </div>
-  );
-}
-
-function PreviewCard({
-  ngaytruc,
-  matkhau,
-  ghichu,
-  chiHuy,
-  tacChien,
-}: {
-  ngaytruc: string;
-  matkhau: string;
-  ghichu?: string;
-  chiHuy?: NguoiTrucWithCaTruc | null;
-  tacChien?: NguoiTrucWithCaTruc | null;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Xem trước</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <PreviewPerson
-          label="Trực chỉ huy"
-          p={chiHuy}
-          accent="border-l-blue-500"
-          icon={<ShieldCheck className="size-4" />}
-        />
-        <PreviewPerson
-          label="Trực ban tác chiến"
-          p={tacChien}
-          accent="border-l-emerald-500"
-          icon={<UserCog className="size-4" />}
-        />
-        <div className="divide-y rounded-lg border">
-          <PreviewRow label="Ngày trực" value={formatDateVN(ngaytruc)} />
-          <PreviewRow label="Mật khẩu" value={matkhau} />
-          <PreviewRow label="Ghi chú" value={ghichu || ""} />
-        </div>
-      </CardContent>
-    </Card>
-  );
+function PreviewPerson({  
+  label,  
+  p,  
+  accent,  
+  icon,  
+}: {  
+  label: string;  
+  p?: NguoiTrucWithCaTruc | null;  
+  accent: string;  
+  icon: React.ReactNode;  
+}) {  
+  return (  
+    <div className={`flex h-full flex-col rounded-lg border border-l-4 ${accent} p-4`}>  
+      <div className="mb-2 flex items-center text-sm font-bold uppercase tracking-wide text-primary">  
+        <span className="mr-2">{icon}</span>  
+        {label}  
+      </div>  
+      {p ? (  
+        <div className="min-w-0">  
+          <p className="break-words text-lg font-bold leading-snug">  
+            {[p.capbacNguoitruc, p.tenNguoitruc].filter(Boolean).join(" - ")}  
+          </p>  
+          <p className="mt-0.5 text-sm text-muted-foreground">  
+            {p.chucvuNguoitruc}  
+          </p>  
+          {p.sodienthoai && (  
+            <p className="mt-0.5 text-sm font-semibold text-primary">  
+              {p.sodienthoai}  
+            </p>  
+          )}  
+        </div>  
+      ) : (  
+        <p className="text-sm italic text-muted-foreground">Chưa có thông tin</p>  
+      )}  
+    </div>  
+  );  
+}  
+  
+function PreviewCard({  
+  ngaytruc,  
+  matkhau,  
+  ghichu,  
+  chiHuy,  
+  tacChien,  
+}: {  
+  ngaytruc: string;  
+  matkhau: string;  
+  ghichu?: string;  
+  chiHuy?: NguoiTrucWithCaTruc | null;  
+  tacChien?: NguoiTrucWithCaTruc | null;  
+}) {  
+  const ngayLabel = ngaytruc  
+    ? new Date(  
+        ngaytruc + (ngaytruc.includes("T") ? "" : "T00:00:00"),  
+      ).toLocaleDateString("vi-VN", {  
+        weekday: "long",  
+        day: "2-digit",  
+        month: "2-digit",  
+        year: "numeric",  
+      })  
+    : "—";  
+  
+  return (  
+    <Card>  
+      <CardContent className="flex flex-col items-center pt-6">  
+        <div className="text-lg font-bold uppercase tracking-wide text-muted-foreground">  
+          Thông tin ca trực  
+        </div>  
+        <div className="mt-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">  
+          {ngayLabel}  
+        </div>  
+  
+        <div className="-mx-3 mt-3 flex w-full flex-wrap">  
+          <div className="mb-4 w-full px-3 md:w-1/3">  
+            <PreviewPerson  
+              label="Trực chỉ huy"  
+              p={chiHuy}  
+              accent="border-l-blue-500"  
+              icon={<ShieldCheck className="size-4" />}  
+            />  
+          </div>  
+          <div className="mb-4 w-full px-3 md:w-1/3">  
+            <PreviewPerson  
+              label="Trực ban tác chiến"  
+              p={tacChien}  
+              accent="border-l-emerald-500"  
+              icon={<UserCog className="size-4" />}  
+            />  
+          </div>  
+          <div className="mb-4 w-full px-3 md:w-1/3">  
+            <div className="flex h-full flex-col items-center justify-center rounded-xl border-[1.5px] border-dashed bg-muted/40 p-4 text-center">  
+              <div className="text-sm font-bold uppercase tracking-wide text-muted-foreground">  
+                Mật khẩu  
+              </div>  
+              <div className="text-sm font-semibold italic uppercase tracking-wide text-muted-foreground opacity-70">  
+                Hỏi - Đáp  
+              </div>  
+              <div className="mt-1 break-words text-2xl font-extrabold leading-snug">  
+                {matkhau || "—"}  
+              </div>  
+            </div>  
+          </div>  
+        </div>  
+  
+        {ghichu && (  
+          <div className="mt-1 w-full rounded-r-lg border border-l-4 border-l-primary bg-primary/5 p-4">  
+            <div className="text-sm font-bold uppercase tracking-wide text-primary">  
+              Ghi chú  
+            </div>  
+            <p className="mt-1 text-sm italic leading-relaxed">{ghichu}</p>  
+          </div>  
+        )}  
+      </CardContent>  
+    </Card>  
+  );  
 }
 
 export default function CreateDutyShift() {
