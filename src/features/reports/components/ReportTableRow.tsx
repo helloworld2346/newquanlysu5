@@ -1,3 +1,4 @@
+// src/features/reports/components/ReportTableRow.tsx
 import { MoreVertical, Eye, Pencil } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,35 @@ const STATUS_LABEL: Record<string, string> = {
   Từ_Chối: "Từ chối",
 };
 
+const STATUS_TONE: Record<string, string> = {
+  Chờ_Duyệt: "bg-amber-100 text-amber-700",
+  "Chờ duyệt": "bg-amber-100 text-amber-700",
+  Đã_Duyệt: "bg-emerald-100 text-emerald-700",
+  Da_Duyet: "bg-emerald-100 text-emerald-700",
+  Tu_Choi: "bg-rose-100 text-rose-700",
+  Từ_Chối: "bg-rose-100 text-rose-700",
+};
+
 const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];
 
 function isApproved(status: string): boolean {
   return APPROVED_STATUSES.includes(status);
+}
+
+function StatusBadge({
+  tone,
+  children,
+}: {
+  tone: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}
+    >
+      {children}
+    </span>
+  );
 }
 
 export default function ReportTableRow({
@@ -43,6 +69,7 @@ export default function ReportTableRow({
   const num = (val: number | null | undefined) =>
     approved ? formatNum(val) : "—";
   const notSubmitted = row.notSubmitted;
+  const signed = !!row.raw?.chuKySo && row.raw.chuKySo.trim() !== "";
   return (
     <TableRow
       className={notSubmitted ? "bg-rose-50 hover:bg-rose-100" : undefined}
@@ -73,16 +100,24 @@ export default function ReportTableRow({
       <TableCell className={td}>{num(v.lyDoVangKhac)}</TableCell>
       <TableCell className={td}>
         {notSubmitted ? (
-          <span className="font-semibold text-rose-600">Chưa nộp</span>
+          <StatusBadge tone="bg-rose-100 text-rose-700">Chưa nộp</StatusBadge>
         ) : (
-          (STATUS_LABEL[row.status] ?? row.status)
+          <StatusBadge
+            tone={STATUS_TONE[row.status] ?? "bg-slate-100 text-slate-700"}
+          >
+            {STATUS_LABEL[row.status] ?? row.status}
+          </StatusBadge>
         )}
       </TableCell>
       <TableCell className={td}>
         {notSubmitted ? (
           "—"
+        ) : signed ? (
+          <StatusBadge tone="bg-emerald-100 text-emerald-700">
+            Đã ký
+          </StatusBadge>
         ) : (
-          <span className="text-muted-foreground">Chưa ký</span>
+          <StatusBadge tone="bg-slate-100 text-slate-600">Chưa ký</StatusBadge>
         )}
       </TableCell>
       <TableCell className={`${td} text-left`}>{row.ghiChu}</TableCell>

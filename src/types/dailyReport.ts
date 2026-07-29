@@ -67,6 +67,7 @@ export interface ReportItemDTO {
   quanSoHienDien: number;
   quanSoVang: number;
   status: string;
+  chuKySo?: string | null;
   ghiChu?: string | null;
   thoiGianBaoCao: string;
   thongTinVang: string;
