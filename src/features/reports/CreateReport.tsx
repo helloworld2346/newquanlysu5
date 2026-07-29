@@ -1,281 +1,284 @@
-// src/features/reports/CreateReport.tsx  
-import { useEffect, useMemo, useState } from "react";  
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";  
-import { toast } from "sonner";  
-import {  
-  Trash2,  
-  ArrowLeft,  
-  Plus,  
-  Save,  
-  Copy,  
-  AlertTriangle,  
-} from "lucide-react";  
-import api from "@/lib/api";  
-import { reportApi } from "./api";  
-import { Button } from "@/components/ui/button";  
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";  
-import { Input } from "@/components/ui/input";  
-import { Textarea } from "@/components/ui/textarea";  
-import {  
-  Select,  
-  SelectContent,  
-  SelectItem,  
-  SelectTrigger,  
-  SelectValue,  
-} from "@/components/ui/select";  
-import { useAuthInfo } from "@/features/auth/queries";  
-import { useCreateReport, useUpdateReport } from "./queries";  
-import {  
-  LY_DO_OPTIONS,  
-  CAP_BAC_OPTIONS,  
-  EMPTY_VANG,  
-  classifyCapBac,  
-  todayIso,  
-} from "./utils";  
-import type {  
-  AbsentRow,  
-  TrucNguoiInfo,  
-  DetailStepData,  
-  CreateReportRequest,  
-  VangChiTiet,  
-} from "@/types/dailyReport";  
-import { useUnits } from "@/features/units/queries";  
-  
-const genId = () => Math.random().toString(36).slice(2);  
-const EMPTY_TRUC: TrucNguoiInfo = {  
-  tenNguoitruc: "",  
-  capbacNguoitruc: "",  
-  chucvuNguoitruc: "",  
-  sodienthoai: "",  
-};  
-const EMPTY_DETAIL: DetailStepData = {  
-  securityStatus: "safe",  
-  incidentStatus: "no",  
-  incidentDetail: "",  
-  advantageStatus: "yes",  
-  advantageDetail: "",  
-  disadvantageStatus: "no",  
-  disadvantageDetail: "",  
-  pendingTaskStatus: "no",  
-  pendingDetail: "",  
-};  
-  
-type NhiemVuNgayPayload = {  
-  nhiemVuPhandoi: string;  
-  noiDungDotXuat: string;  
-  noiDungUuDiem: string;  
-  noiDungKhuyetDiem: string;  
-  noiDungCanGiaiQuyet: string;  
-  donBaoCao: string;  
-};  
-type NhiemVuNgay = {  
-  idNhiemvuNgay?: string;  
-  nhiemVuPhandoi?: string;  
-  noiDungDotXuat?: string;  
-  noiDungUuDiem?: string;  
-  noiDungKhuyetDiem?: string;  
-  noiDungCanGiaiQuyet?: string;  
-};  
-  
-async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {  
-  try {  
-    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {  
-      skipErrorToast: true,  
-    });  
-    return (res.data?.Result as NhiemVuNgay) ?? null;  
-  } catch {  
-    return null;  
-  }  
-}  
-  
-async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {  
-  const payload = detailToNhiemVu(detail, idDonBaoCao);  
-  const existing = await fetchNhiemVu(idDonBaoCao);  
-  try {  
-    if (existing?.idNhiemvuNgay) {  
-      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {  
-        skipErrorToast: true,  
-      });  
-    } else {  
-      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });  
-    }  
-  } catch {  
-    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */  
-  }  
-}  
-  
-function detailToNhiemVu(  
-  d: DetailStepData,  
-  donBaoCao: string,  
-): NhiemVuNgayPayload {  
-  return {  
-    nhiemVuPhandoi: d.securityStatus,  
-    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",  
-    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",  
-    noiDungKhuyetDiem:  
-      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",  
-    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",  
-    donBaoCao,  
-  };  
-}  
-  
-function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {  
-  return {  
-    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",  
-    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",  
-    incidentDetail: nv.noiDungDotXuat ?? "",  
-    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",  
-    advantageDetail: nv.noiDungUuDiem ?? "",  
-    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",  
-    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",  
-    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",  
-    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",  
-  };  
-}  
-  
-type Errors = Record<string, string>;  
-  
-function FieldError({ msg }: { msg?: string }) {  
-  if (!msg) return null;  
-  return (  
-    <p className="mt-1 flex items-center text-sm text-red-600">  
-      <AlertTriangle className="mr-1 size-3.5 shrink-0" />  
-      {msg}  
-    </p>  
-  );  
-}  
-  
-function ReqLabel({  
-  children,  
-  required,  
-}: {  
-  children: string;  
-  required?: boolean;  
-}) {  
-  return (  
-    <label className="mb-1 block text-sm text-muted-foreground">  
-      {children}  
-      {required && <span className="text-red-500"> *</span>}  
-    </label>  
-  );  
-}  
-  
-function TrucSection({  
-  title,  
-  value,  
-  onChange,  
-  prefix,  
-  errors,  
-  clearError,  
-}: {  
-  title: string;  
-  value: TrucNguoiInfo;  
-  onChange: (v: TrucNguoiInfo) => void;  
-  prefix: string;  
-  errors: Errors;  
-  clearError: (key: string) => void;  
-}) {  
-  const errClass = (key: string) =>  
-    errors[`${prefix}.${key}`]  
-      ? "border-red-500 focus-visible:ring-red-500"  
-      : "";  
-  
-  return (  
-    <div className="-mx-1.5 flex flex-wrap">  
-      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel required>Họ và tên</ReqLabel>  
-        <Input  
-          className={errClass("ten")}  
-          placeholder="Nhập họ và tên..."  
-          value={value.tenNguoitruc}  
-          onChange={(e) => {  
-            onChange({ ...value, tenNguoitruc: e.target.value });  
-            clearError(`${prefix}.ten`);  
-          }}  
-        />  
-        <FieldError msg={errors[`${prefix}.ten`]} />  
-      </div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel required>Cấp bậc</ReqLabel>  
-        <Select  
-          value={value.capbacNguoitruc}  
-          onValueChange={(v) => {  
-            onChange({ ...value, capbacNguoitruc: v });  
-            clearError(`${prefix}.capBac`);  
-          }}  
-        >  
-          <SelectTrigger className={errClass("capBac")}>  
-            <SelectValue placeholder="-- Cấp bậc --" />  
-          </SelectTrigger>  
-          <SelectContent>  
-            {CAP_BAC_OPTIONS.map((c) => (  
-              <SelectItem key={c} value={c}>  
-                {c}  
-              </SelectItem>  
-            ))}  
-          </SelectContent>  
-        </Select>  
-        <FieldError msg={errors[`${prefix}.capBac`]} />  
-      </div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel required>Chức vụ</ReqLabel>  
-        <Input  
-          className={errClass("chucVu")}  
-          placeholder="Nhập chức vụ..."  
-          value={value.chucvuNguoitruc}  
-          onChange={(e) => {  
-            onChange({ ...value, chucvuNguoitruc: e.target.value });  
-            clearError(`${prefix}.chucVu`);  
-          }}  
-        />  
-        <FieldError msg={errors[`${prefix}.chucVu`]} />  
-      </div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel>Số điện thoại</ReqLabel>  
-        <Input  
-          placeholder="Nhập số điện thoại..."  
-          value={value.sodienthoai}  
-          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}  
-        />  
-      </div>  
-    </div>  
-  );  
-}  
-  
-function RadioRow({  
-  value,  
-  options,  
-  onChange,  
-}: {  
-  value: string;  
-  options: { value: string; label: string }[];  
-  onChange: (v: string) => void;  
-}) {  
-  return (  
-    <div className="-mb-2 flex flex-wrap">  
-      {options.map((o) => {  
-        const active = value === o.value;  
-        return (  
-          <button  
-            key={o.value}  
-            type="button"  
-            onClick={() => onChange(o.value)}  
-            className={  
-              "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +  
-              (active  
-                ? "border-slate-700 bg-slate-700 text-white"  
-                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")  
-            }  
-          >  
-            {o.label}  
-          </button>  
-        );  
-      })}  
-    </div>  
-  );  
-}  
-  
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  Trash2,
+  ArrowLeft,
+  Plus,
+  Save,
+  Copy,
+  AlertTriangle,
+  PenLine,
+  ImagePlus,
+  X,
+  Send,
+} from "lucide-react";
+import api from "@/lib/api";
+import { reportApi } from "./api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuthInfo } from "@/features/auth/queries";
+import { useCreateReport, useUpdateReport, useSubmitReport } from "./queries";
+import {
+  LY_DO_OPTIONS,
+  CAP_BAC_OPTIONS,
+  EMPTY_VANG,
+  classifyCapBac,
+  todayIso,
+} from "./utils";
+import type {
+  AbsentRow,
+  TrucNguoiInfo,
+  DetailStepData,
+  CreateReportRequest,
+  VangChiTiet,
+} from "@/types/dailyReport";
+import { useUnits } from "@/features/units/queries";
+
+const genId = () => Math.random().toString(36).slice(2);
+const EMPTY_TRUC: TrucNguoiInfo = {
+  tenNguoitruc: "",
+  capbacNguoitruc: "",
+  chucvuNguoitruc: "",
+  sodienthoai: "",
+};
+const EMPTY_DETAIL: DetailStepData = {
+  securityStatus: "safe",
+  incidentStatus: "no",
+  incidentDetail: "",
+  advantageStatus: "yes",
+  advantageDetail: "",
+  disadvantageStatus: "no",
+  disadvantageDetail: "",
+  pendingTaskStatus: "no",
+  pendingDetail: "",
+};
+
+type NhiemVuNgayPayload = {
+  nhiemVuPhandoi: string;
+  noiDungDotXuat: string;
+  noiDungUuDiem: string;
+  noiDungKhuyetDiem: string;
+  noiDungCanGiaiQuyet: string;
+  donBaoCao: string;
+};
+type NhiemVuNgay = {
+  idNhiemvuNgay?: string;
+  nhiemVuPhandoi?: string;
+  noiDungDotXuat?: string;
+  noiDungUuDiem?: string;
+  noiDungKhuyetDiem?: string;
+  noiDungCanGiaiQuyet?: string;
+};
+
+async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {
+  try {
+    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {
+      skipErrorToast: true,
+    });
+    return (res.data?.Result as NhiemVuNgay) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {
+  const payload = detailToNhiemVu(detail, idDonBaoCao);
+  const existing = await fetchNhiemVu(idDonBaoCao);
+  try {
+    if (existing?.idNhiemvuNgay) {
+      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {
+        skipErrorToast: true,
+      });
+    } else {
+      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });
+    }
+  } catch {
+    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */
+  }
+}
+
+function detailToNhiemVu(
+  d: DetailStepData,
+  donBaoCao: string,
+): NhiemVuNgayPayload {
+  return {
+    nhiemVuPhandoi: d.securityStatus,
+    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",
+    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",
+    noiDungKhuyetDiem:
+      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",
+    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",
+    donBaoCao,
+  };
+}
+
+function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {
+  return {
+    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",
+    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",
+    incidentDetail: nv.noiDungDotXuat ?? "",
+    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",
+    advantageDetail: nv.noiDungUuDiem ?? "",
+    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",
+    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",
+    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",
+    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",
+  };
+}
+
+type Errors = Record<string, string>;
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1 flex items-center text-sm text-red-600">
+      <AlertTriangle className="mr-1 size-3.5 shrink-0" />
+      {msg}
+    </p>
+  );
+}
+
+function ReqLabel({
+  children,
+  required,
+}: {
+  children: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="mb-1 block text-sm text-muted-foreground">
+      {children}
+      {required && <span className="text-red-500"> *</span>}
+    </label>
+  );
+}
+
+function TrucSection({
+  title,
+  value,
+  onChange,
+  prefix,
+  errors,
+  clearError,
+}: {
+  title: string;
+  value: TrucNguoiInfo;
+  onChange: (v: TrucNguoiInfo) => void;
+  prefix: string;
+  errors: Errors;
+  clearError: (key: string) => void;
+}) {
+  const errClass = (key: string) =>
+    errors[`${prefix}.${key}`]
+      ? "border-red-500 focus-visible:ring-red-500"
+      : "";
+
+  return (
+    <div className="-mx-1.5 flex flex-wrap">
+      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel required>Họ và tên</ReqLabel>
+        <Input
+          className={errClass("ten")}
+          placeholder="Nhập họ và tên..."
+          value={value.tenNguoitruc}
+          onChange={(e) => {
+            onChange({ ...value, tenNguoitruc: e.target.value });
+            clearError(`${prefix}.ten`);
+          }}
+        />
+        <FieldError msg={errors[`${prefix}.ten`]} />
+      </div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel required>Cấp bậc</ReqLabel>
+        <Select
+          value={value.capbacNguoitruc}
+          onValueChange={(v) => {
+            onChange({ ...value, capbacNguoitruc: v });
+            clearError(`${prefix}.capBac`);
+          }}
+        >
+          <SelectTrigger className={errClass("capBac")}>
+            <SelectValue placeholder="-- Cấp bậc --" />
+          </SelectTrigger>
+          <SelectContent>
+            {CAP_BAC_OPTIONS.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldError msg={errors[`${prefix}.capBac`]} />
+      </div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel required>Chức vụ</ReqLabel>
+        <Input
+          className={errClass("chucVu")}
+          placeholder="Nhập chức vụ..."
+          value={value.chucvuNguoitruc}
+          onChange={(e) => {
+            onChange({ ...value, chucvuNguoitruc: e.target.value });
+            clearError(`${prefix}.chucVu`);
+          }}
+        />
+        <FieldError msg={errors[`${prefix}.chucVu`]} />
+      </div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel>Số điện thoại</ReqLabel>
+        <Input
+          placeholder="Nhập số điện thoại..."
+          value={value.sodienthoai}
+          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RadioRow({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="-mb-2 flex flex-wrap">
+      {options.map((o) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={
+              "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
+              (active
+                ? "border-slate-700 bg-slate-700 text-white"
+                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")
+            }
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function CreateReport() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -305,6 +308,29 @@ export default function CreateReport() {
   const [absentRows, setAbsentRows] = useState<AbsentRow[]>([]);
   const [detail, setDetail] = useState<DetailStepData>({ ...EMPTY_DETAIL });
   const [copying, setCopying] = useState(false);
+
+  // --- Ký số ---
+  const [chuKySo, setChuKySo] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handlePickSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn tệp ảnh chữ ký");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ảnh chữ ký tối đa 2MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setChuKySo(String(reader.result || ""));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const clearSignature = () => setChuKySo("");
 
   const [errors, setErrors] = useState<Errors>({});
   const clearError = (key: string) =>
@@ -458,8 +484,13 @@ export default function CreateReport() {
     }
   };
 
-  const handleSave = async () => {
+  const submitReport = useSubmitReport(); // import từ ./queries
+
+  const handleSave = async (action: "draft" | "submit") => {
     const e = validate();
+    if (action === "submit" && !chuKySo) {
+      e["chuKySo"] = "Vui lòng ký số trước khi trình phê duyệt.";
+    }
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
@@ -480,6 +511,7 @@ export default function CreateReport() {
       trucBanChiHuy: JSON.stringify(trucChiHuy),
       trucBanTacChien: JSON.stringify(trucBanTacChien),
       loaiDonBaoCao: "DON_VI",
+      chuKySo: chuKySo || undefined,
     };
 
     try {
@@ -488,16 +520,20 @@ export default function CreateReport() {
         const res = await updateReport.mutateAsync({ id: id!, data: payload });
         if (!res.success) throw new Error(res.message);
         idDonBaoCao = res.Result?.idDonBaoCao ?? id!;
-        toast.success("Cập nhật báo cáo thành công");
       } else {
         const res = await createReport.mutateAsync(payload);
         if (!res.success) throw new Error(res.message);
         idDonBaoCao = res.Result?.idDonBaoCao ?? "";
-        toast.success("Lưu báo cáo thành công");
       }
 
       if (idDonBaoCao) await saveNhiemVu(idDonBaoCao, detail);
 
+      if (action === "submit" && idDonBaoCao) {
+        await submitReport.mutateAsync(idDonBaoCao);
+        toast.success("Đã trình phê duyệt");
+      } else {
+        toast.success("Đã lưu nháp");
+      }
       navigate("/daily-report");
     } catch {
       toast.error("Không thể lưu báo cáo");
@@ -532,9 +568,15 @@ export default function CreateReport() {
             <Copy className="mr-2 size-4" />
             {copying ? "Đang tải..." : "Sao chép từ hôm qua"}
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="mr-2 size-4" />{" "}
-            {saving ? "Đang lưu..." : "Lưu báo cáo"}
+          <Button
+            variant="outline"
+            onClick={() => handleSave("draft")}
+            disabled={saving}
+          >
+            <Save className="mr-2 size-4" /> Lưu nháp
+          </Button>
+          <Button onClick={() => handleSave("submit")} disabled={saving}>
+            <Send className="mr-2 size-4" /> Trình phê duyệt
           </Button>
         </div>
       </div>
@@ -914,6 +956,82 @@ export default function CreateReport() {
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center text-base">
+            <PenLine className="mr-2 size-4 text-primary" />
+            Ký số báo cáo
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePickSignature}
+          />
+          {chuKySo ? (
+            <div className="-mx-2 flex flex-wrap items-start">
+              <div className="w-full px-2 mb-3 sm:w-auto">
+                <div
+                  className="flex h-40 w-64 items-center justify-center overflow-hidden rounded-lg border bg-white"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(45deg,#f1f5f9 25%,transparent 25%),linear-gradient(-45deg,#f1f5f9 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f1f5f9 75%),linear-gradient(-45deg,transparent 75%,#f1f5f9 75%)",
+                    backgroundSize: "16px 16px",
+                    backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
+                  }}
+                >
+                  <img
+                    src={chuKySo}
+                    alt="Chữ ký"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+              </div>
+              <div className="w-full px-2 sm:w-auto">
+                <p className="mb-2 text-sm text-muted-foreground">
+                  Chữ ký của trực chỉ huy (người báo cáo)
+                  {trucChiHuy.tenNguoitruc
+                    ? `: ${trucChiHuy.tenNguoitruc}`
+                    : ""}
+                </p>
+                <div className="flex flex-wrap items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mb-2 mr-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImagePlus className="mr-2 size-4" />
+                    Đổi ảnh chữ ký
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="mb-2 text-destructive hover:text-destructive"
+                    onClick={clearSignature}
+                  >
+                    <X className="mr-2 size-4" />
+                    Xóa chữ ký
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <ImagePlus className="mb-2 size-6" />
+              Bấm để chọn ảnh chữ ký (PNG/JPG, tối đa 2MB)
+            </button>
+          )}
         </CardContent>
       </Card>
     </div>

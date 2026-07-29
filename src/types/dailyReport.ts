@@ -59,6 +59,18 @@ export interface CreateReportRequest {
   trucBanTacChien?: string;
   tinhHinhHoatDong?: string;
   loaiDonBaoCao?: LoaiDonBaoCao;
+  chuKySo?: string;
+}
+
+export interface RefuseRequest {
+  lyDoTuChoi: string;
+}
+
+export interface ActionResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  Result?: ReportItemDTO;
 }
 
 export interface ReportItemDTO {

@@ -6,7 +6,9 @@ import type {
   NhiemVuNgay,
   NhiemVuNgayPayload,
   ReportDetailResponse,
-} from "@/types/dailyReport";
+  RefuseRequest,
+  ActionResponse,
+} from "@/types/dailyReport";  
 
 export const reportApi = {
   searchByUnitAndDate: async (
@@ -69,6 +71,30 @@ export const reportApi = {
     const res = await api.get<ReportDetailResponse>(`/donbaocao/${id}`, {
       skipErrorToast: true,
     });
+    return res.data;
+  },
+
+  submit: async (id: string): Promise<ActionResponse> => {
+    const res = await api.put<ActionResponse>(`/donbaocao/submit/${id}`, null, {
+      params: { id },
+    });
+    return res.data;
+  },
+
+  recall: async (id: string): Promise<ActionResponse> => {
+    const res = await api.put<ActionResponse>(`/donbaocao/recall/${id}`, null, {
+      params: { id },
+    });
+    return res.data;
+  },
+
+  approve: async (id: string): Promise<ActionResponse> => {
+    const res = await api.put<ActionResponse>(`/donbaocao/approve/${id}`);
+    return res.data;
+  },
+
+  refuse: async (id: string, body: RefuseRequest): Promise<ActionResponse> => {
+    const res = await api.put<ActionResponse>(`/donbaocao/refuse/${id}`, body);
     return res.data;
   },
 };

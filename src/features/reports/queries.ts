@@ -22,79 +22,79 @@ export function useChildrenReports(maDonVi: string | undefined, ngay: string) {
   });
 }
 
-export function useChildrenReportsMerged(  
-  maDonVi: string | undefined,  
-  ngay: string,  
-  capByUnit: Record<string, string | null | undefined>,  
-  hasChildren = true,  
-  ready = true,  
-) {  
-  const baseEnabled = !!maDonVi && !!ngay && ready;  
-  
-  const selfQuery = useQuery({  
-    queryKey: [...reportsKey(maDonVi ?? "", ngay), "SELF"],  
-    queryFn: () => reportApi.searchByUnitAndDate(maDonVi!, ngay, "DON_VI"),  
-    enabled: baseEnabled && !hasChildren,  
-    select: (res) => (res.Result ? [res.Result] : []),  
-  });  
-  
-  const donViQuery = useQuery({  
-    queryKey: [...reportsKey(maDonVi ?? "", ngay), "DON_VI"],  
-    queryFn: () => reportApi.searchChildren(maDonVi!, ngay, "DON_VI"),  
-    enabled: baseEnabled && hasChildren,  
-    select: (res) => res.Result ?? [],  
-  });  
-  
-  const tongHopQuery = useQuery({  
-    queryKey: [...reportsKey(maDonVi ?? "", ngay), "TONG_HOP"],  
-    queryFn: () => reportApi.searchChildren(maDonVi!, ngay, "TONG_HOP"),  
-    enabled: baseEnabled && hasChildren,  
-    select: (res) => res.Result ?? [],  
-  });  
-  
-  const data = useMemo(() => {  
-    if (!hasChildren) {  
-      return selfQuery.data ?? [];  
-    }  
-  
-    const map = new Map<string, ReportItemDTO>();  
+export function useChildrenReportsMerged(
+  maDonVi: string | undefined,
+  ngay: string,
+  capByUnit: Record<string, string | null | undefined>,
+  hasChildren = true,
+  ready = true,
+) {
+  const baseEnabled = !!maDonVi && !!ngay && ready;
 
-    for (const item of donViQuery.data ?? []) {  
-      const ma = item.donVi.maDonVi;  
-      const cap = capByUnit[ma] ?? "";  
-      const isAggregating = TONG_HOP_CAPS.includes(cap);  
-      const isSelf = ma === maDonVi;  
-      if (!isAggregating || isSelf) {  
-        map.set(ma, item);  
-      }  
-    }  
+  const selfQuery = useQuery({
+    queryKey: [...reportsKey(maDonVi ?? "", ngay), "SELF"],
+    queryFn: () => reportApi.searchByUnitAndDate(maDonVi!, ngay, "DON_VI"),
+    enabled: baseEnabled && !hasChildren,
+    select: (res) => (res.Result ? [res.Result] : []),
+  });
 
-    for (const item of tongHopQuery.data ?? []) {  
-      const ma = item.donVi.maDonVi;  
-      const cap = capByUnit[ma] ?? "";  
-      const isAggregating = TONG_HOP_CAPS.includes(cap);  
-      const isSelf = ma === maDonVi;  
-      if (isAggregating || isSelf || !map.has(ma)) {  
-        map.set(ma, item);  
-      }  
-    }  
-  
-    return Array.from(map.values());  
-  }, [  
-    hasChildren,  
-    maDonVi,  
-    selfQuery.data,  
-    donViQuery.data,  
-    tongHopQuery.data,  
-    capByUnit,  
-  ]);  
-  
-  return {  
-    data,  
-    isLoading: hasChildren  
-      ? donViQuery.isLoading || tongHopQuery.isLoading  
-      : selfQuery.isLoading,  
-  };  
+  const donViQuery = useQuery({
+    queryKey: [...reportsKey(maDonVi ?? "", ngay), "DON_VI"],
+    queryFn: () => reportApi.searchChildren(maDonVi!, ngay, "DON_VI"),
+    enabled: baseEnabled && hasChildren,
+    select: (res) => res.Result ?? [],
+  });
+
+  const tongHopQuery = useQuery({
+    queryKey: [...reportsKey(maDonVi ?? "", ngay), "TONG_HOP"],
+    queryFn: () => reportApi.searchChildren(maDonVi!, ngay, "TONG_HOP"),
+    enabled: baseEnabled && hasChildren,
+    select: (res) => res.Result ?? [],
+  });
+
+  const data = useMemo(() => {
+    if (!hasChildren) {
+      return selfQuery.data ?? [];
+    }
+
+    const map = new Map<string, ReportItemDTO>();
+
+    for (const item of donViQuery.data ?? []) {
+      const ma = item.donVi.maDonVi;
+      const cap = capByUnit[ma] ?? "";
+      const isAggregating = TONG_HOP_CAPS.includes(cap);
+      const isSelf = ma === maDonVi;
+      if (!isAggregating || isSelf) {
+        map.set(ma, item);
+      }
+    }
+
+    for (const item of tongHopQuery.data ?? []) {
+      const ma = item.donVi.maDonVi;
+      const cap = capByUnit[ma] ?? "";
+      const isAggregating = TONG_HOP_CAPS.includes(cap);
+      const isSelf = ma === maDonVi;
+      if (isAggregating || isSelf || !map.has(ma)) {
+        map.set(ma, item);
+      }
+    }
+
+    return Array.from(map.values());
+  }, [
+    hasChildren,
+    maDonVi,
+    selfQuery.data,
+    donViQuery.data,
+    tongHopQuery.data,
+    capByUnit,
+  ]);
+
+  return {
+    data,
+    isLoading: hasChildren
+      ? donViQuery.isLoading || tongHopQuery.isLoading
+      : selfQuery.isLoading,
+  };
 }
 
 export function useCreateReport() {
@@ -141,5 +141,38 @@ export function useNhiemVuNgayDetail(id: string | undefined) {
     enabled: !!id,
     staleTime: 60_000,
     select: (res) => res.Result ?? null,
+  });
+}
+
+export function useSubmitReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reportApi.submit(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
+export function useRecallReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reportApi.recall(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
+export function useApproveReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reportApi.approve(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
+export function useRefuseReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: string; lyDoTuChoi: string }) =>
+      reportApi.refuse(v.id, { lyDoTuChoi: v.lyDoTuChoi }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
   });
 }

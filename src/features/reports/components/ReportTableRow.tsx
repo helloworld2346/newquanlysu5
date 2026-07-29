@@ -1,5 +1,14 @@
+// src/features/reports/components/ReportTableRow.tsx
 import { useState } from "react";
-import { MoreVertical, Eye, Pencil } from "lucide-react";
+import {
+  MoreVertical,
+  Eye,
+  Pencil,
+  Send,
+  Undo2,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import KySoModal from "./KySoModal";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,6 +16,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ReportRow, TrucNguoiInfo } from "@/types/dailyReport";
@@ -21,6 +31,8 @@ const STATUS_LABEL: Record<string, string> = {
   Da_Duyet: "Đã duyệt",
   Tu_Choi: "Từ chối",
   Từ_Chối: "Từ chối",
+  Nháp: "Nháp",
+  Nhap: "Nháp",
 };
 
 const STATUS_TONE: Record<string, string> = {
@@ -28,8 +40,12 @@ const STATUS_TONE: Record<string, string> = {
   "Chờ duyệt": "bg-amber-100 text-amber-700",
   Đã_Duyệt: "bg-emerald-100 text-emerald-700",
   Da_Duyet: "bg-emerald-100 text-emerald-700",
+  "Đã duyệt": "bg-emerald-100 text-emerald-700",
   Tu_Choi: "bg-rose-100 text-rose-700",
   Từ_Chối: "bg-rose-100 text-rose-700",
+  "Từ chối": "bg-rose-100 text-rose-700",
+  Nháp: "bg-slate-100 text-slate-700",
+  Nhap: "bg-slate-100 text-slate-700",
 };
 
 const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];
@@ -38,7 +54,7 @@ function isApproved(status: string): boolean {
   return APPROVED_STATUSES.includes(status);
 }
 
-function parseJson<T>(raw: string | null | undefined, fallback: T): T {
+function parseJson<T>(raw: string | undefined | null, fallback: T): T {
   if (!raw) return fallback;
   try {
     return JSON.parse(raw) as T;
@@ -47,18 +63,13 @@ function parseJson<T>(raw: string | null | undefined, fallback: T): T {
   }
 }
 
-function StatusBadge({
-  tone,
-  children,
-}: {
-  tone: string;
-  children: React.ReactNode;
-}) {
+function StatusBadge({ status }: { status: string }) {
+  const tone = STATUS_TONE[status] ?? "bg-slate-100 text-slate-700";
   return (
     <span
       className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}
     >
-      {children}
+      {STATUS_LABEL[status] ?? status}
     </span>
   );
 }
@@ -66,22 +77,41 @@ function StatusBadge({
 export default function ReportTableRow({
   row,
   canEdit,
+  canSubmit = false,
+  canRecall = false,
+  canApprove = false,
+  canRefuse = false,
   onViewDetail,
   onEdit,
+  onSubmit,
+  onRecall,
+  onApprove,
+  onRefuse,
 }: {
   row: ReportRow;
   canEdit: boolean;
+  canSubmit?: boolean;
+  canRecall?: boolean;
+  canApprove?: boolean;
+  canRefuse?: boolean;
   onViewDetail: (r: ReportRow) => void;
   onEdit: (r: ReportRow) => void;
+  onSubmit?: (r: ReportRow) => void;
+  onRecall?: (r: ReportRow) => void;
+  onApprove?: (r: ReportRow) => void;
+  onRefuse?: (r: ReportRow) => void;
 }) {
   const [showKySo, setShowKySo] = useState(false);
+
   const v = row.vang;
   const approved = !row.notSubmitted && isApproved(row.status);
   const num = (val: number | null | undefined) =>
     approved ? formatNum(val) : "—";
   const notSubmitted = row.notSubmitted;
+
   const signed = !!row.raw?.chuKySo && row.raw.chuKySo.trim() !== "";
   const signer = parseJson<TrucNguoiInfo | null>(row.raw?.trucBanChiHuy, null);
+
   return (
     <TableRow
       className={notSubmitted ? "bg-rose-50 hover:bg-rose-100" : undefined}
@@ -112,13 +142,11 @@ export default function ReportTableRow({
       <TableCell className={td}>{num(v.lyDoVangKhac)}</TableCell>
       <TableCell className={td}>
         {notSubmitted ? (
-          <StatusBadge tone="bg-rose-100 text-rose-700">Chưa nộp</StatusBadge>
+          <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
+            Chưa nộp
+          </span>
         ) : (
-          <StatusBadge
-            tone={STATUS_TONE[row.status] ?? "bg-slate-100 text-slate-700"}
-          >
-            {STATUS_LABEL[row.status] ?? row.status}
-          </StatusBadge>
+          <StatusBadge status={row.status} />
         )}
       </TableCell>
       <TableCell className={td}>
@@ -128,12 +156,14 @@ export default function ReportTableRow({
           <button
             type="button"
             onClick={() => setShowKySo(true)}
-            className="inline-block cursor-pointer rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-200"
+            className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
           >
             Đã ký
           </button>
         ) : (
-          <StatusBadge tone="bg-slate-100 text-slate-600">Chưa ký</StatusBadge>
+          <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+            Chưa ký
+          </span>
         )}
       </TableCell>
       <TableCell className={`${td} text-left`}>{row.ghiChu}</TableCell>
@@ -154,6 +184,34 @@ export default function ReportTableRow({
               {canEdit && (
                 <DropdownMenuItem onClick={() => onEdit(row)}>
                   <Pencil className="mr-2 size-4" /> Chỉnh sửa
+                </DropdownMenuItem>
+              )}
+
+              {(canSubmit || canRecall) && <DropdownMenuSeparator />}
+              {canSubmit && (
+                <DropdownMenuItem onClick={() => onSubmit?.(row)}>
+                  <Send className="mr-2 size-4" /> Trình phê duyệt
+                </DropdownMenuItem>
+              )}
+              {canRecall && (
+                <DropdownMenuItem onClick={() => onRecall?.(row)}>
+                  <Undo2 className="mr-2 size-4" /> Thu hồi
+                </DropdownMenuItem>
+              )}
+
+              {(canApprove || canRefuse) && <DropdownMenuSeparator />}
+              {canApprove && (
+                <DropdownMenuItem onClick={() => onApprove?.(row)}>
+                  <CheckCircle2 className="mr-2 size-4 text-emerald-600" /> Phê
+                  duyệt
+                </DropdownMenuItem>
+              )}
+              {canRefuse && (
+                <DropdownMenuItem
+                  className="text-rose-600 focus:text-rose-600"
+                  onClick={() => onRefuse?.(row)}
+                >
+                  <XCircle className="mr-2 size-4" /> Từ chối
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
