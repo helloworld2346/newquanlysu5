@@ -72,6 +72,7 @@ const DutyPersonnel = lazy(() => import("@/features/duty/DutyPersonnel"));
 
 const DutyShifts = lazy(() => import("@/features/duty/DutyShifts"));  
 
+const CreateDutyShift = lazy(() => import("@/features/duty/CreateDutyShift"));  
 
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
@@ -156,7 +157,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "duty-create",
     label: "Tạo ca trực",
     path: "/duty/create",
-    component: Placeholder,
+    component: CreateDutyShift,
     icon: CalendarPlus,
     group: "duty",
     allowedRoles: TAC_CHIEN,

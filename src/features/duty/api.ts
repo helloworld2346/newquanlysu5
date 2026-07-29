@@ -6,6 +6,10 @@ import type {
   CaTrucListResponse,
   UpdateCaTrucPayload,
   UpdateCaTrucResponse,
+  CaTrucPayload,
+  CaTrucCreateResponse,
+  CaTrucDetailResponse,
+  GetCaTrucByDateResponse,
 } from "@/types/duty";
 
 export const dutyApi = {
@@ -52,4 +56,18 @@ export const dutyApi = {
     api
       .put<UpdateCaTrucResponse>(`/ca-truc/${id}`, body)
       .then((r) => r.data.Result),
+
+  createCaTruc: (body: CaTrucPayload) =>
+    api.post<CaTrucCreateResponse>("/ca-truc", body).then((r) => r.data.Result),
+
+  getCaTruc: (id: string) =>
+    api.get<CaTrucDetailResponse>(`/ca-truc/${id}`).then((r) => r.data.Result),
+
+  getCaTrucByDate: (ngayTruc: string) =>
+    api
+      .get<GetCaTrucByDateResponse>(`/ca-truc/ngaytruc`, {
+        params: { ngayTruc },
+        skipErrorToast: true,
+      })
+      .then((r) => r.data.Result ?? null),
 };

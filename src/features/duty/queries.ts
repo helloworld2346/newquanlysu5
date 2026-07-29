@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { dutyApi } from "./api";
-import type { TrucNguoiPayload, UpdateCaTrucPayload } from "@/types/duty";
+import type {
+  TrucNguoiPayload,
+  UpdateCaTrucPayload,
+  CaTrucPayload,
+} from "@/types/duty";  
 
 const chiHuyKey = ["truc-chi-huy"] as const;
 const tacChienKey = ["truc-ban-tac-chien"] as const;
@@ -72,6 +76,14 @@ export function useUpdateCaTruc() {
   return useMutation({
     mutationFn: (v: { id: string; body: UpdateCaTrucPayload }) =>
       dutyApi.updateCaTruc(v.id, v.body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: caTrucKey }),
+  });
+}
+
+export function useCreateCaTruc() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CaTrucPayload) => dutyApi.createCaTruc(body),
     onSuccess: () => qc.invalidateQueries({ queryKey: caTrucKey }),
   });
 }

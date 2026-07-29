@@ -69,3 +69,32 @@ export interface UpdateCaTrucResponse {
   message: string;  
   Result: CaTrucDetail;  
 }
+
+export interface CaTrucPayload {  
+  ngaytruc: string;  
+  matkhau: string;  
+  ghichu: string;  
+  trucChiHuy: string;  
+  trucBanTacChien: string;  
+}  
+  
+export interface CaTrucCreateResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: CaTrucDetail;  
+}  
+  
+export interface CaTrucDetailResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: CaTrucDetail;  
+}  
+  
+export interface GetCaTrucByDateResponse {  
+  success: boolean;  
+  code: number;  
+  message: string;  
+  Result: CaTrucDetail | null;  
+}
