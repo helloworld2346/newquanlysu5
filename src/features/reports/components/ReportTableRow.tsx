@@ -1,5 +1,6 @@
-// src/features/reports/components/ReportTableRow.tsx
+import { useState } from "react";
 import { MoreVertical, Eye, Pencil } from "lucide-react";
+import KySoModal from "./KySoModal";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ReportRow } from "@/types/dailyReport";
+import type { ReportRow, TrucNguoiInfo } from "@/types/dailyReport";
 import { formatNum } from "../utils";
 
 const td = "border text-center tabular-nums break-words px-1";
@@ -35,6 +36,15 @@ const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];
 
 function isApproved(status: string): boolean {
   return APPROVED_STATUSES.includes(status);
+}
+
+function parseJson<T>(raw: string | null | undefined, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 function StatusBadge({
@@ -64,12 +74,14 @@ export default function ReportTableRow({
   onViewDetail: (r: ReportRow) => void;
   onEdit: (r: ReportRow) => void;
 }) {
+  const [showKySo, setShowKySo] = useState(false);
   const v = row.vang;
   const approved = !row.notSubmitted && isApproved(row.status);
   const num = (val: number | null | undefined) =>
     approved ? formatNum(val) : "—";
   const notSubmitted = row.notSubmitted;
   const signed = !!row.raw?.chuKySo && row.raw.chuKySo.trim() !== "";
+  const signer = parseJson<TrucNguoiInfo | null>(row.raw?.trucBanChiHuy, null);
   return (
     <TableRow
       className={notSubmitted ? "bg-rose-50 hover:bg-rose-100" : undefined}
@@ -113,9 +125,13 @@ export default function ReportTableRow({
         {notSubmitted ? (
           "—"
         ) : signed ? (
-          <StatusBadge tone="bg-emerald-100 text-emerald-700">
+          <button
+            type="button"
+            onClick={() => setShowKySo(true)}
+            className="inline-block cursor-pointer rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-200"
+          >
             Đã ký
-          </StatusBadge>
+          </button>
         ) : (
           <StatusBadge tone="bg-slate-100 text-slate-600">Chưa ký</StatusBadge>
         )}
@@ -144,6 +160,19 @@ export default function ReportTableRow({
           </DropdownMenu>
         )}
       </TableCell>
+
+      {signed && (
+        <KySoModal
+          open={showKySo}
+          onOpenChange={setShowKySo}
+          chuKySo={row.raw?.chuKySo ?? ""}
+          hoTen={signer?.tenNguoitruc}
+          capBac={signer?.capbacNguoitruc}
+          chucVu={signer?.chucvuNguoitruc || "Người báo cáo"}
+          donViLabel={row.kyhieuDonVi || row.tenDonVi}
+          thoiGian={row.raw?.thoiGianBaoCao}
+        />
+      )}
     </TableRow>
   );
 }
