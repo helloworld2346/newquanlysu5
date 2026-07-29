@@ -62,6 +62,13 @@ export interface CreateReportRequest {
   chuKySo?: string;
 }
 
+export interface ApproveResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  Result: ReportItemDTO;
+}
+
 export interface RefuseRequest {
   lyDoTuChoi: string;
 }

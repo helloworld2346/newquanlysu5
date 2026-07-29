@@ -8,6 +8,7 @@ import type {
   ReportDetailResponse,
   RefuseRequest,
   ActionResponse,
+  ApproveResponse,
 } from "@/types/dailyReport";  
 
 export const reportApi = {
@@ -74,10 +75,12 @@ export const reportApi = {
     return res.data;
   },
 
-  submit: async (id: string): Promise<ActionResponse> => {
-    const res = await api.put<ActionResponse>(`/donbaocao/submit/${id}`, null, {
-      params: { id },
-    });
+  submit: async (id: string): Promise<ApproveResponse> => {
+    const res = await api.put<ApproveResponse>(
+      `/donbaocao/submit/${id}`,
+      null,
+      { params: { id } },
+    );
     return res.data;
   },
 

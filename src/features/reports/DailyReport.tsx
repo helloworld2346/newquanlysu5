@@ -1,5 +1,4 @@
-// src/features/reports/DailyReport.tsx
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -10,10 +9,19 @@ import {
   UserCog,
   UsersRound,
   X,
+  Send,
+  PenLine,
+  ImagePlus,
+  CheckCircle2,
+  User,
+  Award,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import SearchBar from "@/components/common/SearchBar";
 import {
   Select,
@@ -23,17 +31,14 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { DateInputVi } from "@/components/ui/date-input-vi";
-import ConfirmDialog from "@/components/ui/confirm-dialog";
-import RefuseDialog from "./components/RefuseDialog";
 import { getErrorMessage } from "@/lib/errorHandler";
 import { useAuthInfo } from "@/features/auth/queries";
 import {
   useChildrenReportsMerged,
   useSubmitReport,
-  useRecallReport,
-  useApproveReport,
-  useRefuseReport,
+  useUpdateReport,
 } from "./queries";
+import { reportApi } from "./api";
 import { useUnits } from "@/features/units/queries";
 import {
   mapItemToRow,
@@ -45,7 +50,11 @@ import {
 import ReportTableHeader from "./components/ReportTableHeader";
 import ReportTableRow from "./components/ReportTableRow";
 import ReportTotalRow from "./components/ReportTotalRow";
-import type { ReportRow } from "@/types/dailyReport";
+import type {
+  CreateReportRequest,
+  ReportRow,
+  TrucNguoiInfo,
+} from "@/types/dailyReport";
 import ReportColGroup from "./components/ReportColGroup";
 import NhiemVuNgaySection from "./components/NhiemVuNgaySection";
 
@@ -53,9 +62,6 @@ const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
 
 const DRAFT = ["Nháp", "Nhap", "DRAFT"];
 const isDraft = (s: string) => DRAFT.includes(s);
-
-const PENDING = ["Chờ_Duyệt", "Chờ duyệt"];
-const isPending = (s: string) => PENDING.includes(s);
 
 const STATUS_FILTERS = [
   { value: "Chua_Nop", label: "Chưa nộp" },
@@ -68,26 +74,50 @@ function normalizeStatus(s: string): string {
   return s;
 }
 
+function parseJson<T>(raw: string | undefined | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function SignerRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-3 py-2">
+      <span className="flex items-center text-muted-foreground">
+        <span className="mr-1.5">{icon}</span>
+        {label}
+      </span>
+      <span className="font-medium">{value || "—"}</span>
+    </div>
+  );
+}
+
 export default function DailyReport() {
   const navigate = useNavigate();
-  const { account, role } = useAuthInfo();
+  const { account } = useAuthInfo();
   const maDonVi = account?.donVi?.maDonVi;
-  const isChiHuy = role === "Trực chỉ huy";
 
   const [ngay, setNgay] = useState(todayIso());
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
 
-  // luồng nháp / trình duyệt
-  const [confirmSubmit, setConfirmSubmit] = useState<ReportRow | null>(null);
-  const [confirmRecall, setConfirmRecall] = useState<ReportRow | null>(null);
-  const [confirmApprove, setConfirmApprove] = useState<ReportRow | null>(null);
-  const [refuseTarget, setRefuseTarget] = useState<ReportRow | null>(null);
-
+  // ký số + submit
+  const [chuKySo, setChuKySo] = useState("");
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const updateReport = useUpdateReport();
   const submitReport = useSubmitReport();
-  const recallReport = useRecallReport();
-  const approveReport = useApproveReport();
-  const refuseReport = useRefuseReport();
 
   const { data: units = [] } = useUnits();
 
@@ -151,6 +181,18 @@ export default function DailyReport() {
     );
   }, [items, units, maDonVi]);
 
+  // báo cáo nháp của chính đơn vị mình
+  const ownDraft = useMemo(
+    () => rows.find((r) => r.donVi === maDonVi && isDraft(r.status)) ?? null,
+    [rows, maDonVi],
+  );
+
+  // thông tin trực chỉ huy (người ký) của báo cáo nháp
+  const signer = useMemo(
+    () => parseJson<TrucNguoiInfo | null>(ownDraft?.raw?.trucBanChiHuy, null),
+    [ownDraft],
+  );
+
   const visibleRows = useMemo(
     () => rows.filter((r) => !isDraft(r.status) || r.donVi === maDonVi),
     [rows, maDonVi],
@@ -210,78 +252,65 @@ export default function DailyReport() {
     }
   };
 
-  const goDetail = (row: ReportRow) => {
-    if (row.notSubmitted) {
-      navigate(`/daily-report/create?donVi=${row.donVi}`);
-    } else {
-      navigate(`/daily-report/detail/${row.idDonBaoCao}`);
+  const handlePickSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh (PNG/JPG).");
+      return;
     }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ảnh chữ ký tối đa 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setChuKySo(String(reader.result));
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
-  // ---- quyền theo từng dòng ----
-  const isOwnRow = (r: ReportRow) => r.donVi === maDonVi;
-  const canSubmit = (r: ReportRow) =>
-    !r.notSubmitted &&
-    isOwnRow(r) &&
-    isDraft(r.status) &&
-    !!r.raw?.chuKySo &&
-    r.raw.chuKySo.trim() !== "";
-  const canRecall = (r: ReportRow) =>
-    !r.notSubmitted && isOwnRow(r) && isPending(r.status);
-  const canApprove = (r: ReportRow) =>
-    !r.notSubmitted && isChiHuy && !isOwnRow(r) && isPending(r.status);
+  const clearSignature = () => setChuKySo("");
 
-  // ---- xử lý mutation ----
   const doSubmit = async () => {
-    if (!confirmSubmit) return;
+    if (!ownDraft) return;
     try {
-      await submitReport.mutateAsync(confirmSubmit.idDonBaoCao);
-      toast.success("Đã trình phê duyệt báo cáo");
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setConfirmSubmit(null);
-    }
-  };
-
-  const doRecall = async () => {
-    if (!confirmRecall) return;
-    try {
-      await recallReport.mutateAsync(confirmRecall.idDonBaoCao);
-      toast.success("Đã thu hồi báo cáo về nháp");
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setConfirmRecall(null);
-    }
-  };
-
-  const doApprove = async () => {
-    if (!confirmApprove) return;
-    try {
-      await approveReport.mutateAsync(confirmApprove.idDonBaoCao);
-      toast.success("Đã phê duyệt báo cáo");
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setConfirmApprove(null);
-    }
-  };
-
-  const doRefuse = async (lyDoTuChoi: string) => {
-    if (!refuseTarget) return;
-    try {
-      await refuseReport.mutateAsync({
-        id: refuseTarget.idDonBaoCao,
-        lyDoTuChoi,
+      // lấy dữ liệu báo cáo nháp để giữ nguyên khi update kèm chữ ký
+      const detail = (await reportApi.getById(ownDraft.idDonBaoCao)).Result;
+      const payload: CreateReportRequest = {
+        quanSoTong: detail.quanSoTong,
+        quanSoHienDien: detail.quanSoHienDien,
+        quanSoVang: detail.quanSoVang,
+        thoiGianBaoCao: detail.thoiGianBaoCao,
+        thongTinVang: detail.thongTinVang,
+        chiTietVang: detail.chiTietVang,
+        donVi: detail.donVi.maDonVi,
+        trucBanChiHuy: detail.trucBanChiHuy,
+        trucBanTacChien: detail.trucBanTacChien,
+        tinhHinhHoatDong: detail.tinhHinhHoatDong,
+        loaiDonBaoCao: detail.loaiDonBaoCao,
+        chuKySo,
+      };
+      await updateReport.mutateAsync({
+        id: ownDraft.idDonBaoCao,
+        data: payload,
       });
-      toast.success("Đã từ chối báo cáo");
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setRefuseTarget(null);
+      await submitReport.mutateAsync(ownDraft.idDonBaoCao);
+      toast.success("Đã trình báo cáo lên cấp trên phê duyệt.");
+      setChuKySo("");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
+
+  const onClickSubmit = () => {
+    if (!chuKySo) {
+      toast.error("Vui lòng ký số trước khi trình phê duyệt.");
+      return;
+    }
+    setConfirmSubmit(true);
+  };
+
+  const submitting = updateReport.isPending || submitReport.isPending;
 
   const stats: {
     tone: StatCardTone;
@@ -321,6 +350,14 @@ export default function DailyReport() {
     },
   ];
 
+  const goDetail = (row: ReportRow) => {
+    if (row.notSubmitted) {
+      navigate(`/daily-report/create?donVi=${row.donVi}`);
+    } else {
+      navigate(`/daily-report/detail/${row.idDonBaoCao}`);
+    }
+  };
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between">
@@ -334,9 +371,15 @@ export default function DailyReport() {
             onChange={setNgay}
             className="mr-2 w-[280px]"
           />
-          <Button onClick={() => navigate("/daily-report/create")}>
-            <Plus className="mr-2 size-4" /> Thêm báo cáo
-          </Button>
+          {ownDraft ? (
+            <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
+              <Send className="mr-2 size-4" /> Trình phê duyệt
+            </Button>
+          ) : (
+            <Button onClick={() => navigate("/daily-report/create")}>
+              <Plus className="mr-2 size-4" /> Thêm báo cáo
+            </Button>
+          )}
         </div>
       </div>
       <div className="-mx-1.5 mb-4 flex flex-wrap">
@@ -410,16 +453,8 @@ export default function DailyReport() {
                     key={r.idDonBaoCao}
                     row={r}
                     canEdit={!r.notSubmitted && EDITABLE.includes(r.status)}
-                    canSubmit={canSubmit(r)}
-                    canRecall={canRecall(r)}
-                    canApprove={canApprove(r)}
-                    canRefuse={canApprove(r)}
                     onViewDetail={goDetail}
                     onEdit={goEditOrCreate}
-                    onSubmit={setConfirmSubmit}
-                    onRecall={setConfirmRecall}
-                    onApprove={setConfirmApprove}
-                    onRefuse={setRefuseTarget}
                   />
                 ))}
                 <ReportTotalRow t={totals} absentList={absentList} />{" "}
@@ -428,42 +463,122 @@ export default function DailyReport() {
           </TableBody>
         </Table>
       </div>
+
       {!isLoading && filteredRows.length > 0 && (
         <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
       )}
 
+      {ownDraft && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="flex items-center text-base">
+              <PenLine className="mr-2 size-4 text-primary" />
+              Ký số báo cáo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg"
+              className="hidden"
+              onChange={handlePickSignature}
+            />
+
+            <div className="-mx-2 flex flex-wrap items-stretch">
+              <div className="mb-2 w-full px-2 md:w-2/3">
+                {chuKySo ? (
+                  <div className="flex h-full items-center justify-center rounded-lg border bg-[length:16px_16px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%),linear-gradient(-45deg,#f1f5f9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f1f5f9_75%),linear-gradient(-45deg,transparent_75%,#f1f5f9_75%)] p-4">
+                    <img
+                      src={chuKySo}
+                      alt="Chữ ký"
+                      className="max-h-40 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <ImagePlus className="mb-2 size-8" />
+                    Bấm để chọn ảnh chữ ký (PNG/JPG, tối đa 2MB)
+                  </button>
+                )}
+              </div>
+
+              <div className="mb-2 w-full px-2 md:w-1/3">
+                <div className="flex h-full flex-col justify-between rounded-lg border bg-muted/30 p-4">
+                  <div>
+                    {chuKySo ? (
+                      <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                        <CheckCircle2 className="mr-1.5 size-4" />
+                        Đã ký số
+                      </div>
+                    ) : (
+                      <div className="mb-3 inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700">
+                        <PenLine className="mr-1.5 size-4" />
+                        Chưa ký số
+                      </div>
+                    )}
+                    <p className="mb-3 text-sm text-muted-foreground">
+                      Ký số vào báo cáo nháp trước khi bấm "Trình phê duyệt".
+                      Ảnh chữ ký định dạng PNG/JPG.
+                    </p>
+
+                    <div className="divide-y rounded-lg border bg-background/70 text-sm">
+                      <SignerRow
+                        icon={<User className="size-3.5" />}
+                        label="Người ký"
+                        value={signer?.tenNguoitruc}
+                      />
+                      <SignerRow
+                        icon={<Award className="size-3.5" />}
+                        label="Cấp bậc"
+                        value={signer?.capbacNguoitruc}
+                      />
+                      <SignerRow
+                        icon={<Briefcase className="size-3.5" />}
+                        label="Chức vụ"
+                        value={signer?.chucvuNguoitruc}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-col">
+                    <Button
+                      variant="outline"
+                      className="mb-2 w-full"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <ImagePlus className="mr-2 size-4" />
+                      {chuKySo ? "Đổi ảnh chữ ký" : "Chọn ảnh chữ ký"}
+                    </Button>
+                    {chuKySo && (
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={clearSignature}
+                      >
+                        <X className="mr-2 size-4" /> Xóa chữ ký
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <ConfirmDialog
-        open={!!confirmSubmit}
-        onOpenChange={(v) => !v && setConfirmSubmit(null)}
-        title="Trình phê duyệt báo cáo"
-        description="Bạn có chắc muốn trình báo cáo này lên cấp trên phê duyệt?"
+        open={confirmSubmit}
+        onOpenChange={setConfirmSubmit}
+        title="Xác nhận trình phê duyệt"
+        description="Báo cáo sẽ được gửi lên cấp trên để phê duyệt. Bạn có chắc chắn?"
         confirmText="Trình phê duyệt"
-        loading={submitReport.isPending}
+        loading={submitting}
         onConfirm={doSubmit}
-      />
-      <ConfirmDialog
-        open={!!confirmRecall}
-        onOpenChange={(v) => !v && setConfirmRecall(null)}
-        title="Thu hồi báo cáo"
-        description="Thu hồi báo cáo về trạng thái nháp để chỉnh sửa?"
-        confirmText="Thu hồi"
-        loading={recallReport.isPending}
-        onConfirm={doRecall}
-      />
-      <ConfirmDialog
-        open={!!confirmApprove}
-        onOpenChange={(v) => !v && setConfirmApprove(null)}
-        title="Phê duyệt báo cáo"
-        description="Xác nhận phê duyệt báo cáo của đơn vị này?"
-        confirmText="Phê duyệt"
-        loading={approveReport.isPending}
-        onConfirm={doApprove}
-      />
-      <RefuseDialog
-        open={!!refuseTarget}
-        onOpenChange={(v) => !v && setRefuseTarget(null)}
-        loading={refuseReport.isPending}
-        onConfirm={doRefuse}
       />
     </div>
   );
