@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+// src/features/reports/CreateReport.tsx
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -8,10 +9,6 @@ import {
   Save,
   Copy,
   AlertTriangle,
-  PenLine,
-  ImagePlus,
-  X,
-  Send,
 } from "lucide-react";
 import api from "@/lib/api";
 import { reportApi } from "./api";
@@ -27,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuthInfo } from "@/features/auth/queries";
-import { useCreateReport, useUpdateReport, useSubmitReport } from "./queries";
+import { useCreateReport, useUpdateReport } from "./queries";
 import {
   LY_DO_OPTIONS,
   CAP_BAC_OPTIONS,
@@ -309,29 +306,6 @@ export default function CreateReport() {
   const [detail, setDetail] = useState<DetailStepData>({ ...EMPTY_DETAIL });
   const [copying, setCopying] = useState(false);
 
-  // --- Ký số ---
-  const [chuKySo, setChuKySo] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handlePickSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Vui lòng chọn tệp ảnh chữ ký");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Ảnh chữ ký tối đa 2MB");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setChuKySo(String(reader.result || ""));
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  };
-
-  const clearSignature = () => setChuKySo("");
-
   const [errors, setErrors] = useState<Errors>({});
   const clearError = (key: string) =>
     setErrors((p) => {
@@ -344,9 +318,46 @@ export default function CreateReport() {
   useEffect(() => {
     if (!isEdit || !id) return;
     let ignore = false;
-    fetchNhiemVu(id).then((nv) => {
+
+    (async () => {
+      // 1) Nạp lại báo cáo chính (trực chỉ huy / trực ban / danh sách vắng)
+      try {
+        const res = await reportApi.getById(id);
+        const r = res.Result;
+        if (!ignore && r) {
+          try {
+            if (r.trucBanChiHuy)
+              setTrucChiHuy({ ...EMPTY_TRUC, ...JSON.parse(r.trucBanChiHuy) });
+          } catch {
+            /* ignore */
+          }
+          try {
+            if (r.trucBanTacChien)
+              setTrucBanTacChien({
+                ...EMPTY_TRUC,
+                ...JSON.parse(r.trucBanTacChien),
+              });
+          } catch {
+            /* ignore */
+          }
+          try {
+            if (r.chiTietVang) {
+              const rows = JSON.parse(r.chiTietVang) as AbsentRow[];
+              setAbsentRows(rows.map((row) => ({ ...row, id: genId() })));
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+
+      // 2) Nạp lại "Tình hình nhiệm vụ trong ngày"
+      const nv = await fetchNhiemVu(id);
       if (!ignore && nv) setDetail(nhiemVuToDetail(nv));
-    });
+    })();
+
     return () => {
       ignore = true;
     };
@@ -484,13 +495,8 @@ export default function CreateReport() {
     }
   };
 
-  const submitReport = useSubmitReport(); // import từ ./queries
-
-  const handleSave = async (action: "draft" | "submit") => {
+  const handleSave = async () => {
     const e = validate();
-    if (action === "submit" && !chuKySo) {
-      e["chuKySo"] = "Vui lòng ký số trước khi trình phê duyệt.";
-    }
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
@@ -511,7 +517,6 @@ export default function CreateReport() {
       trucBanChiHuy: JSON.stringify(trucChiHuy),
       trucBanTacChien: JSON.stringify(trucBanTacChien),
       loaiDonBaoCao: "DON_VI",
-      chuKySo: chuKySo || undefined,
     };
 
     try {
@@ -520,20 +525,16 @@ export default function CreateReport() {
         const res = await updateReport.mutateAsync({ id: id!, data: payload });
         if (!res.success) throw new Error(res.message);
         idDonBaoCao = res.Result?.idDonBaoCao ?? id!;
+        toast.success("Cập nhật báo cáo thành công");
       } else {
         const res = await createReport.mutateAsync(payload);
         if (!res.success) throw new Error(res.message);
         idDonBaoCao = res.Result?.idDonBaoCao ?? "";
+        toast.success("Lưu báo cáo thành công");
       }
 
       if (idDonBaoCao) await saveNhiemVu(idDonBaoCao, detail);
 
-      if (action === "submit" && idDonBaoCao) {
-        await submitReport.mutateAsync(idDonBaoCao);
-        toast.success("Đã trình phê duyệt");
-      } else {
-        toast.success("Đã lưu nháp");
-      }
       navigate("/daily-report");
     } catch {
       toast.error("Không thể lưu báo cáo");
@@ -568,15 +569,9 @@ export default function CreateReport() {
             <Copy className="mr-2 size-4" />
             {copying ? "Đang tải..." : "Sao chép từ hôm qua"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => handleSave("draft")}
-            disabled={saving}
-          >
-            <Save className="mr-2 size-4" /> Lưu nháp
-          </Button>
-          <Button onClick={() => handleSave("submit")} disabled={saving}>
-            <Send className="mr-2 size-4" /> Trình phê duyệt
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="mr-2 size-4" />{" "}
+            {saving ? "Đang lưu..." : "Lưu báo cáo"}
           </Button>
         </div>
       </div>
@@ -956,82 +951,6 @@ export default function CreateReport() {
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-base">
-            <PenLine className="mr-2 size-4 text-primary" />
-            Ký số báo cáo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePickSignature}
-          />
-          {chuKySo ? (
-            <div className="-mx-2 flex flex-wrap items-start">
-              <div className="w-full px-2 mb-3 sm:w-auto">
-                <div
-                  className="flex h-40 w-64 items-center justify-center overflow-hidden rounded-lg border bg-white"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(45deg,#f1f5f9 25%,transparent 25%),linear-gradient(-45deg,#f1f5f9 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f1f5f9 75%),linear-gradient(-45deg,transparent 75%,#f1f5f9 75%)",
-                    backgroundSize: "16px 16px",
-                    backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
-                  }}
-                >
-                  <img
-                    src={chuKySo}
-                    alt="Chữ ký"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-              </div>
-              <div className="w-full px-2 sm:w-auto">
-                <p className="mb-2 text-sm text-muted-foreground">
-                  Chữ ký của trực chỉ huy (người báo cáo)
-                  {trucChiHuy.tenNguoitruc
-                    ? `: ${trucChiHuy.tenNguoitruc}`
-                    : ""}
-                </p>
-                <div className="flex flex-wrap items-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mb-2 mr-2"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <ImagePlus className="mr-2 size-4" />
-                    Đổi ảnh chữ ký
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="mb-2 text-destructive hover:text-destructive"
-                    onClick={clearSignature}
-                  >
-                    <X className="mr-2 size-4" />
-                    Xóa chữ ký
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              <ImagePlus className="mb-2 size-6" />
-              Bấm để chọn ảnh chữ ký (PNG/JPG, tối đa 2MB)
-            </button>
-          )}
         </CardContent>
       </Card>
     </div>

@@ -429,7 +429,7 @@ export default function DailyReport() {
         </Table>
       </div>
       {!isLoading && filteredRows.length > 0 && (
-        <NhiemVuNgaySection rows={filteredRows} />
+        <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
       )}
 
       <ConfirmDialog

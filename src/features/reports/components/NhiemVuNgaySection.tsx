@@ -1,4 +1,3 @@
-// src/features/reports/components/NhiemVuNgaySection.tsx
 import { useState } from "react";
 import {
   Dialog,
@@ -18,6 +17,32 @@ type NhiemVu = {
 };
 
 type Accent = "success" | "danger" | "warning" | "neutral";
+
+const STATUS_LABEL: Record<string, string> = {
+  Nháp: "Nháp",
+  Nhap: "Nháp",
+  DRAFT: "Nháp",
+  Chờ_Duyệt: "Chờ duyệt",
+  "Chờ duyệt": "Chờ duyệt",
+  Đã_Duyệt: "Đã duyệt",
+  Da_Duyet: "Đã duyệt",
+  Tu_Choi: "Từ chối",
+  Từ_Chối: "Từ chối",
+  "Từ chối": "Từ chối",
+};
+
+const STATUS_TONE: Record<string, Accent> = {
+  Nháp: "neutral",
+  Nhap: "neutral",
+  DRAFT: "neutral",
+  Chờ_Duyệt: "warning",
+  "Chờ duyệt": "warning",
+  Đã_Duyệt: "success",
+  Da_Duyet: "success",
+  Tu_Choi: "danger",
+  Từ_Chối: "danger",
+  "Từ chối": "danger",
+};
 
 function Badge({
   tone,
@@ -156,7 +181,13 @@ function NhiemVuBody({ data }: { data: NhiemVu }) {
   );
 }
 
-export default function NhiemVuNgaySection({ rows }: { rows: ReportRow[] }) {
+export default function NhiemVuNgaySection({
+  rows,
+  hasChildren,
+}: {
+  rows: ReportRow[];
+  hasChildren: boolean;
+}) {
   const submitted = rows.filter((r) => !r.notSubmitted && r.idDonBaoCao);
   const queries = useNhiemVuNgayByReports(submitted.map((r) => r.idDonBaoCao));
 
@@ -169,6 +200,46 @@ export default function NhiemVuNgaySection({ rows }: { rows: ReportRow[] }) {
     return { isLoading: q?.isLoading ?? false, data };
   };
 
+  const statusBadge = (r: ReportRow) =>
+    r.notSubmitted ? (
+      <Badge tone="neutral">Chưa nộp</Badge>
+    ) : (
+      <Badge tone={STATUS_TONE[r.status] ?? "neutral"}>
+        {STATUS_LABEL[r.status] ?? r.status}
+      </Badge>
+    );
+
+  if (!hasChildren) {
+    const r = rows[0];
+    if (!r) return null;
+    const info = getInfo(r);
+
+    return (
+      <div className="mt-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            Tình hình nhiệm vụ trong ngày
+          </h2>
+          {statusBadge(r)}
+        </div>
+
+        {r.notSubmitted ? (
+          <p className="text-sm text-muted-foreground">
+            Đơn vị chưa nộp báo cáo
+          </p>
+        ) : info.isLoading ? (
+          <p className="text-sm text-muted-foreground">Đang tải...</p>
+        ) : info.data ? (
+          <NhiemVuBody data={info.data} />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Chưa có nội dung nhiệm vụ ngày
+          </p>
+        )}
+      </div>
+    );
+  }
+
   const openRow = rows.find((r) => (r.idDonBaoCao || r.donVi) === openKey);
   const openInfo = openRow ? getInfo(openRow) : null;
 
@@ -179,17 +250,6 @@ export default function NhiemVuNgaySection({ rows }: { rows: ReportRow[] }) {
       <div className="-mx-1.5 flex flex-wrap">
         {rows.map((r, i) => {
           const key = r.idDonBaoCao || r.donVi || String(i);
-          const { data } = getInfo(r);
-
-          let statusNode: React.ReactNode;
-          if (r.notSubmitted) {
-            statusNode = <Badge tone="neutral">Chưa nộp</Badge>;
-          } else if (data) {
-            statusNode = <Badge tone="success">Đã nộp</Badge>;
-          } else {
-            statusNode = <Badge tone="warning">Chưa có nội dung</Badge>;
-          }
-
           return (
             <div key={key} className="w-1/2 p-1.5 sm:w-1/3 lg:w-1/4">
               <button
@@ -201,14 +261,13 @@ export default function NhiemVuNgaySection({ rows }: { rows: ReportRow[] }) {
                 <span className="mb-2 line-clamp-2 text-sm font-semibold">
                   {r.kyhieuDonVi || r.tenDonVi}
                 </span>
-                {statusNode}
+                {statusBadge(r)}
               </button>
             </div>
           );
         })}
       </div>
 
-      {/* Modal chi tiết nhiệm vụ ngày của đơn vị được chọn */}
       <Dialog open={!!openKey} onOpenChange={(v) => !v && setOpenKey(null)}>
         <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
