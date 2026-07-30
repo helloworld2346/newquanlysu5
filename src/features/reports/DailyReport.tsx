@@ -40,6 +40,7 @@ import {
   useSubmitReport,
   useUpdateReport,
   TONG_HOP_CAPS,
+  useTongHopReports,
 } from "./queries";
 import { reportApi } from "./api";
 import { useUnits } from "@/features/units/queries";
@@ -115,8 +116,8 @@ export default function DailyReport() {
   const [ngay, setNgay] = useState(todayIso());
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [activeTab, setActiveTab] = useState<"child" | "consolidated">("child");
 
-  // ký số + submit
   const [chuKySo, setChuKySo] = useState("");
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -153,7 +154,7 @@ export default function DailyReport() {
     unitsReady,
   );
 
-  const isAggregating = TONG_HOP_CAPS.includes(capByUnit[maDonVi ?? ""] ?? "");  
+  const isAggregating = TONG_HOP_CAPS.includes(capByUnit[maDonVi ?? ""] ?? "");
 
   const rows = useMemo(() => {
     const reportByUnit = new Map(
@@ -289,6 +290,32 @@ export default function DailyReport() {
           })),
         ),
     [filteredRows],
+  );
+
+  const { data: tongHopItems = [], isLoading: tongHopLoading } =
+    useTongHopReports(maDonVi, ngay, hasChildren);
+
+  const tongHopRows = useMemo(
+    () => tongHopItems.map(mapItemToRow),
+    [tongHopItems],
+  );
+
+  const tongHopTotals = useMemo(
+    () => buildDisplayTotals(tongHopRows),
+    [tongHopRows],
+  );
+
+  const tongHopAbsent = useMemo(
+    () =>
+      tongHopRows
+        .filter((r) => !r.notSubmitted)
+        .flatMap((r) =>
+          r.chiTietVangList.map((qn) => ({
+            ...qn,
+            tenDonVi: r.kyhieuDonVi || r.tenDonVi,
+          })),
+        ),
+    [tongHopRows],
   );
 
   const goEditOrCreate = (row: ReportRow) => {
@@ -475,12 +502,79 @@ export default function DailyReport() {
           </Button>
         )}
       </div>
+      {hasChildren && (
+        <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "child"}
+            onClick={() => setActiveTab("child")}
+            className={`mr-1 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              activeTab === "child"
+                ? "bg-background text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Báo cáo đơn vị
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "consolidated"}
+            onClick={() => setActiveTab("consolidated")}
+            className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              activeTab === "consolidated"
+                ? "bg-background text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Báo cáo tổng hợp
+          </button>
+        </div>
+      )}
       <div className="overflow-x-auto rounded-lg border bg-background">
         <Table className="w-full table-fixed min-w-[960px]">
           <ReportColGroup />
           <ReportTableHeader />
           <TableBody>
-            {isLoading ? (
+            {activeTab === "consolidated" ? (
+              tongHopLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <TableRow key={`sk-th-${i}`}>
+                    {Array.from({ length: 22 }).map((__, j) => (
+                      <TableCell key={`sk-th-${i}-${j}`} className="px-1">
+                        <Skeleton className="mx-auto h-4 w-full" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : tongHopRows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={22}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    Chưa có báo cáo tổng hợp cho ngày này
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <>
+                  {tongHopRows.map((r) => (
+                    <ReportTableRow
+                      key={r.idDonBaoCao}
+                      row={r}
+                      canEdit={false}
+                      onViewDetail={goDetail}
+                      onEdit={goEditOrCreate}
+                    />
+                  ))}
+                  <ReportTotalRow
+                    t={tongHopTotals}
+                    absentList={tongHopAbsent}
+                  />
+                </>
+              )
+            ) : isLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <TableRow key={`sk-${i}`}>
                   {Array.from({ length: 22 }).map((__, j) => (

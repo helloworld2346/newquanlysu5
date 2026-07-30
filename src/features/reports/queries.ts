@@ -101,6 +101,19 @@ export function useChildrenReportsMerged(
   };
 }
 
+export function useTongHopReports(
+  maDonVi: string | undefined,
+  ngay: string,
+  hasChildren = true,
+) {
+  return useQuery({
+    queryKey: [...reportsKey(maDonVi ?? "", ngay), "TONG_HOP_TAB"],
+    queryFn: () => reportApi.searchByUnitAndDate(maDonVi!, ngay, "TONG_HOP"),
+    enabled: !!maDonVi && !!ngay && hasChildren,
+    select: (res) => (res.Result ? [res.Result] : []),
+  });
+}
+
 export function useCreateReport() {
   const qc = useQueryClient();
   return useMutation({
