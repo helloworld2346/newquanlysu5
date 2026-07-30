@@ -1,4 +1,3 @@
-// src/features/reports/DailyReport.tsx
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
@@ -198,7 +198,7 @@ export default function DailyReport() {
     [ownDraft],
   );
 
-    const childRows = useMemo(
+  const childRows = useMemo(
     () => (hasChildren ? rows.filter((r) => r.donVi !== maDonVi) : []),
     [hasChildren, rows, maDonVi],
   );
@@ -477,14 +477,15 @@ export default function DailyReport() {
           <ReportTableHeader />
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={22}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Đang tải...
-                </TableCell>
-              </TableRow>
+              Array.from({ length: 8 }).map((_, i) => (
+                <TableRow key={`sk-${i}`}>
+                  {Array.from({ length: 22 }).map((__, j) => (
+                    <TableCell key={`sk-${i}-${j}`} className="px-1">
+                      <Skeleton className="mx-auto h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : filteredRows.length === 0 ? (
               <TableRow>
                 <TableCell
