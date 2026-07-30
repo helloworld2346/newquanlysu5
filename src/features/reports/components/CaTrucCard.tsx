@@ -65,24 +65,30 @@ function CaTrucPerson({
     </div>
   );
 }
-
-export default function CaTrucCard({
-  ngay,
-  maDonVi,
-  isAggregating,
-}: {
-  ngay: string;
-  maDonVi: string | undefined;
-  isAggregating: boolean;
-}) {
-  const { data: report, isLoading } = useOwnReport(
-    maDonVi,
-    ngay,
-    isAggregating,
-  );
-
-  const trucChiHuy = parseTruc(report?.trucBanChiHuy);
-  const trucTacChien = parseTruc(report?.trucBanTacChien);
+export default function CaTrucCard({  
+  ngay,  
+  maDonVi,  
+  isAggregating,  
+  capDonVi,  
+}: {  
+  ngay: string;  
+  maDonVi: string | undefined;  
+  isAggregating: boolean;  
+  capDonVi: string | null | undefined;  
+}) {  
+  const { data: report, isLoading } = useOwnReport(  
+    maDonVi,  
+    ngay,  
+    isAggregating,  
+  );  
+  
+  const trucChiHuy = parseTruc(report?.trucBanChiHuy);  
+  const trucTacChien = parseTruc(report?.trucBanTacChien);  
+  
+  const tacChienLabel =  
+    capDonVi === "TRUNG_DOAN" || capDonVi === "SU_DOAN"  
+      ? "Trực ban tác chiến"  
+      : "Trực ban nội vụ";
 
   return (
     <Card className="mt-4">
@@ -125,7 +131,7 @@ export default function CaTrucCard({
             </div>
             <div className="w-full px-2 lg:w-1/2">
               <CaTrucPerson
-                label="Trực ban tác chiến"
+                label={tacChienLabel}
                 p={trucTacChien}
                 accent="border-l-emerald-500"
                 icon={<UserCog className="size-4" />}

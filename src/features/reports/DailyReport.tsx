@@ -522,7 +522,12 @@ export default function DailyReport() {
       {!isLoading && filteredRows.length > 0 && (
         <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
       )}
-      <CaTrucCard ngay={ngay} maDonVi={maDonVi} isAggregating={isAggregating} />
+      <CaTrucCard
+        ngay={ngay}
+        maDonVi={maDonVi}
+        isAggregating={isAggregating}
+        capDonVi={capByUnit[maDonVi ?? ""] ?? account?.donVi?.capDonVi}
+      />
 
       {ownDraft && (
         <Card className="mt-4">
