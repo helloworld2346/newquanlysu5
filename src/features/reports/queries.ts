@@ -6,12 +6,16 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { reportApi } from "./api";
-import type { CreateReportRequest, ReportItemDTO } from "@/types/dailyReport";
+import type {
+  CreateReportRequest,
+  ReportItemDTO,
+  LoaiDonBaoCao,
+} from "@/types/dailyReport";
 
 export const reportsKey = (maDonVi: string, ngay: string) =>
   ["reports", maDonVi, ngay] as const;
 
-const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];
+export const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];
 
 export function useChildrenReports(maDonVi: string | undefined, ngay: string) {
   return useQuery({
@@ -174,5 +178,19 @@ export function useRefuseReport() {
     mutationFn: (v: { id: string; lyDoTuChoi: string }) =>
       reportApi.refuse(v.id, { lyDoTuChoi: v.lyDoTuChoi }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
+export function useOwnReport(
+  maDonVi: string | undefined,
+  ngay: string,
+  isAggregating: boolean,
+) {
+  const loai: LoaiDonBaoCao = isAggregating ? "TONG_HOP" : "DON_VI";
+  return useQuery({
+    queryKey: [...reportsKey(maDonVi ?? "", ngay), "OWN", loai],
+    queryFn: () => reportApi.searchByUnitAndDate(maDonVi!, ngay, loai),
+    enabled: !!maDonVi && !!ngay,
+    select: (res) => res.Result ?? null,
   });
 }

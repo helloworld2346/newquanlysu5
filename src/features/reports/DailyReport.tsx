@@ -39,6 +39,7 @@ import {
   useChildrenReportsMerged,
   useSubmitReport,
   useUpdateReport,
+  TONG_HOP_CAPS,
 } from "./queries";
 import { reportApi } from "./api";
 import { useUnits } from "@/features/units/queries";
@@ -151,6 +152,8 @@ export default function DailyReport() {
     hasChildren,
     unitsReady,
   );
+
+  const isAggregating = TONG_HOP_CAPS.includes(capByUnit[maDonVi ?? ""] ?? "");  
 
   const rows = useMemo(() => {
     const reportByUnit = new Map(
@@ -519,7 +522,7 @@ export default function DailyReport() {
       {!isLoading && filteredRows.length > 0 && (
         <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
       )}
-      <CaTrucCard ngay={ngay} />
+      <CaTrucCard ngay={ngay} maDonVi={maDonVi} isAggregating={isAggregating} />
 
       {ownDraft && (
         <Card className="mt-4">
