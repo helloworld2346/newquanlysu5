@@ -198,11 +198,6 @@ export default function DailyReport() {
     [rows, maDonVi],
   );
 
-  const signer = useMemo(
-    () => parseJson<TrucNguoiInfo | null>(ownDraft?.raw?.trucBanChiHuy, null),
-    [ownDraft],
-  );
-
   const childRows = useMemo(
     () => (hasChildren ? rows.filter((r) => r.donVi !== maDonVi) : []),
     [hasChildren, rows, maDonVi],
@@ -318,6 +313,20 @@ export default function DailyReport() {
     [tongHopRows],
   );
 
+  const tongHopDraft = useMemo(
+    () =>
+      tongHopRows.find((r) => r.donVi === maDonVi && isDraft(r.status)) ?? null,
+    [tongHopRows, maDonVi],
+  );
+
+  const activeDraft = hasChildren ? tongHopDraft : ownDraft;
+
+  const signer = useMemo(
+    () =>
+      parseJson<TrucNguoiInfo | null>(activeDraft?.raw?.trucBanChiHuy, null),
+    [activeDraft],
+  );
+
   const goEditOrCreate = (row: ReportRow) => {
     if (row.notSubmitted) {
       navigate(`/daily-report/create?donVi=${row.donVi}&ngay=${ngay}`);
@@ -346,9 +355,9 @@ export default function DailyReport() {
   const clearSignature = () => setChuKySo("");
 
   const doSubmit = async () => {
-    if (!ownDraft) return;
+    if (!activeDraft) return;
     try {
-      const detail = (await reportApi.getById(ownDraft.idDonBaoCao)).Result;
+      const detail = (await reportApi.getById(activeDraft.idDonBaoCao)).Result;
       const payload: CreateReportRequest = {
         quanSoTong: detail.quanSoTong,
         quanSoHienDien: detail.quanSoHienDien,
@@ -364,10 +373,10 @@ export default function DailyReport() {
         chuKySo,
       };
       await updateReport.mutateAsync({
-        id: ownDraft.idDonBaoCao,
+        id: activeDraft.idDonBaoCao,
         data: payload,
       });
-      await submitReport.mutateAsync(ownDraft.idDonBaoCao);
+      await submitReport.mutateAsync(activeDraft.idDonBaoCao);
       toast.success("Đã trình báo cáo lên cấp trên phê duyệt.");
       setChuKySo("");
     } catch (err) {
@@ -445,9 +454,15 @@ export default function DailyReport() {
             className="mr-2 w-[280px]"
           />
           {hasChildren ? (
-            <Button onClick={handleConsolidate} disabled={!canConsolidate}>
-              <Layers className="mr-2 size-4" /> {consolidateLabel}
-            </Button>
+            tongHopDraft ? (
+              <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
+                <Send className="mr-2 size-4" /> Trình phê duyệt
+              </Button>
+            ) : (
+              <Button onClick={handleConsolidate} disabled={!canConsolidate}>
+                <Layers className="mr-2 size-4" /> {consolidateLabel}
+              </Button>
+            )
           ) : ownDraft ? (
             <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
               <Send className="mr-2 size-4" /> Trình phê duyệt
@@ -613,9 +628,15 @@ export default function DailyReport() {
         </Table>
       </div>
 
-      {!isLoading && filteredRows.length > 0 && (
-        <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
-      )}
+      {activeTab === "consolidated"
+        ? tongHopRows.length > 0 && (
+            <NhiemVuNgaySection rows={tongHopRows} hasChildren={false} />
+          )
+        : !isLoading &&
+          filteredRows.length > 0 && (
+            <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
+        )}
+      
       <CaTrucCard
         ngay={ngay}
         maDonVi={maDonVi}
@@ -623,7 +644,7 @@ export default function DailyReport() {
         capDonVi={capByUnit[maDonVi ?? ""] ?? account?.donVi?.capDonVi}
       />
 
-      {ownDraft && (
+      {activeDraft && (
         <Card className="mt-4">
           <CardHeader>
             <CardTitle className="flex items-center text-base">
