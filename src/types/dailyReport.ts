@@ -70,7 +70,7 @@ export interface ApproveResponse {
 }
 
 export interface RefuseRequest {
-  lyDoTuChoi: string;
+  ghiChu: string;
 }
 
 export interface ActionResponse {

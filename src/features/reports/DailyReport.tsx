@@ -341,7 +341,6 @@ export default function DailyReport() {
     isChiHuy &&
     !!commanderReport &&
     normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
-  const canRefuse = canApprove;
 
   const effectiveTab = isChiHuy ? "consolidated" : activeTab;
 
@@ -458,7 +457,7 @@ export default function DailyReport() {
     const row = refuseTarget;
     if (!row) return;
     try {
-      await refuseReport.mutateAsync({ id: row.idDonBaoCao, lyDoTuChoi: lyDo });
+      await refuseReport.mutateAsync({ id: row.idDonBaoCao, ghiChu: lyDo });
       toast.success("Đã từ chối báo cáo.");
       setRefuseTarget(null);
     } catch (err) {
@@ -550,7 +549,10 @@ export default function DailyReport() {
                 </>
               ) : null
             ) : tongHopDraft ? (
-              <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
+              <Button
+                onClick={() => setConfirmSubmit(true)}
+                disabled={submitting}
+              >
                 <Send className="mr-2 size-4" /> Trình phê duyệt
               </Button>
             ) : (
@@ -739,7 +741,7 @@ export default function DailyReport() {
         capDonVi={capByUnit[maDonVi ?? ""] ?? account?.donVi?.capDonVi}
       />
 
-      {(activeDraft || canApprove) && (
+      {((activeDraft && !hasChildren) || canApprove) && (
         <Card className="mt-4">
           <CardHeader>
             <CardTitle className="flex items-center text-base">

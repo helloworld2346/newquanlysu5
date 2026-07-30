@@ -188,8 +188,8 @@ export function useApproveReport() {
 export function useRefuseReport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (v: { id: string; lyDoTuChoi: string }) =>
-      reportApi.refuse(v.id, { lyDoTuChoi: v.lyDoTuChoi }),
+    mutationFn: (v: { id: string; ghiChu: string }) =>
+      reportApi.refuse(v.id, { ghiChu: v.ghiChu }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
   });
 }
