@@ -4,11 +4,11 @@ import type {
   TrucNguoiPayload,
   UpdateCaTrucPayload,
   CaTrucPayload,
-} from "@/types/duty";  
+} from "@/types/duty";
 
 const chiHuyKey = ["truc-chi-huy"] as const;
 const tacChienKey = ["truc-ban-tac-chien"] as const;
-const caTrucKey = ["ca-truc"] as const;  
+const caTrucKey = ["ca-truc"] as const;
 
 export function useTrucChiHuy() {
   return useQuery({ queryKey: chiHuyKey, queryFn: dutyApi.getAllTrucChiHuy });
@@ -85,5 +85,14 @@ export function useCreateCaTruc() {
   return useMutation({
     mutationFn: (body: CaTrucPayload) => dutyApi.createCaTruc(body),
     onSuccess: () => qc.invalidateQueries({ queryKey: caTrucKey }),
+  });
+}
+
+export function useCaTrucByDate(ngayTruc: string | undefined) {
+  return useQuery({
+    queryKey: ["ca-truc-by-date", ngayTruc],
+    queryFn: () => dutyApi.getCaTrucByDate(ngayTruc!),
+    enabled: !!ngayTruc,
+    staleTime: 60_000,
   });
 }

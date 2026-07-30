@@ -59,6 +59,7 @@ import type {
 } from "@/types/dailyReport";
 import ReportColGroup from "./components/ReportColGroup";
 import NhiemVuNgaySection from "./components/NhiemVuNgaySection";
+import CaTrucCard from "./components/CaTrucCard";
 
 const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
 
@@ -518,6 +519,7 @@ export default function DailyReport() {
       {!isLoading && filteredRows.length > 0 && (
         <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
       )}
+      <CaTrucCard ngay={ngay} />
 
       {ownDraft && (
         <Card className="mt-4">
