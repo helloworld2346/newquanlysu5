@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
@@ -6,27 +6,48 @@ import Breadcrumb from "./Breadcrumb";
 import dongsonBg from "@/assets/images/login-bg-dongson.png";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
+const SWITCH_DELAY = 180;
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(
-    () => localStorage.getItem(COLLAPSE_KEY) === "true",
-  );
+  const initialCollapsed = localStorage.getItem(COLLAPSE_KEY) === "true";
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const [showCollapsed, setShowCollapsed] = useState(initialCollapsed);
+  const switchTimer = useRef<number | null>(null);
+
+  const applyCollapsed = (next: boolean, immediate = false) => {
+    setCollapsed(next);
+    if (switchTimer.current !== null) {
+      window.clearTimeout(switchTimer.current);
+      switchTimer.current = null;
+    }
+    if (!next || immediate) {
+      setShowCollapsed(next);
+    } else {
+      switchTimer.current = window.setTimeout(() => {
+        setShowCollapsed(true);
+        switchTimer.current = null;
+      }, SWITCH_DELAY);
+    }
+  };
 
   const toggle = () => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(COLLAPSE_KEY, String(next));
-      return next;
-    });
+    const next = !collapsed;
+    localStorage.setItem(COLLAPSE_KEY, String(next));
+    applyCollapsed(next);
   };
 
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth < 1024) setCollapsed(true);
+      if (window.innerWidth < 1024) applyCollapsed(true, true);
     };
     onResize();
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      if (switchTimer.current !== null) {
+        window.clearTimeout(switchTimer.current);
+      }
+    };
   }, []);
 
   return (
@@ -36,7 +57,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           collapsed ? "w-28" : "w-72"
         }`}
       >
-        <Sidebar collapsed={collapsed} />
+        <Sidebar collapsed={showCollapsed} />
       </div>
 
       <button
@@ -55,12 +76,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </button>
 
       <main className="flex flex-1 flex-col overflow-hidden p-3 pl-0">
-        {/* <header className="flex h-16 shrink-0 items-center justify-center px-3">
-          <p className="truncate text-xl font-bold uppercase text-gold">
-            Thống kê quân số, Hoạt động CTĐ, CTCT
-          </p>
-        </header> */}
-
         <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-background text-foreground shadow-sm">
           <div className="flex h-16 shrink-0 items-center justify-between border-b px-6">
             <Breadcrumb />

@@ -15,12 +15,16 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const unitName = account?.donVi?.tenDonvi || "Chưa phân đơn vị";
   const sections = getNavGroupsByRole(role || null, capDonVi, tenChucnang);
 
-  const textAnim = `overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out ${
-    collapsed ? "ml-0 max-w-0 opacity-0" : "ml-3 max-w-[12rem] opacity-100"
+  const textCls = `ml-3 overflow-hidden whitespace-nowrap ${
+    collapsed ? "hidden" : ""
   }`;
 
   return (
-    <aside className="flex h-full w-full flex-col bg-primary text-primary-foreground">
+    <aside
+      className={`flex h-full flex-col bg-primary text-primary-foreground ${
+        collapsed ? "w-full" : "w-72"
+      }`}
+    >
       <div
         className={`flex h-[96px] shrink-0 items-center ${
           collapsed ? "justify-center px-2" : "px-4"
@@ -32,7 +36,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
           className="size-14 shrink-0 object-contain"
           draggable={false}
         />
-        <div className={textAnim}>
+        <div className={textCls}>
           <p className="truncate text-base font-bold uppercase text-gold">
             {unitName}
           </p>
@@ -49,7 +53,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
         {sections.map((sec, i) => (
           <div key={sec.id} className={i === 0 ? "" : "mt-4"}>
             <p
-              className={`pb-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground/60 transition-all duration-300 ease-in-out ${
+              className={`whitespace-nowrap pb-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground/60 ${
                 collapsed
                   ? "px-1 text-center text-[10px] leading-tight"
                   : "px-3"
@@ -89,7 +93,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                           />
                         )}
                         <Icon className="relative z-10 size-5 shrink-0" />
-                        <span className={`relative z-10 truncate ${textAnim}`}>
+                        <span className={`relative z-10 truncate ${textCls}`}>
                           {label}
                         </span>
                       </>
