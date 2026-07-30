@@ -365,10 +365,14 @@ export default function CreateReport() {
   const [searchParams] = useSearchParams();
   const ngayParam = searchParams.get("ngay");
   const isTongHop = searchParams.get("tongHop") === "1" && !isEdit;
-  const [ngayBaoCao] = useState(ngayParam || todayIso());
+  const [ngayBaoCao, setNgayBaoCao] = useState(ngayParam || todayIso());
 
   const [aggTongQuanSo, setAggTongQuanSo] = useState(0);
-  const tongQuanSo = isTongHop ? aggTongQuanSo : (fullDonVi?.quanSoTong ?? 0);
+  const [isAggregatingReport, setIsAggregatingReport] = useState(false);
+  const isAggregating = isTongHop || isAggregatingReport;
+  const tongQuanSo = isAggregating
+    ? aggTongQuanSo
+    : (fullDonVi?.quanSoTong ?? 0);
 
   const [trucChiHuy, setTrucChiHuy] = useState<TrucNguoiInfo>({
     ...EMPTY_TRUC,
@@ -401,31 +405,38 @@ export default function CreateReport() {
       try {
         const res = await reportApi.getById(id);
         const r = res.Result;
-        if (!ignore && r) {
-          try {
-            if (r.trucBanChiHuy)
-              setTrucChiHuy({ ...EMPTY_TRUC, ...JSON.parse(r.trucBanChiHuy) });
-          } catch {
-            /* ignore */
-          }
-          try {
-            if (r.trucBanTacChien)
-              setTrucBanTacChien({
-                ...EMPTY_TRUC,
-                ...JSON.parse(r.trucBanTacChien),
-              });
-          } catch {
-            /* ignore */
-          }
-          try {
-            if (r.chiTietVang) {
-              const rows = JSON.parse(r.chiTietVang) as AbsentRow[];
-              setAbsentRows(rows.map((row) => ({ ...row, id: genId() })));
-            }
-          } catch {
-            /* ignore */
-          }
-        }
+       if (!ignore && r) {
+         if (r.thoiGianBaoCao) {
+           setNgayBaoCao(r.thoiGianBaoCao.slice(0, 10));
+         }
+         if (r.loaiDonBaoCao === "TONG_HOP") {
+           setIsAggregatingReport(true);
+           setAggTongQuanSo(r.quanSoTong ?? 0);
+         }
+         try {
+           if (r.trucBanChiHuy)
+             setTrucChiHuy({ ...EMPTY_TRUC, ...JSON.parse(r.trucBanChiHuy) });
+         } catch {
+           /* ignore */
+         }
+         try {
+           if (r.trucBanTacChien)
+             setTrucBanTacChien({
+               ...EMPTY_TRUC,
+               ...JSON.parse(r.trucBanTacChien),
+             });
+         } catch {
+           /* ignore */
+         }
+         try {
+           if (r.chiTietVang) {
+             const rows = JSON.parse(r.chiTietVang) as AbsentRow[];
+             setAbsentRows(rows.map((row) => ({ ...row, id: genId() })));
+           }
+         } catch {
+           /* ignore */
+         }
+       }
       } catch {
         /* ignore */
       }
@@ -499,14 +510,14 @@ export default function CreateReport() {
   const quanSoVang = absentRows.length;
   const quanSoHienDien = Math.max(0, tongQuanSo - quanSoVang);
 
-  const bienChe = useMemo<Agg>(() => {
-    if (isTongHop && fullDonVi) return unitFullAgg(fullDonVi, units);
-    return {
-      siQuan: fullDonVi?.quanSoSiQuan ?? 0,
-      qncn: fullDonVi?.quanSoQncn ?? 0,
-      hsqBs: fullDonVi?.quanSoHsqBs ?? 0,
-    };
-  }, [isTongHop, fullDonVi, units]);
+  const bienChe = useMemo<Agg>(() => {  
+    if (isAggregating && fullDonVi) return unitFullAgg(fullDonVi, units);  
+    return {  
+      siQuan: fullDonVi?.quanSoSiQuan ?? 0,  
+      qncn: fullDonVi?.quanSoQncn ?? 0,  
+      hsqBs: fullDonVi?.quanSoHsqBs ?? 0,  
+    };  
+  }, [isAggregating, fullDonVi, units]);
 
   const warnings = useMemo(() => {
     const by = { siQuan: 0, qncn: 0, hsqBs: 0 };
@@ -656,7 +667,7 @@ export default function CreateReport() {
       donVi: donVi?.maDonVi ?? "",
       trucBanChiHuy: JSON.stringify(trucChiHuy),
       trucBanTacChien: JSON.stringify(isDaiDoi ? EMPTY_TRUC : trucBanTacChien),
-      loaiDonBaoCao: isTongHop ? "TONG_HOP" : "DON_VI",
+      loaiDonBaoCao: isAggregating ? "TONG_HOP" : "DON_VI",
     };
 
     try {

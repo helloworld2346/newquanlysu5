@@ -72,6 +72,9 @@ const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
 const DRAFT = ["Nháp", "Nhap", "DRAFT"];
 const isDraft = (s: string) => DRAFT.includes(s);
 
+const REFUSED = ["Từ_Chối", "Từ chối", "Tu_Choi"];
+const isRefused = (s: string) => REFUSED.includes(s);
+
 const STATUS_FILTERS = [
   { value: "Chua_Nop", label: "Chưa nộp" },
   { value: "Đã_Duyệt", label: "Đã duyệt" },
@@ -329,6 +332,14 @@ export default function DailyReport() {
     [tongHopRows, maDonVi],
   );
 
+  const tongHopRefused = useMemo(
+    () =>
+      tongHopRows.find(
+        (r) => r.donVi === maDonVi && !r.notSubmitted && isRefused(r.status),
+      ) ?? null,
+    [tongHopRows, maDonVi],
+  );
+
   const activeDraft = hasChildren ? tongHopDraft : ownDraft;
 
   const commanderReport = useMemo(
@@ -548,6 +559,15 @@ export default function DailyReport() {
                   </Button>
                 </>
               ) : null
+            ) : tongHopRefused ? (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  navigate(`/daily-report/edit/${tongHopRefused.idDonBaoCao}`)
+                }
+              >
+                <PenLine className="mr-2 size-4" /> Chỉnh sửa báo cáo
+              </Button>
             ) : tongHopDraft ? (
               <Button
                 onClick={() => setConfirmSubmit(true)}
