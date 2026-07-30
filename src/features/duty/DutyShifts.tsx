@@ -34,6 +34,7 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import SearchBar from "@/components/common/SearchBar";
 import { getErrorMessage } from "@/lib/errorHandler";
@@ -341,14 +342,30 @@ export default function DutyShifts() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Đang tải...
-                </TableCell>
-              </TableRow>
+              Array.from({ length: 8 }).map((_, i) => (
+                <TableRow key={`sk-${i}`}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-40" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="mb-1 h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="mb-1 h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-28" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="ml-auto size-8 rounded-md" />
+                  </TableCell>
+                </TableRow>
+              ))
             ) : paginated.length === 0 ? (
               <TableRow>
                 <TableCell
