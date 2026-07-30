@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import SearchBar from "@/components/common/SearchBar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/errorHandler";
 import {
   useTrucChiHuy,
@@ -203,6 +204,36 @@ export default function DutyPersonnel() {
   }, [tacChienList, search]);
 
   const isLoading = loadingChiHuy || loadingTacChien;
+
+  const renderSkeletonCard = (i: number) => (
+    <div
+      key={`sk-${i}`}
+      className="mb-2 flex items-center rounded-lg border p-3"
+    >
+      <Skeleton className="mr-3 size-10 shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1">
+        <Skeleton className="mb-1.5 h-4 w-40" />
+        <Skeleton className="mb-1.5 h-3 w-28" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+    </div>
+  );
+
+  const renderSkeletonList = (title: string) => (
+    <div className="w-full px-2 lg:w-1/2">
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle className="flex items-center text-base">
+            <UsersRound className="mr-2 size-5 text-primary" />
+            {title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {Array.from({ length: 4 }).map((_, i) => renderSkeletonCard(i))}
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   const renderPersonCard = (person: NguoiTrucWithCaTruc, type: DutyType) => (
     <div
@@ -426,7 +457,10 @@ export default function DutyPersonnel() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Đang tải...</p>
+        <div className="-mx-2 flex flex-wrap">
+          {renderSkeletonList("Trực chỉ huy")}
+          {renderSkeletonList("Trực ban tác chiến")}
+        </div>
       ) : (
         <div className="-mx-2 flex flex-wrap">
           {renderList("Trực chỉ huy", filteredChiHuy, "chiHuy")}
