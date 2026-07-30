@@ -340,6 +340,10 @@ export default function CreateReport() {
   const { account } = useAuthInfo();
   const donVi = account?.donVi;
   const isDaiDoi = donVi?.capDonVi === "DAI_DOI";
+  const tacChienLabel =
+    donVi?.capDonVi === "TRUNG_DOAN" || donVi?.capDonVi === "SU_DOAN"
+      ? "Trực ban tác chiến"
+      : "Trực ban nội vụ";
 
   const { data: units = [] } = useUnits();
   const fullDonVi = useMemo(
@@ -773,7 +777,7 @@ export default function CreateReport() {
           />
           {!isDaiDoi && (
             <TrucSection
-              title="Trực ban tác chiến / nội vụ"
+              title={tacChienLabel}
               value={trucBanTacChien}
               onChange={setTrucBanTacChien}
               prefix="tacChien"
