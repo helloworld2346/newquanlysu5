@@ -1,4 +1,3 @@
-// src/features/reports/ReportDetail.tsx
 import { useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -43,6 +42,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useReportDetail, useNhiemVuNgayDetail } from "./queries";
 import { LY_DO_OPTIONS, formatNum } from "./utils";
 import type { AbsentRow, TrucNguoiInfo } from "@/types/dailyReport";
@@ -315,6 +315,71 @@ function NhiemVuItem({
   );
 }
 
+function ReportDetailSkeleton() {
+  return (
+    <div className="space-y-4 pb-10">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <Skeleton className="mr-2 size-9 rounded-md" />
+          <Skeleton className="h-6 w-64" />
+        </div>
+        <Skeleton className="h-7 w-24 rounded-full" />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-40" />
+        </CardHeader>
+        <CardContent className="-mx-2 flex flex-wrap">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={`info-${i}`} className="min-w-0 flex-1 px-2 mb-3">
+              <Skeleton className="h-20 w-full rounded-md" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent className="-mx-2 flex flex-wrap">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={`truc-${i}`} className="w-full px-2 mb-4 lg:w-1/2">
+              <Skeleton className="h-44 w-full rounded-md" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-56" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="mb-2 h-10 w-full rounded-md" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={`row-${i}`} className="mb-2 h-8 w-full" />
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-24" />
+        </CardHeader>
+        <CardContent className="-mx-2 flex flex-wrap">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={`kyso-${i}`} className="w-full px-2 mb-4 lg:w-1/2">
+              <Skeleton className="h-52 w-full rounded-lg" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function ReportDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -353,7 +418,7 @@ export default function ReportDetail() {
   };
 
   if (isLoading) {
-    return <div className="p-4 text-muted-foreground">Đang tải...</div>;
+    return <ReportDetailSkeleton />;
   }
   if (!data) {
     return (
