@@ -17,6 +17,7 @@ import {
   Award,
   Briefcase,
   Layers,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -39,9 +40,13 @@ import {
   useChildrenReportsMerged,
   useSubmitReport,
   useUpdateReport,
+  useApproveReport,
+  useRefuseReport,
   TONG_HOP_CAPS,
   useTongHopReports,
 } from "./queries";
+import CaTrucCard from "./components/CaTrucCard";
+import RefuseDialog from "./components/RefuseDialog";
 import { reportApi } from "./api";
 import { useUnits } from "@/features/units/queries";
 import {
@@ -61,7 +66,6 @@ import type {
 } from "@/types/dailyReport";
 import ReportColGroup from "./components/ReportColGroup";
 import NhiemVuNgaySection from "./components/NhiemVuNgaySection";
-import CaTrucCard from "./components/CaTrucCard";
 
 const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
 
@@ -110,8 +114,9 @@ function SignerRow({
 
 export default function DailyReport() {
   const navigate = useNavigate();
-  const { account } = useAuthInfo();
+  const { account, role } = useAuthInfo();
   const maDonVi = account?.donVi?.maDonVi;
+  const isChiHuy = role === "Trực chỉ huy";
 
   const [ngay, setNgay] = useState(todayIso());
   const [search, setSearch] = useState("");
@@ -123,6 +128,11 @@ export default function DailyReport() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const updateReport = useUpdateReport();
   const submitReport = useSubmitReport();
+  const approveReport = useApproveReport();
+  const refuseReport = useRefuseReport();
+
+  const [confirmApprove, setConfirmApprove] = useState<ReportRow | null>(null);
+  const [refuseTarget, setRefuseTarget] = useState<ReportRow | null>(null);
 
   const { data: units = [] } = useUnits();
 
@@ -321,10 +331,25 @@ export default function DailyReport() {
 
   const activeDraft = hasChildren ? tongHopDraft : ownDraft;
 
+  const commanderReport = useMemo(
+    () =>
+      tongHopRows.find((r) => r.donVi === maDonVi && !r.notSubmitted) ?? null,
+    [tongHopRows, maDonVi],
+  );
+
+  const canApprove =
+    isChiHuy &&
+    !!commanderReport &&
+    normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
+  const canRefuse = canApprove;
+
+  const effectiveTab = isChiHuy ? "consolidated" : activeTab;
+
+  const signerSource = activeDraft ?? (canApprove ? commanderReport : null);
   const signer = useMemo(
     () =>
-      parseJson<TrucNguoiInfo | null>(activeDraft?.raw?.trucBanChiHuy, null),
-    [activeDraft],
+      parseJson<TrucNguoiInfo | null>(signerSource?.raw?.trucBanChiHuy, null),
+    [signerSource],
   );
 
   const goEditOrCreate = (row: ReportRow) => {
@@ -392,6 +417,57 @@ export default function DailyReport() {
     setConfirmSubmit(true);
   };
 
+  const onClickApprove = (row: ReportRow) => {
+    if (!chuKySo) {
+      toast.error("Vui lòng ký số trước khi phê duyệt.");
+      return;
+    }
+    setConfirmApprove(row);
+  };
+
+  const doApprove = async () => {
+    const row = confirmApprove;
+    if (!row) return;
+    try {
+      const detail = (await reportApi.getById(row.idDonBaoCao)).Result;
+      const payload: CreateReportRequest = {
+        quanSoTong: detail.quanSoTong,
+        quanSoHienDien: detail.quanSoHienDien,
+        quanSoVang: detail.quanSoVang,
+        thoiGianBaoCao: detail.thoiGianBaoCao,
+        thongTinVang: detail.thongTinVang,
+        chiTietVang: detail.chiTietVang,
+        donVi: detail.donVi.maDonVi,
+        trucBanChiHuy: detail.trucBanChiHuy,
+        trucBanTacChien: detail.trucBanTacChien,
+        tinhHinhHoatDong: detail.tinhHinhHoatDong,
+        loaiDonBaoCao: detail.loaiDonBaoCao,
+        chuKySo,
+      };
+      await updateReport.mutateAsync({ id: row.idDonBaoCao, data: payload });
+      await approveReport.mutateAsync(row.idDonBaoCao);
+      toast.success("Đã phê duyệt báo cáo tổng hợp.");
+      setChuKySo("");
+      setConfirmApprove(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  const doRefuse = async (lyDo: string) => {
+    const row = refuseTarget;
+    if (!row) return;
+    try {
+      await refuseReport.mutateAsync({ id: row.idDonBaoCao, lyDoTuChoi: lyDo });
+      toast.success("Đã từ chối báo cáo.");
+      setRefuseTarget(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  const approving = updateReport.isPending || approveReport.isPending;
+
   const submitting = updateReport.isPending || submitReport.isPending;
 
   const stats: {
@@ -454,7 +530,26 @@ export default function DailyReport() {
             className="mr-2 w-[280px]"
           />
           {hasChildren ? (
-            tongHopDraft ? (
+            isChiHuy ? (
+              canApprove && commanderReport ? (
+                <>
+                  <Button
+                    onClick={() => onClickApprove(commanderReport)}
+                    disabled={!chuKySo || approving}
+                  >
+                    <CheckCircle2 className="mr-2 size-4" /> Phê duyệt
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="ml-2"
+                    onClick={() => setRefuseTarget(commanderReport)}
+                    disabled={refuseReport.isPending}
+                  >
+                    <XCircle className="mr-2 size-4" /> Từ chối
+                  </Button>
+                </>
+              ) : null
+            ) : tongHopDraft ? (
               <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
                 <Send className="mr-2 size-4" /> Trình phê duyệt
               </Button>
@@ -517,7 +612,7 @@ export default function DailyReport() {
           </Button>
         )}
       </div>
-      {hasChildren && (
+      {hasChildren && !isChiHuy && (
         <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1">
           <button
             type="button"
@@ -552,7 +647,7 @@ export default function DailyReport() {
           <ReportColGroup />
           <ReportTableHeader />
           <TableBody>
-            {activeTab === "consolidated" ? (
+            {effectiveTab === "consolidated" ? (
               tongHopLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <TableRow key={`sk-th-${i}`}>
@@ -628,15 +723,15 @@ export default function DailyReport() {
         </Table>
       </div>
 
-      {activeTab === "consolidated"
+      {effectiveTab === "consolidated"
         ? tongHopRows.length > 0 && (
             <NhiemVuNgaySection rows={tongHopRows} hasChildren={false} />
           )
         : !isLoading &&
           filteredRows.length > 0 && (
             <NhiemVuNgaySection rows={filteredRows} hasChildren={hasChildren} />
-        )}
-      
+          )}
+
       <CaTrucCard
         ngay={ngay}
         maDonVi={maDonVi}
@@ -644,7 +739,7 @@ export default function DailyReport() {
         capDonVi={capByUnit[maDonVi ?? ""] ?? account?.donVi?.capDonVi}
       />
 
-      {activeDraft && (
+      {(activeDraft || canApprove) && (
         <Card className="mt-4">
           <CardHeader>
             <CardTitle className="flex items-center text-base">
@@ -755,6 +850,23 @@ export default function DailyReport() {
         confirmText="Trình phê duyệt"
         loading={submitting}
         onConfirm={doSubmit}
+      />
+
+      <ConfirmDialog
+        open={!!confirmApprove}
+        onOpenChange={(v) => !v && setConfirmApprove(null)}
+        title="Xác nhận phê duyệt"
+        description="Báo cáo tổng hợp sẽ được phê duyệt. Bạn có chắc chắn?"
+        confirmText="Phê duyệt"
+        loading={approving}
+        onConfirm={doApprove}
+      />
+
+      <RefuseDialog
+        open={!!refuseTarget}
+        onOpenChange={(v) => !v && setRefuseTarget(null)}
+        loading={refuseReport.isPending}
+        onConfirm={doRefuse}
       />
     </div>
   );
