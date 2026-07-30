@@ -1,14 +1,31 @@
 import { useMemo } from "react";
 import { useAuthInfo } from "@/features/auth/queries";
 import { useUnits } from "@/features/units/queries";
+import { Skeleton } from "@/components/ui/skeleton";
 import ProfileCard from "./components/ProfileCard";
 import PasswordForm from "./components/PasswordForm";
 import QuanSoForm from "./components/QuanSoForm";
 
+function SettingsSkeleton() {
+  return (
+    <div className="flex flex-wrap -mx-2 items-start">
+      <div className="w-full lg:w-1/3 px-2 mb-4 lg:mb-0">
+        <Skeleton className="h-64 w-full rounded-lg" />
+      </div>
+      <div className="w-full lg:w-2/3 px-2">
+        <div className="space-y-4">
+          <Skeleton className="h-56 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Settings() {
   const { account } = useAuthInfo();
   const maDonVi = account?.donVi?.maDonVi;
-  const { data: units = [] } = useUnits();
+  const { data: units = [], isLoading } = useUnits();
 
   const fullDonVi = useMemo(
     () => units.find((u) => u.maDonVi === maDonVi) ?? null,
@@ -28,26 +45,28 @@ export default function Settings() {
     <div className="space-y-4 pb-10">
       <h1 className="text-xl font-semibold">Cài đặt</h1>
 
-      <div className="flex flex-wrap -mx-2 items-start">
-        {account && (
+      {isLoading || !account ? (
+        <SettingsSkeleton />
+      ) : (
+        <div className="flex flex-wrap -mx-2 items-start">
           <div className="w-full lg:w-1/3 px-2 mb-4 lg:mb-0">
             <ProfileCard account={account} />
           </div>
-        )}
 
-        <div className="w-full lg:w-2/3 px-2">
-          <div className="space-y-4">
-            {fullDonVi && (
-              <QuanSoForm
-                donVi={fullDonVi}
-                childUnits={childUnits}
-                allUnits={units}
-              />
-            )}
-            <PasswordForm />
+          <div className="w-full lg:w-2/3 px-2">
+            <div className="space-y-4">
+              {fullDonVi && (
+                <QuanSoForm
+                  donVi={fullDonVi}
+                  childUnits={childUnits}
+                  allUnits={units}
+                />
+              )}
+              <PasswordForm />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
