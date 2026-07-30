@@ -1,46 +1,46 @@
-import { useEffect, useMemo, useState } from "react";  
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";  
-import { toast } from "sonner";  
-import {  
-  Trash2,  
-  ArrowLeft,  
-  Plus,  
-  Save,  
-  Copy,  
-  AlertTriangle,  
-  Layers,  
-} from "lucide-react";  
-import api from "@/lib/api";  
-import { reportApi } from "./api";  
-import { Button } from "@/components/ui/button";  
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";  
-import { Input } from "@/components/ui/input";  
-import { Textarea } from "@/components/ui/textarea";  
-import {  
-  Select,  
-  SelectContent,  
-  SelectItem,  
-  SelectTrigger,  
-  SelectValue,  
-} from "@/components/ui/select";  
-import { useAuthInfo } from "@/features/auth/queries";  
-import { useCreateReport, useUpdateReport } from "./queries";  
-import {  
-  LY_DO_OPTIONS,  
-  CAP_BAC_OPTIONS,  
-  EMPTY_VANG,  
-  classifyCapBac,  
-  todayIso,  
-} from "./utils";  
-import type {  
-  AbsentRow,  
-  TrucNguoiInfo,  
-  DetailStepData,  
-  CreateReportRequest,  
-  VangChiTiet,  
-  ReportItemDTO,  
-} from "@/types/dailyReport";  
-import { useUnits } from "@/features/units/queries";  
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  Trash2,
+  ArrowLeft,
+  Plus,
+  Save,
+  Copy,
+  AlertTriangle,
+  Layers,
+} from "lucide-react";
+import api from "@/lib/api";
+import { reportApi } from "./api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuthInfo } from "@/features/auth/queries";
+import { useCreateReport, useUpdateReport } from "./queries";
+import {
+  LY_DO_OPTIONS,
+  CAP_BAC_OPTIONS,
+  EMPTY_VANG,
+  classifyCapBac,
+  todayIso,
+} from "./utils";
+import type {
+  AbsentRow,
+  TrucNguoiInfo,
+  DetailStepData,
+  CreateReportRequest,
+  VangChiTiet,
+  ReportItemDTO,
+} from "@/types/dailyReport";
+import { useUnits } from "@/features/units/queries";
 import {
   Pagination,
   PaginationContent,
@@ -51,8 +51,8 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import type { DonVi } from "@/types/account";
-  
-const genId = () => Math.random().toString(36).slice(2);  
+
+const genId = () => Math.random().toString(36).slice(2);
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const COMMAND_KYHIEU = ["CH/e", "CH/f"];
@@ -94,251 +94,252 @@ function getPageList(current: number, total: number): (number | "…")[] {
     return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
   return [1, "…", current - 1, current, current + 1, "…", total];
 }
-  
-const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];  
-const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];  
-const isApproved = (s: string) => APPROVED_STATUSES.includes(s);  
-  
-const EMPTY_TRUC: TrucNguoiInfo = {  
-  tenNguoitruc: "",  
-  capbacNguoitruc: "",  
-  chucvuNguoitruc: "",  
-  sodienthoai: "",  
-};  
-const EMPTY_DETAIL: DetailStepData = {  
-  securityStatus: "safe",  
-  incidentStatus: "no",  
-  incidentDetail: "",  
-  advantageStatus: "yes",  
-  advantageDetail: "",  
-  disadvantageStatus: "no",  
-  disadvantageDetail: "",  
-  pendingTaskStatus: "no",  
-  pendingDetail: "",  
-};  
-  
-type NhiemVuNgayPayload = {  
-  nhiemVuPhandoi: string;  
-  noiDungDotXuat: string;  
-  noiDungUuDiem: string;  
-  noiDungKhuyetDiem: string;  
-  noiDungCanGiaiQuyet: string;  
-  donBaoCao: string;  
-};  
-type NhiemVuNgay = {  
-  idNhiemvuNgay?: string;  
-  nhiemVuPhandoi?: string;  
-  noiDungDotXuat?: string;  
-  noiDungUuDiem?: string;  
-  noiDungKhuyetDiem?: string;  
-  noiDungCanGiaiQuyet?: string;  
-};  
-  
-async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {  
-  try {  
-    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {  
-      skipErrorToast: true,  
-    });  
-    return (res.data?.Result as NhiemVuNgay) ?? null;  
-  } catch {  
-    return null;  
-  }  
-}  
-  
-async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {  
-  const payload = detailToNhiemVu(detail, idDonBaoCao);  
-  const existing = await fetchNhiemVu(idDonBaoCao);  
-  try {  
-    if (existing?.idNhiemvuNgay) {  
-      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {  
-        skipErrorToast: true,  
-      });  
-    } else {  
-      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });  
-    }  
-  } catch {  
-    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */  
-  }  
-}  
-  
-function detailToNhiemVu(  
-  d: DetailStepData,  
-  donBaoCao: string,  
-): NhiemVuNgayPayload {  
-  return {  
-    nhiemVuPhandoi: d.securityStatus,  
-    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",  
-    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",  
-    noiDungKhuyetDiem:  
-      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",  
-    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",  
-    donBaoCao,  
-  };  
-}  
-  
-function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {  
-  return {  
-    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",  
-    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",  
-    incidentDetail: nv.noiDungDotXuat ?? "",  
-    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",  
-    advantageDetail: nv.noiDungUuDiem ?? "",  
-    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",  
-    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",  
-    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",  
-    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",  
-  };  
-}  
-  
-type Errors = Record<string, string>;  
-  
-function FieldError({ msg }: { msg?: string }) {  
-  if (!msg) return null;  
-  return (  
-    <p className="mt-1 flex items-center text-sm text-red-600">  
-      <AlertTriangle className="mr-1 size-3.5 shrink-0" />  
-      {msg}  
-    </p>  
-  );  
-}  
-  
-function ReqLabel({  
-  children,  
-  required,  
-}: {  
-  children: string;  
-  required?: boolean;  
-}) {  
-  return (  
-    <label className="mb-1 block text-sm text-muted-foreground">  
-      {children}  
-      {required && <span className="text-red-500"> *</span>}  
-    </label>  
-  );  
-}  
-  
-function TrucSection({  
-  title,  
-  value,  
-  onChange,  
-  prefix,  
-  errors,  
-  clearError,  
-}: {  
-  title: string;  
-  value: TrucNguoiInfo;  
-  onChange: (v: TrucNguoiInfo) => void;  
-  prefix: string;  
-  errors: Errors;  
-  clearError: (key: string) => void;  
-}) {  
-  const errClass = (key: string) =>  
-    errors[`${prefix}.${key}`]  
-      ? "border-red-500 focus-visible:ring-red-500"  
-      : "";  
-  
-  return (  
-    <div className="-mx-1.5 flex flex-wrap">  
-      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel required>Họ và tên</ReqLabel>  
-        <Input  
-          className={errClass("ten")}  
-          placeholder="Nhập họ và tên..."  
-          value={value.tenNguoitruc}  
-          onChange={(e) => {  
-            onChange({ ...value, tenNguoitruc: e.target.value });  
-            clearError(`${prefix}.ten`);  
-          }}  
-        />  
-        <FieldError msg={errors[`${prefix}.ten`]} />  
-      </div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel required>Cấp bậc</ReqLabel>  
-        <Select  
-          value={value.capbacNguoitruc}  
-          onValueChange={(v) => {  
-            onChange({ ...value, capbacNguoitruc: v });  
-            clearError(`${prefix}.capBac`);  
-          }}  
-        >  
-          <SelectTrigger className={errClass("capBac")}>  
-            <SelectValue placeholder="-- Cấp bậc --" />  
-          </SelectTrigger>  
-          <SelectContent>  
-            {CAP_BAC_OPTIONS.map((c) => (  
-              <SelectItem key={c} value={c}>  
-                {c}  
-              </SelectItem>  
-            ))}  
-          </SelectContent>  
-        </Select>  
-        <FieldError msg={errors[`${prefix}.capBac`]} />  
-      </div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel required>Chức vụ</ReqLabel>  
-        <Input  
-          className={errClass("chucVu")}  
-          placeholder="Nhập chức vụ..."  
-          value={value.chucvuNguoitruc}  
-          onChange={(e) => {  
-            onChange({ ...value, chucvuNguoitruc: e.target.value });  
-            clearError(`${prefix}.chucVu`);  
-          }}  
-        />  
-        <FieldError msg={errors[`${prefix}.chucVu`]} />  
-      </div>  
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
-        <ReqLabel>Số điện thoại</ReqLabel>  
-        <Input  
-          placeholder="Nhập số điện thoại..."  
-          value={value.sodienthoai}  
-          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}  
-        />  
-      </div>  
-    </div>  
-  );  
-}  
-  
-function RadioRow({  
-  value,  
-  options,  
-  onChange,  
-}: {  
-  value: string;  
-  options: { value: string; label: string }[];  
-  onChange: (v: string) => void;  
-}) {  
-  return (  
-    <div className="-mb-2 flex flex-wrap">  
-      {options.map((o) => {  
-        const active = value === o.value;  
-        return (  
-          <button  
-            key={o.value}  
-            type="button"  
-            onClick={() => onChange(o.value)}  
-            className={  
-              "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +  
-              (active  
-                ? "border-slate-700 bg-slate-700 text-white"  
-                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")  
-            }  
-          >  
-            {o.label}  
-          </button>  
-        );  
-      })}  
-    </div>  
-  );  
-}  
-  
+
+const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];
+const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];
+const isApproved = (s: string) => APPROVED_STATUSES.includes(s);
+
+const EMPTY_TRUC: TrucNguoiInfo = {
+  tenNguoitruc: "",
+  capbacNguoitruc: "",
+  chucvuNguoitruc: "",
+  sodienthoai: "",
+};
+const EMPTY_DETAIL: DetailStepData = {
+  securityStatus: "safe",
+  incidentStatus: "no",
+  incidentDetail: "",
+  advantageStatus: "yes",
+  advantageDetail: "",
+  disadvantageStatus: "no",
+  disadvantageDetail: "",
+  pendingTaskStatus: "no",
+  pendingDetail: "",
+};
+
+type NhiemVuNgayPayload = {
+  nhiemVuPhandoi: string;
+  noiDungDotXuat: string;
+  noiDungUuDiem: string;
+  noiDungKhuyetDiem: string;
+  noiDungCanGiaiQuyet: string;
+  donBaoCao: string;
+};
+type NhiemVuNgay = {
+  idNhiemvuNgay?: string;
+  nhiemVuPhandoi?: string;
+  noiDungDotXuat?: string;
+  noiDungUuDiem?: string;
+  noiDungKhuyetDiem?: string;
+  noiDungCanGiaiQuyet?: string;
+};
+
+async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {
+  try {
+    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {
+      skipErrorToast: true,
+    });
+    return (res.data?.Result as NhiemVuNgay) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {
+  const payload = detailToNhiemVu(detail, idDonBaoCao);
+  const existing = await fetchNhiemVu(idDonBaoCao);
+  try {
+    if (existing?.idNhiemvuNgay) {
+      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {
+        skipErrorToast: true,
+      });
+    } else {
+      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });
+    }
+  } catch {
+    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */
+  }
+}
+
+function detailToNhiemVu(
+  d: DetailStepData,
+  donBaoCao: string,
+): NhiemVuNgayPayload {
+  return {
+    nhiemVuPhandoi: d.securityStatus,
+    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",
+    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",
+    noiDungKhuyetDiem:
+      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",
+    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",
+    donBaoCao,
+  };
+}
+
+function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {
+  return {
+    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",
+    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",
+    incidentDetail: nv.noiDungDotXuat ?? "",
+    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",
+    advantageDetail: nv.noiDungUuDiem ?? "",
+    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",
+    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",
+    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",
+    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",
+  };
+}
+
+type Errors = Record<string, string>;
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1 flex items-center text-sm text-red-600">
+      <AlertTriangle className="mr-1 size-3.5 shrink-0" />
+      {msg}
+    </p>
+  );
+}
+
+function ReqLabel({
+  children,
+  required,
+}: {
+  children: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="mb-1 block text-sm text-muted-foreground">
+      {children}
+      {required && <span className="text-red-500"> *</span>}
+    </label>
+  );
+}
+
+function TrucSection({
+  title,
+  value,
+  onChange,
+  prefix,
+  errors,
+  clearError,
+}: {
+  title: string;
+  value: TrucNguoiInfo;
+  onChange: (v: TrucNguoiInfo) => void;
+  prefix: string;
+  errors: Errors;
+  clearError: (key: string) => void;
+}) {
+  const errClass = (key: string) =>
+    errors[`${prefix}.${key}`]
+      ? "border-red-500 focus-visible:ring-red-500"
+      : "";
+
+  return (
+    <div className="-mx-1.5 flex flex-wrap">
+      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel required>Họ và tên</ReqLabel>
+        <Input
+          className={errClass("ten")}
+          placeholder="Nhập họ và tên..."
+          value={value.tenNguoitruc}
+          onChange={(e) => {
+            onChange({ ...value, tenNguoitruc: e.target.value });
+            clearError(`${prefix}.ten`);
+          }}
+        />
+        <FieldError msg={errors[`${prefix}.ten`]} />
+      </div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel required>Cấp bậc</ReqLabel>
+        <Select
+          value={value.capbacNguoitruc}
+          onValueChange={(v) => {
+            onChange({ ...value, capbacNguoitruc: v });
+            clearError(`${prefix}.capBac`);
+          }}
+        >
+          <SelectTrigger className={errClass("capBac")}>
+            <SelectValue placeholder="-- Cấp bậc --" />
+          </SelectTrigger>
+          <SelectContent>
+            {CAP_BAC_OPTIONS.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldError msg={errors[`${prefix}.capBac`]} />
+      </div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel required>Chức vụ</ReqLabel>
+        <Input
+          className={errClass("chucVu")}
+          placeholder="Nhập chức vụ..."
+          value={value.chucvuNguoitruc}
+          onChange={(e) => {
+            onChange({ ...value, chucvuNguoitruc: e.target.value });
+            clearError(`${prefix}.chucVu`);
+          }}
+        />
+        <FieldError msg={errors[`${prefix}.chucVu`]} />
+      </div>
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
+        <ReqLabel>Số điện thoại</ReqLabel>
+        <Input
+          placeholder="Nhập số điện thoại..."
+          value={value.sodienthoai}
+          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RadioRow({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="-mb-2 flex flex-wrap">
+      {options.map((o) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={
+              "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
+              (active
+                ? "border-slate-700 bg-slate-700 text-white"
+                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")
+            }
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function CreateReport() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
   const { account } = useAuthInfo();
   const donVi = account?.donVi;
+  const isDaiDoi = donVi?.capDonVi === "DAI_DOI";
 
   const { data: units = [] } = useUnits();
   const fullDonVi = useMemo(
@@ -346,7 +347,6 @@ export default function CreateReport() {
     [units, donVi?.maDonVi],
   );
 
-  // Bản đồ cấp đơn vị -> để merge DON_VI/TONG_HOP giống useChildrenReportsMerged
   const capByUnit = useMemo(() => {
     const m: Record<string, string> = {};
     units.forEach((u) => {
@@ -389,13 +389,11 @@ export default function CreateReport() {
       return n;
     });
 
-  // Chế độ chỉnh sửa: nạp lại dữ liệu báo cáo đã lưu
   useEffect(() => {
     if (!isEdit || !id) return;
     let ignore = false;
 
     (async () => {
-      // 1) Nạp lại báo cáo chính (trực chỉ huy / trực ban / danh sách vắng)
       try {
         const res = await reportApi.getById(id);
         const r = res.Result;
@@ -428,7 +426,6 @@ export default function CreateReport() {
         /* ignore */
       }
 
-      // 2) Nạp lại "Tình hình nhiệm vụ trong ngày"
       const nv = await fetchNhiemVu(id);
       if (!ignore && nv) setDetail(nhiemVuToDetail(nv));
     })();
@@ -438,7 +435,6 @@ export default function CreateReport() {
     };
   }, [isEdit, id]);
 
-  // Chế độ tổng hợp: gộp quân nhân vắng + biên chế từ các đơn vị con ĐÃ DUYỆT
   useEffect(() => {
     if (!isTongHop || !donVi?.maDonVi || units.length === 0) return;
     let ignore = false;
@@ -451,7 +447,6 @@ export default function CreateReport() {
           reportApi.searchChildren(donVi.maDonVi, ngayBaoCao, "TONG_HOP"),
         ]);
 
-        // Merge DON_VI/TONG_HOP theo cấp đơn vị (giống useChildrenReportsMerged)
         const map = new Map<string, ReportItemDTO>();
         for (const item of donViRes.Result ?? []) {
           const ma = item.donVi.maDonVi;
@@ -465,7 +460,6 @@ export default function CreateReport() {
             map.set(ma, item);
         }
 
-        // Chỉ lấy đơn vị con (khác chính mình) và đã được duyệt
         const children = Array.from(map.values()).filter(
           (it) => it.donVi.maDonVi !== donVi.maDonVi && isApproved(it.status),
         );
@@ -657,7 +651,7 @@ export default function CreateReport() {
       thongTinVang: JSON.stringify(vang),
       donVi: donVi?.maDonVi ?? "",
       trucBanChiHuy: JSON.stringify(trucChiHuy),
-      trucBanTacChien: JSON.stringify(trucBanTacChien),
+      trucBanTacChien: JSON.stringify(isDaiDoi ? EMPTY_TRUC : trucBanTacChien),
       loaiDonBaoCao: isTongHop ? "TONG_HOP" : "DON_VI",
     };
 
@@ -777,14 +771,16 @@ export default function CreateReport() {
             errors={errors}
             clearError={clearError}
           />
-          <TrucSection
-            title="Trực ban tác chiến / nội vụ"
-            value={trucBanTacChien}
-            onChange={setTrucBanTacChien}
-            prefix="tacChien"
-            errors={errors}
-            clearError={clearError}
-          />
+          {!isDaiDoi && (
+            <TrucSection
+              title="Trực ban tác chiến / nội vụ"
+              value={trucBanTacChien}
+              onChange={setTrucBanTacChien}
+              prefix="tacChien"
+              errors={errors}
+              clearError={clearError}
+            />
+          )}
         </CardContent>
       </Card>
 
