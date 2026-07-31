@@ -169,6 +169,14 @@ export default function DailyReport() {
 
   const isAggregating = TONG_HOP_CAPS.includes(capByUnit[maDonVi ?? ""] ?? "");
 
+  const { data: tongHopItems = [], isLoading: tongHopLoading } =
+    useTongHopReports(maDonVi, ngay, hasChildren);
+
+  const tongHopRows = useMemo(
+    () => tongHopItems.map(mapItemToRow),
+    [tongHopItems],
+  );
+
   const rows = useMemo(() => {
     const reportByUnit = new Map(
       items.map((it) => {
@@ -227,11 +235,8 @@ export default function DailyReport() {
   const totalRequiredCount = childRows.length;
 
   const tongHopDone = useMemo(
-    () =>
-      items.some(
-        (it) => it.donVi.maDonVi === maDonVi && it.loaiDonBaoCao === "TONG_HOP",
-      ),
-    [items, maDonVi],
+    () => tongHopRows.some((r) => r.donVi === maDonVi && !r.notSubmitted),
+    [tongHopRows, maDonVi],
   );
 
   const canConsolidate =
@@ -300,14 +305,6 @@ export default function DailyReport() {
     [filteredRows],
   );
 
-  const { data: tongHopItems = [], isLoading: tongHopLoading } =
-    useTongHopReports(maDonVi, ngay, hasChildren);
-
-  const tongHopRows = useMemo(
-    () => tongHopItems.map(mapItemToRow),
-    [tongHopItems],
-  );
-
   const tongHopTotals = useMemo(
     () => buildDisplayTotals(tongHopRows),
     [tongHopRows],
@@ -353,7 +350,7 @@ export default function DailyReport() {
     !!commanderReport &&
     normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
 
-  const effectiveTab = isChiHuy ? "consolidated" : activeTab;
+  const effectiveTab = isChiHuy && hasChildren ? "consolidated" : activeTab;
 
   const signerSource = activeDraft ?? (canApprove ? commanderReport : null);
   const signer = useMemo(
@@ -575,6 +572,10 @@ export default function DailyReport() {
               >
                 <Send className="mr-2 size-4" /> Trình phê duyệt
               </Button>
+            ) : tongHopDone ? (
+              <span className="text-sm text-muted-foreground">
+                Đã có báo cáo cho ngày này
+              </span>
             ) : (
               <Button onClick={handleConsolidate} disabled={!canConsolidate}>
                 <Layers className="mr-2 size-4" /> {consolidateLabel}
@@ -586,7 +587,7 @@ export default function DailyReport() {
             </Button>
           ) : ownReport ? (
             <span className="text-sm text-muted-foreground">
-              Đơn vị đã có báo cáo cho ngày này
+              Đã có báo cáo cho ngày này
             </span>
           ) : (
             <Button onClick={() => navigate("/daily-report/create")}>

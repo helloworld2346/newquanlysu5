@@ -15,7 +15,7 @@ import type {
 export const reportsKey = (maDonVi: string, ngay: string) =>
   ["reports", maDonVi, ngay] as const;
 
-export const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];
+export const TONG_HOP_CAPS = ["SU_DOAN", "TRUNG_DOAN", "TIEU_DOAN"];
 
 export function useChildrenReports(maDonVi: string | undefined, ngay: string) {
   return useQuery({
@@ -61,12 +61,16 @@ export function useChildrenReportsMerged(
       return selfQuery.data ?? [];
     }
 
+    const allCodes = Object.keys(capByUnit);
+    const unitHasChildren = (ma: string) =>
+      allCodes.some((c) => c.startsWith(ma + "."));
+
     const map = new Map<string, ReportItemDTO>();
 
     for (const item of donViQuery.data ?? []) {
       const ma = item.donVi.maDonVi;
       const cap = capByUnit[ma] ?? "";
-      const isAggregating = TONG_HOP_CAPS.includes(cap);
+      const isAggregating = TONG_HOP_CAPS.includes(cap) && unitHasChildren(ma);
       const isSelf = ma === maDonVi;
       if (!isAggregating || isSelf) {
         map.set(ma, item);
@@ -76,7 +80,7 @@ export function useChildrenReportsMerged(
     for (const item of tongHopQuery.data ?? []) {
       const ma = item.donVi.maDonVi;
       const cap = capByUnit[ma] ?? "";
-      const isAggregating = TONG_HOP_CAPS.includes(cap);
+      const isAggregating = TONG_HOP_CAPS.includes(cap) && unitHasChildren(ma);
       const isSelf = ma === maDonVi;
       if (isAggregating || isSelf || !map.has(ma)) {
         map.set(ma, item);
