@@ -44,7 +44,9 @@ import {
   useRefuseReport,
   TONG_HOP_CAPS,
   useTongHopReports,
+  useOwnReport,
 } from "./queries";
+import InlineOwnReportRow from "./components/InlineOwnReportRow";
 import CaTrucCard from "./components/CaTrucCard";
 import RefuseDialog from "./components/RefuseDialog";
 import { reportApi } from "./api";
@@ -175,6 +177,12 @@ export default function DailyReport() {
   const tongHopRows = useMemo(
     () => tongHopItems.map(mapItemToRow),
     [tongHopItems],
+  );
+
+  const { data: ownDonViItem } = useOwnReport(maDonVi, ngay, false);
+  const ownDonViRow = useMemo(
+    () => (ownDonViItem ? mapItemToRow(ownDonViItem) : null),
+    [ownDonViItem],
   );
 
   const rows = useMemo(() => {
@@ -730,6 +738,14 @@ export default function DailyReport() {
               </TableRow>
             ) : (
               <>
+                {hasChildren && !isChiHuy && maDonVi && (
+                  <InlineOwnReportRow
+                    maDonVi={maDonVi}
+                    label="CH/e"
+                    ngay={ngay}
+                    existing={ownDonViRow}
+                  />
+                )}
                 {filteredRows.map((r) => (
                   <ReportTableRow
                     key={r.idDonBaoCao}
