@@ -1,4 +1,3 @@
-// src/features/reports/components/ReportTableRow.tsx
 import { useState } from "react";
 import {
   MoreVertical,
@@ -87,6 +86,7 @@ export default function ReportTableRow({
   onRecall,
   onApprove,
   onRefuse,
+  displayKyHieu,
 }: {
   row: ReportRow;
   canEdit: boolean;
@@ -100,13 +100,20 @@ export default function ReportTableRow({
   onRecall?: (r: ReportRow) => void;
   onApprove?: (r: ReportRow) => void;
   onRefuse?: (r: ReportRow) => void;
+  displayKyHieu?: string;
 }) {
   const [showKySo, setShowKySo] = useState(false);
 
+  const DRAFT_STATUSES = ["Nháp", "Nhap"];
+  function isDraftStatus(s: string) {
+    return DRAFT_STATUSES.includes(s);
+  }
+
   const v = row.vang;
-  const approved = !row.notSubmitted && isApproved(row.status);
+  const showNum =
+    !row.notSubmitted && (isApproved(row.status) || isDraftStatus(row.status));
   const num = (val: number | null | undefined) =>
-    approved ? formatNum(val) : "—";
+    showNum ? formatNum(val) : "—";
   const notSubmitted = row.notSubmitted;
 
   const signed = !!row.raw?.chuKySo && row.raw.chuKySo.trim() !== "";
@@ -121,7 +128,7 @@ export default function ReportTableRow({
           notSubmitted ? "text-rose-700" : ""
         }`}
       >
-        {row.kyhieuDonVi || row.tenDonVi}
+        {displayKyHieu ?? (row.kyhieuDonVi || row.tenDonVi)}
       </TableCell>
       <TableCell className={td}>{num(row.quanSoTong)}</TableCell>
       <TableCell className={td}>{num(row.quanSoHienDien)}</TableCell>

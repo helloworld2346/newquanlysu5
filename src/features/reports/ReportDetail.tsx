@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   User,
@@ -383,6 +383,12 @@ function ReportDetailSkeleton() {
 export default function ReportDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const ngayParam = searchParams.get("ngay") ?? "";
+  const backUrl = ngayParam
+    ? `/daily-report?ngay=${ngayParam}`
+    : "/daily-report";
+
   const { data, isLoading } = useReportDetail(id);
   const { data: nhiemVu, isLoading: nhiemVuLoading } = useNhiemVuNgayDetail(id);
 
@@ -424,7 +430,7 @@ export default function ReportDetail() {
     return (
       <div className="space-y-4 p-4">
         <p className="text-muted-foreground">Không tìm thấy báo cáo.</p>
-        <Button variant="outline" onClick={() => navigate("/daily-report")}>
+        <Button variant="outline" onClick={() => navigate(backUrl)}>
           <ArrowLeft className="mr-2 size-4" /> Quay lại
         </Button>
       </div>
@@ -448,7 +454,7 @@ export default function ReportDetail() {
             variant="ghost"
             size="icon"
             className="mr-2"
-            onClick={() => navigate("/daily-report")}
+            onClick={() => navigate(backUrl)}
           >
             <ArrowLeft className="size-4" />
           </Button>

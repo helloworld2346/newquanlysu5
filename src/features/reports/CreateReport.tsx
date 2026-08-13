@@ -698,7 +698,7 @@ export default function CreateReport() {
 
       if (idDonBaoCao) await saveNhiemVu(idDonBaoCao, detail);
 
-      navigate("/daily-report");
+      navigate(`/daily-report?ngay=${ngayBaoCao}`);
     } catch {
       toast.error("Không thể lưu báo cáo");
     }
@@ -713,7 +713,7 @@ export default function CreateReport() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/daily-report")}
+            onClick={() => navigate(`/daily-report?ngay=${ngayBaoCao}`)}
           >
             <ArrowLeft className="size-4" />
           </Button>

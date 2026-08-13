@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Plus,
@@ -123,7 +123,18 @@ export default function DailyReport() {
   const maDonVi = account?.donVi?.maDonVi;
   const isChiHuy = role === "Trực chỉ huy";
 
-  const [ngay, setNgay] = useState(todayIso());
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ngay = searchParams.get("ngay") || todayIso();
+  const setNgay = (value: string) => {
+    setSearchParams(
+      (prev) => {
+        const p = new URLSearchParams(prev);
+        p.set("ngay", value);
+        return p;
+      },
+      { replace: true },
+    );
+  };
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [activeTab, setActiveTab] = useState<"child" | "consolidated">("child");
@@ -367,14 +378,6 @@ export default function DailyReport() {
     [signerSource],
   );
 
-  const goEditOrCreate = (row: ReportRow) => {
-    if (row.notSubmitted) {
-      navigate(`/daily-report/create?donVi=${row.donVi}&ngay=${ngay}`);
-    } else {
-      navigate(`/daily-report/edit/${row.idDonBaoCao}`);
-    }
-  };
-
   const handlePickSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -523,11 +526,14 @@ export default function DailyReport() {
     },
   ];
 
-  const goDetail = (row: ReportRow) => {
-    if (row.notSubmitted) {
-      navigate(`/daily-report/create?donVi=${row.donVi}`);
+  const goDetail = (row: ReportRow) =>
+    navigate(`/daily-report/detail/${row.idDonBaoCao}?ngay=${ngay}`);
+
+  const goEditOrCreate = (row: ReportRow) => {
+    if (row.idDonBaoCao) {
+      navigate(`/daily-report/edit/${row.idDonBaoCao}?ngay=${ngay}`);
     } else {
-      navigate(`/daily-report/detail/${row.idDonBaoCao}`);
+      navigate(`/daily-report/create?ngay=${ngay}`);
     }
   };
 
@@ -700,15 +706,25 @@ export default function DailyReport() {
                 </TableRow>
               ) : (
                 <>
-                  {tongHopRows.map((r) => (
-                    <ReportTableRow
-                      key={r.idDonBaoCao}
-                      row={r}
-                      canEdit={false}
-                      onViewDetail={goDetail}
-                      onEdit={goEditOrCreate}
-                    />
-                  ))}
+                  {tongHopRows.map((r) => {
+                    const isCommandBlock =
+                      r.kyhieuDonVi === "CH/f" || r.kyhieuDonVi === "CH/e";
+                    const divisionKyHieu = units.find(
+                      (u) => u.maDonVi === maDonVi,
+                    )?.kyhieuDonvi;
+                    return (
+                      <ReportTableRow
+                        key={r.idDonBaoCao}
+                        row={r}
+                        canEdit={false}
+                        displayKyHieu={
+                          isCommandBlock ? divisionKyHieu : undefined
+                        }
+                        onViewDetail={goDetail}
+                        onEdit={goEditOrCreate}
+                      />
+                    );
+                  })}
                   <ReportTotalRow
                     t={tongHopTotals}
                     absentList={tongHopAbsent}
