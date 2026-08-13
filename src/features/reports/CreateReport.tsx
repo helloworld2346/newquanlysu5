@@ -321,8 +321,8 @@ function RadioRow({
             className={
               "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
               (active
-                ? "border-slate-700 bg-slate-700 text-white"
-                : "border-input bg-background text-foreground hover:border-slate-700 hover:text-slate-700")
+                ? "border-red-700 bg-red-700 text-white"
+                : "border-input bg-background text-foreground hover:border-red-700 hover:text-red-700")
             }
           >
             {o.label}
@@ -737,8 +737,8 @@ export default function CreateReport() {
         <div className="flex items-center rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary">
           <Layers className="mr-2 size-4 shrink-0" />
           {aggLoading
-            ? "Đang tổng hợp số liệu từ các đơn vị con đã duyệt..."
-            : `Báo cáo tổng hợp: đã gộp ${quanSoVang} quân nhân vắng và tổng biên chế ${tongQuanSo} từ các đơn vị con đã duyệt.`}
+            ? "Đang tổng hợp số liệu từ các đơn vị đã duyệt..."
+            : `Báo cáo tổng hợp: đã gộp ${quanSoVang} quân nhân vắng và tổng biên chế ${tongQuanSo} từ các đơn vị đã duyệt.`}
         </div>
       )}
 
@@ -807,7 +807,7 @@ export default function CreateReport() {
           <Button
             size="sm"
             onClick={addRow}
-            className="bg-slate-700 text-white hover:bg-slate-800"
+            className="bg-red-700 text-white hover:bg-slate-800"
           >
             <Plus className="mr-2 size-4" /> Thêm quân nhân vắng
           </Button>
