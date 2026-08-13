@@ -741,9 +741,12 @@ export default function DailyReport() {
                 {hasChildren && !isChiHuy && maDonVi && (
                   <InlineOwnReportRow
                     maDonVi={maDonVi}
-                    label="CH/e"
+                    label={capByUnit[maDonVi] === "SU_DOAN" ? "CH/f" : "CH/e"}
                     ngay={ngay}
                     existing={ownDonViRow}
+                    bienCheTong={
+                      units.find((u) => u.maDonVi === maDonVi)?.quanSoTong ?? 0
+                    }
                   />
                 )}
                 {filteredRows.map((r) => (

@@ -1,9 +1,23 @@
+// src/features/reports/components/InlineOwnReportRow.tsx
 import { useState } from "react";
 import { toast } from "sonner";
-import { Save, Pencil, X } from "lucide-react";
+import {
+  Save,
+  Pencil,
+  X,
+  MousePointerClick,
+  Loader2,
+  MoreVertical,
+} from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCreateReport, useSubmitReport } from "../queries";
 import { EMPTY_VANG, VANG_KEYS, formatNum } from "../utils";
 import { getErrorMessage } from "@/lib/errorHandler";
@@ -13,7 +27,13 @@ import type {
   VangChiTiet,
 } from "@/types/dailyReport";
 
+const rowBase = "border-l-4 border-l-primary bg-primary/5 transition-colors";
 const td = "border text-center tabular-nums break-words px-1";
+
+const cellInput =
+  "h-8 w-full min-w-0 rounded-md border border-input bg-background px-1 text-center text-sm " +
+  "focus:outline-none focus:ring-2 focus:ring-ring " +
+  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 const EMPTY_TRUC = {
   tenNguoitruc: "",
@@ -22,22 +42,32 @@ const EMPTY_TRUC = {
   sodienthoai: "",
 };
 
+function UnitBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+      {label}
+    </span>
+  );
+}
+
 export default function InlineOwnReportRow({
   maDonVi,
   label,
   ngay,
   existing,
+  bienCheTong = 0,
 }: {
   maDonVi: string;
   label: string;
   ngay: string;
   existing: ReportRow | null;
+  bienCheTong?: number;
 }) {
   const createReport = useCreateReport();
   const submitReport = useSubmitReport();
 
   const [editing, setEditing] = useState(false);
-  const [quanSoTong, setQuanSoTong] = useState(0);
+  const [quanSoTong, setQuanSoTong] = useState(bienCheTong);
   const [vang, setVang] = useState<VangChiTiet>({ ...EMPTY_VANG });
 
   const saving = createReport.isPending || submitReport.isPending;
@@ -45,7 +75,7 @@ export default function InlineOwnReportRow({
   const quanSoHienDien = Math.max(quanSoTong - quanSoVang, 0);
 
   const startEdit = () => {
-    setQuanSoTong(existing?.quanSoTong ?? 0);
+    setQuanSoTong(bienCheTong || existing?.quanSoTong || 0);
     setVang(existing ? { ...EMPTY_VANG, ...existing.vang } : { ...EMPTY_VANG });
     setEditing(true);
   };
@@ -54,7 +84,10 @@ export default function InlineOwnReportRow({
     setVang((v) => ({ ...v, [k]: Number(val) || 0 }));
 
   const handleSave = async () => {
-    if (quanSoTong <= 0) return toast.error("Nhập tổng quân số.");
+    if (quanSoTong <= 0)
+      return toast.error(
+        "Chưa có quân số biên chế. Vui lòng nhập trong Cài đặt.",
+      );
     if (quanSoVang > quanSoTong)
       return toast.error("Tổng vắng không được lớn hơn tổng quân số.");
     try {
@@ -75,20 +108,23 @@ export default function InlineOwnReportRow({
       const id = res.Result?.idDonBaoCao;
       if (!id) throw new Error(res.message || "Không tạo được báo cáo");
       await submitReport.mutateAsync(id);
-      toast.success("Đã lưu và trình báo cáo CH/e.");
+      toast.success(`Đã lưu và trình báo cáo ${label}.`);
       setEditing(false);
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
   };
 
-  // Đã có báo cáo, không đang sửa -> readonly
   if (existing && !existing.notSubmitted && !editing) {
     const v = existing.vang;
     return (
-      <TableRow className="bg-primary/5">
-        <TableCell className={`${td} font-medium`}>{label}</TableCell>
-        <TableCell className={td}>{formatNum(existing.quanSoTong)}</TableCell>
+      <TableRow className={rowBase}>
+        <TableCell className={`${td} font-medium`}>
+          <UnitBadge label={label} />
+        </TableCell>
+        <TableCell className={`${td} font-semibold`}>
+          {formatNum(existing.quanSoTong)}
+        </TableCell>
         <TableCell className={td}>
           {formatNum(existing.quanSoHienDien)}
         </TableCell>
@@ -106,90 +142,135 @@ export default function InlineOwnReportRow({
         <TableCell className={td}>—</TableCell>
         <TableCell className={`${td} text-left`}>{existing.ghiChu}</TableCell>
         <TableCell className={td}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={startEdit}
-            aria-label="Sửa"
-          >
-            <Pencil className="size-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Thao tác">
+                <MoreVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={startEdit}>
+                <Pencil className="mr-2 size-4" /> Chỉnh sửa
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     );
   }
 
-  // Chưa nhập -> dòng rỗng, bấm để nhập
   if (!editing) {
     return (
       <TableRow
-        className="cursor-pointer bg-primary/5 hover:bg-primary/10"
+        className={`cursor-pointer hover:bg-primary/10 ${rowBase}`}
         onClick={startEdit}
       >
-        <TableCell className={`${td} font-medium`}>{label}</TableCell>
+        <TableCell className={`${td} font-medium`}>
+          <UnitBadge label={label} />
+        </TableCell>
         <TableCell
           colSpan={20}
           className={`${td} text-left text-muted-foreground`}
         >
-          Bấm để nhập số liệu báo cáo CH/e...
+          <span className="inline-flex items-center gap-1.5">
+            <MousePointerClick className="size-4 text-primary/70" />
+            Bấm để nhập số liệu báo cáo {label}...
+          </span>
         </TableCell>
         <TableCell className={td}>
-          <Button variant="ghost" size="icon" aria-label="Nhập">
-            <Pencil className="size-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Thao tác"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={startEdit}>
+                <Pencil className="mr-2 size-4" /> Nhập số liệu
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     );
   }
 
-  // Đang nhập
   return (
-    <TableRow className="bg-primary/5">
-      <TableCell className={`${td} font-medium`}>{label}</TableCell>
-      <TableCell className={td}>
-        <Input
-          type="number"
-          min={0}
-          value={quanSoTong || ""}
-          onChange={(e) => setQuanSoTong(Number(e.target.value) || 0)}
-          className="h-8 px-1 text-center"
-        />
+    <TableRow className={rowBase}>
+      <TableCell className={`${td} font-medium`}>
+        <UnitBadge label={label} />
       </TableCell>
-      <TableCell className={td}>{formatNum(quanSoHienDien)}</TableCell>
-      <TableCell className={td}>{formatNum(quanSoVang)}</TableCell>
+      <TableCell
+        className={`${td} font-semibold`}
+        title="Lấy từ quân số biên chế (Cài đặt)"
+      >
+        {formatNum(quanSoTong)}
+      </TableCell>
+      <TableCell className={`${td} font-medium text-emerald-700`}>
+        {formatNum(quanSoHienDien)}
+      </TableCell>
+      <TableCell className={`${td} font-medium text-rose-600`}>
+        {formatNum(quanSoVang)}
+      </TableCell>
       {VANG_KEYS.map((k) => (
         <TableCell key={k} className={td}>
-          <Input
+          <input
             type="number"
             min={0}
             value={vang[k] || ""}
             onChange={(e) => setVangKey(k, e.target.value)}
-            className="h-8 px-1 text-center"
+            className={cellInput}
           />
         </TableCell>
       ))}
       <TableCell className={td}>
-        <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+        <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
           Nháp
         </span>
       </TableCell>
       <TableCell className={td}>—</TableCell>
       <TableCell className={`${td} text-left`}>—</TableCell>
       <TableCell className={td}>
-        <div className="flex items-center justify-center">
-          <Button size="icon" onClick={handleSave} disabled={saving}>
-            <Save className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-1"
-            onClick={() => setEditing(false)}
-            disabled={saving}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Thao tác"
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <MoreVertical className="size-4" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleSave();
+              }}
+              disabled={saving}
+            >
+              <Save className="mr-2 size-4 text-emerald-600" /> Lưu và trình
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-rose-600 focus:text-rose-600"
+              onClick={() => setEditing(false)}
+              disabled={saving}
+            >
+              <X className="mr-2 size-4" /> Hủy
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </TableCell>
     </TableRow>
   );
