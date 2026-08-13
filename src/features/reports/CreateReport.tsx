@@ -300,37 +300,47 @@ function TrucSection({
   );
 }
 
-function RadioRow({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="-mb-2 flex flex-wrap">
-      {options.map((o) => {
-        const active = value === o.value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => onChange(o.value)}
-            className={
-              "mb-2 mr-2 select-none rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
-              (active
-                ? "border-red-700 bg-red-700 text-white"
-                : "border-input bg-background text-foreground hover:border-red-700 hover:text-red-700")
-            }
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
+function RadioRow({  
+  value,  
+  options,  
+  onChange,  
+}: {  
+  value: string;  
+  options: { value: string; label: string; tone?: "success" | "danger" }[];  
+  onChange: (v: string) => void;  
+}) {  
+  return (  
+    <div className="-mb-2 flex flex-wrap">  
+      {options.map((o) => {  
+        const active = value === o.value;  
+        const tone = o.tone ?? "success";  
+        const activeCls =  
+          tone === "danger"  
+            ? "border-rose-200 bg-rose-100 text-rose-700"  
+            : "border-emerald-200 bg-emerald-100 text-emerald-700";  
+        const idleCls =  
+          tone === "danger"  
+            ? "border-input bg-background text-foreground hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"  
+            : "border-input bg-background text-foreground hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700";  
+        return (  
+          <button  
+            key={o.value}  
+            type="button"  
+            onClick={() => onChange(o.value)}  
+            className={  
+              "mb-2 mr-2 inline-flex select-none items-center gap-1 rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +  
+              (active ? activeCls : idleCls)  
+            }  
+          >  
+            {active && (  
+              <span aria-hidden>{tone === "danger" ? "✕" : "✓"}</span>  
+            )}  
+            {o.label}  
+          </button>  
+        );  
+      })}  
+    </div>  
+  );  
 }
 
 export default function CreateReport() {
@@ -386,7 +396,7 @@ export default function CreateReport() {
   const [aggLoading, setAggLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
 
   const [errors, setErrors] = useState<Errors>({});
   const clearError = (key: string) =>
@@ -1031,8 +1041,12 @@ export default function CreateReport() {
               <RadioRow
                 value={detail.securityStatus}
                 options={[
-                  { value: "safe", label: "Đảm bảo an toàn" },
-                  { value: "unsafe", label: "Không đảm bảo an toàn" },
+                  { value: "safe", label: "Đảm bảo an toàn", tone: "success" },
+                  {
+                    value: "unsafe",
+                    label: "Không đảm bảo an toàn",
+                    tone: "danger",
+                  },
                 ]}
                 onChange={(v) =>
                   setDetail((d) => ({ ...d, securityStatus: v }))
@@ -1049,8 +1063,8 @@ export default function CreateReport() {
               <RadioRow
                 value={detail.incidentStatus}
                 options={[
-                  { value: "yes", label: "Có" },
-                  { value: "no", label: "Không" },
+                  { value: "yes", label: "Có", tone: "danger" },
+                  { value: "no", label: "Không", tone: "success" },
                 ]}
                 onChange={(v) =>
                   setDetail((d) => ({
@@ -1090,8 +1104,8 @@ export default function CreateReport() {
               <RadioRow
                 value={detail.advantageStatus}
                 options={[
-                  { value: "yes", label: "Có" },
-                  { value: "no", label: "Không" },
+                  { value: "yes", label: "Có", tone: "success" },
+                  { value: "no", label: "Không", tone: "danger" },
                 ]}
                 onChange={(v) =>
                   setDetail((d) => ({
@@ -1125,8 +1139,8 @@ export default function CreateReport() {
               <RadioRow
                 value={detail.disadvantageStatus}
                 options={[
-                  { value: "yes", label: "Có" },
-                  { value: "no", label: "Không" },
+                  { value: "yes", label: "Có", tone: "danger" },
+                  { value: "no", label: "Không", tone: "success" },
                 ]}
                 onChange={(v) =>
                   setDetail((d) => ({
@@ -1160,8 +1174,8 @@ export default function CreateReport() {
               <RadioRow
                 value={detail.pendingTaskStatus}
                 options={[
-                  { value: "yes", label: "Có" },
-                  { value: "no", label: "Không" },
+                  { value: "yes", label: "Có", tone: "danger" },
+                  { value: "no", label: "Không", tone: "success" },
                 ]}
                 onChange={(v) =>
                   setDetail((d) => ({
