@@ -1,9 +1,9 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const th =
-  "border border-white/20 bg-slate-700 text-center align-middle px-1 text-sm font-semibold text-white";
+  "border border-white/20 bg-red-700 text-center align-middle px-1 text-sm font-semibold text-white";
 const thV =
-  "border border-white/20 bg-slate-700 text-center align-middle px-1 py-2 text-sm font-semibold text-white";
+  "border border-white/20 bg-red-700 text-center align-middle px-1 py-2 text-sm font-semibold text-white";
 
 function V({ children }: { children: string }) {
   const words = children.split(" ");

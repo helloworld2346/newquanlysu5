@@ -118,13 +118,11 @@ export default function InlineOwnReportRow({
   if (existing && !existing.notSubmitted && !editing) {
     const v = existing.vang;
     return (
-      <TableRow className={rowBase}>
-        <TableCell className={`${td} font-medium`}>
-          <UnitBadge label={label} />
+      <TableRow>
+        <TableCell className={`${td} text-center font-medium`}>
+          {label}
         </TableCell>
-        <TableCell className={`${td} font-semibold`}>
-          {formatNum(existing.quanSoTong)}
-        </TableCell>
+        <TableCell className={td}>{formatNum(existing.quanSoTong)}</TableCell>
         <TableCell className={td}>
           {formatNum(existing.quanSoHienDien)}
         </TableCell>
@@ -142,18 +140,16 @@ export default function InlineOwnReportRow({
         <TableCell className={td}>—</TableCell>
         <TableCell className={`${td} text-left`}>{existing.ghiChu}</TableCell>
         <TableCell className={td}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Thao tác">
-                <MoreVertical className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={startEdit}>
-                <Pencil className="mr-2 size-4" /> Chỉnh sửa
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mx-auto size-7"
+            onClick={startEdit}
+            aria-label={`Sửa báo cáo ${label}`}
+            title="Sửa"
+          >
+            <Pencil className="size-4" />
+          </Button>
         </TableCell>
       </TableRow>
     );
