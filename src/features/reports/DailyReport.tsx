@@ -539,7 +539,7 @@ export default function DailyReport() {
 
   const TONG_HOP_KYHIEU: Record<string, string> = {
     GS003: "f5",
-  };
+  };  
 
   return (
     <div>
@@ -723,6 +723,7 @@ export default function DailyReport() {
                             ? (TONG_HOP_KYHIEU[maDonVi] ?? r.kyhieuDonVi)
                             : undefined
                         }
+                        noKySo={isCommandBlock}
                         onViewDetail={goDetail}
                         onEdit={goEditOrCreate}
                       />

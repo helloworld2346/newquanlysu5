@@ -87,6 +87,7 @@ export default function ReportTableRow({
   onApprove,
   onRefuse,
   displayKyHieu,
+  noKySo = false,
 }: {
   row: ReportRow;
   canEdit: boolean;
@@ -101,6 +102,7 @@ export default function ReportTableRow({
   onApprove?: (r: ReportRow) => void;
   onRefuse?: (r: ReportRow) => void;
   displayKyHieu?: string;
+  noKySo?: boolean;
 }) {
   const [showKySo, setShowKySo] = useState(false);
 
@@ -167,6 +169,8 @@ export default function ReportTableRow({
           >
             Đã ký
           </button>
+        ) : noKySo ? (
+          "—"
         ) : (
           <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
             Chưa ký
