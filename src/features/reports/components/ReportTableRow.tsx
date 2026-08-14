@@ -47,12 +47,6 @@ const STATUS_TONE: Record<string, string> = {
   Nhap: "bg-slate-100 text-slate-700",
 };
 
-const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];
-
-function isApproved(status: string): boolean {
-  return APPROVED_STATUSES.includes(status);
-}
-
 function parseJson<T>(raw: string | undefined | null, fallback: T): T {
   if (!raw) return fallback;
   try {
@@ -106,14 +100,8 @@ export default function ReportTableRow({
 }) {
   const [showKySo, setShowKySo] = useState(false);
 
-  const DRAFT_STATUSES = ["Nháp", "Nhap"];
-  function isDraftStatus(s: string) {
-    return DRAFT_STATUSES.includes(s);
-  }
-
   const v = row.vang;
-  const showNum =
-    !row.notSubmitted && (isApproved(row.status) || isDraftStatus(row.status));
+  const showNum = !row.notSubmitted;
   const num = (val: number | null | undefined) =>
     showNum ? formatNum(val) : "—";
   const notSubmitted = row.notSubmitted;
