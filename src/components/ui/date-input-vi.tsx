@@ -10,6 +10,7 @@ type Props = {
   disabled?: boolean;
   className?: string;
   id?: string;
+  align?: "left" | "right";
 };
 
 const WEEKDAY_LABELS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
@@ -83,6 +84,7 @@ export function DateInputVi({
   disabled = false,
   className,
   id,
+  align = "left",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(isoToDisplay(value));
@@ -190,7 +192,10 @@ export function DateInputVi({
       {open && (
         <div
           role="dialog"
-          className="absolute left-0 top-11 z-50 w-64 rounded-lg border bg-background p-2.5 shadow-lg"
+          className={cn(
+            "absolute top-11 z-50 w-64 rounded-lg border bg-background p-2.5 shadow-lg",
+            align === "right" ? "right-0" : "left-0",
+          )}
         >
           <div className="mb-2 flex items-center justify-between">
             <button

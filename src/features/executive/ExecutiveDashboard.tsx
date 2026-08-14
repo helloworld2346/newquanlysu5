@@ -110,7 +110,12 @@ export default function ExecutiveDashboard() {
           </p>
         </div>
         <div className="w-56">
-          <DateInputVi value={ngay} onChange={setNgay} max={todayIso()} />
+          <DateInputVi
+            value={ngay}
+            onChange={setNgay}
+            max={todayIso()}
+            align="right"
+          />
         </div>
       </div>
 
