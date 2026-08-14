@@ -105,15 +105,16 @@ const EMPTY_TRUC: TrucNguoiInfo = {
   chucvuNguoitruc: "",
   sodienthoai: "",
 };
+
 const EMPTY_DETAIL: DetailStepData = {
-  securityStatus: "safe",
-  incidentStatus: "no",
+  securityStatus: "",
+  incidentStatus: "",
   incidentDetail: "",
-  advantageStatus: "yes",
+  advantageStatus: "",
   advantageDetail: "",
-  disadvantageStatus: "no",
+  disadvantageStatus: "",
   disadvantageDetail: "",
-  pendingTaskStatus: "no",
+  pendingTaskStatus: "",
   pendingDetail: "",
 };
 
@@ -177,8 +178,9 @@ function detailToNhiemVu(
 }
 
 function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {
+  const sec = nv.nhiemVuPhandoi;
   return {
-    securityStatus: nv.nhiemVuPhandoi === "safe" ? "safe" : "unsafe",
+    securityStatus: sec === "safe" || sec === "unsafe" ? sec : "",
     incidentStatus: nv.noiDungDotXuat ? "yes" : "no",
     incidentDetail: nv.noiDungDotXuat ?? "",
     advantageStatus: nv.noiDungUuDiem ? "yes" : "no",
@@ -300,47 +302,48 @@ function TrucSection({
   );
 }
 
-function RadioRow({  
-  value,  
-  options,  
-  onChange,  
-}: {  
-  value: string;  
-  options: { value: string; label: string; tone?: "success" | "danger" }[];  
-  onChange: (v: string) => void;  
-}) {  
-  return (  
-    <div className="-mb-2 flex flex-wrap">  
-      {options.map((o) => {  
-        const active = value === o.value;  
-        const tone = o.tone ?? "success";  
-        const activeCls =  
-          tone === "danger"  
-            ? "border-rose-200 bg-rose-100 text-rose-700"  
-            : "border-emerald-200 bg-emerald-100 text-emerald-700";  
-        const idleCls =  
-          tone === "danger"  
-            ? "border-input bg-background text-foreground hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"  
-            : "border-input bg-background text-foreground hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700";  
-        return (  
-          <button  
-            key={o.value}  
-            type="button"  
-            onClick={() => onChange(o.value)}  
-            className={  
-              "mb-2 mr-2 inline-flex select-none items-center gap-1 rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +  
-              (active ? activeCls : idleCls)  
-            }  
-          >  
-            {active && (  
-              <span aria-hidden>{tone === "danger" ? "✕" : "✓"}</span>  
-            )}  
-            {o.label}  
-          </button>  
-        );  
-      })}  
-    </div>  
-  );  
+function RadioRow({
+  value,
+  options,
+  onChange,
+  hasError,
+}: {
+  value: string;
+  options: { value: string; label: string; tone?: "success" | "danger" }[];
+  onChange: (v: string) => void;
+  hasError?: boolean;
+}) {
+  return (
+    <div className="-mb-2 flex flex-wrap">
+      {options.map((o) => {
+        const active = value === o.value;
+        const tone = o.tone ?? "success";
+        const activeCls =
+          tone === "danger"
+            ? "border-rose-200 bg-rose-100 text-rose-700"
+            : "border-emerald-200 bg-emerald-100 text-emerald-700";
+        const idleCls =
+          tone === "danger"
+            ? "border-input bg-background text-foreground hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+            : "border-input bg-background text-foreground hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700";
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={
+              "mb-2 mr-2 inline-flex select-none items-center gap-1 rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
+              (active ? activeCls : idleCls) +
+              (hasError && !active ? " border-red-400" : "")
+            }
+          >
+            {active && <span aria-hidden>{tone === "danger" ? "✕" : "✓"}</span>}
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function CreateReport() {
@@ -415,44 +418,61 @@ export default function CreateReport() {
       try {
         const res = await reportApi.getById(id);
         const r = res.Result;
-       if (!ignore && r) {
-         if (r.thoiGianBaoCao) {
-           setNgayBaoCao(r.thoiGianBaoCao.slice(0, 10));
-         }
-         if (r.loaiDonBaoCao === "TONG_HOP") {
-           setIsAggregatingReport(true);
-           setAggTongQuanSo(r.quanSoTong ?? 0);
-         }
-         try {
-           if (r.trucBanChiHuy)
-             setTrucChiHuy({ ...EMPTY_TRUC, ...JSON.parse(r.trucBanChiHuy) });
-         } catch {
-           /* ignore */
-         }
-         try {
-           if (r.trucBanTacChien)
-             setTrucBanTacChien({
-               ...EMPTY_TRUC,
-               ...JSON.parse(r.trucBanTacChien),
-             });
-         } catch {
-           /* ignore */
-         }
-         try {
-           if (r.chiTietVang) {
-             const rows = JSON.parse(r.chiTietVang) as AbsentRow[];
-             setAbsentRows(rows.map((row) => ({ ...row, id: genId() })));
-           }
-         } catch {
-           /* ignore */
-         }
-       }
+        if (!ignore && r) {
+          if (r.thoiGianBaoCao) {
+            setNgayBaoCao(r.thoiGianBaoCao.slice(0, 10));
+          }
+          if (r.loaiDonBaoCao === "TONG_HOP") {
+            setIsAggregatingReport(true);
+            setAggTongQuanSo(r.quanSoTong ?? 0);
+          }
+          try {
+            if (r.trucBanChiHuy)
+              setTrucChiHuy({ ...EMPTY_TRUC, ...JSON.parse(r.trucBanChiHuy) });
+          } catch {
+            /* ignore */
+          }
+          try {
+            if (r.trucBanTacChien)
+              setTrucBanTacChien({
+                ...EMPTY_TRUC,
+                ...JSON.parse(r.trucBanTacChien),
+              });
+          } catch {
+            /* ignore */
+          }
+          try {
+            if (r.chiTietVang) {
+              const rows = JSON.parse(r.chiTietVang) as AbsentRow[];
+              setAbsentRows(rows.map((row) => ({ ...row, id: genId() })));
+            }
+          } catch {
+            /* ignore */
+          }
+        }
       } catch {
         /* ignore */
       }
 
       const nv = await fetchNhiemVu(id);
-      if (!ignore && nv) setDetail(nhiemVuToDetail(nv));
+      if (!ignore) {
+        if (nv) {
+          setDetail(nhiemVuToDetail(nv));
+        } else {
+          // báo cáo cũ chưa có bản ghi nhiệm vụ → gán mặc định hợp lệ, không ép chọn lại
+          setDetail({
+            securityStatus: "safe",
+            incidentStatus: "no",
+            incidentDetail: "",
+            advantageStatus: "no",
+            advantageDetail: "",
+            disadvantageStatus: "no",
+            disadvantageDetail: "",
+            pendingTaskStatus: "no",
+            pendingDetail: "",
+          });
+        }
+      }
     })();
 
     return () => {
@@ -520,13 +540,13 @@ export default function CreateReport() {
   const quanSoVang = absentRows.length;
   const quanSoHienDien = Math.max(0, tongQuanSo - quanSoVang);
 
-  const bienChe = useMemo<Agg>(() => {  
-    if (isAggregating && fullDonVi) return unitFullAgg(fullDonVi, units);  
-    return {  
-      siQuan: fullDonVi?.quanSoSiQuan ?? 0,  
-      qncn: fullDonVi?.quanSoQncn ?? 0,  
-      hsqBs: fullDonVi?.quanSoHsqBs ?? 0,  
-    };  
+  const bienChe = useMemo<Agg>(() => {
+    if (isAggregating && fullDonVi) return unitFullAgg(fullDonVi, units);
+    return {
+      siQuan: fullDonVi?.quanSoSiQuan ?? 0,
+      qncn: fullDonVi?.quanSoQncn ?? 0,
+      hsqBs: fullDonVi?.quanSoHsqBs ?? 0,
+    };
   }, [isAggregating, fullDonVi, units]);
 
   const warnings = useMemo(() => {
@@ -590,9 +610,26 @@ export default function CreateReport() {
       e["tongVang"] =
         `Tổng vắng (${quanSoVang}) vượt tổng quân số (${tongQuanSo}).`;
 
+    if (!detail.securityStatus) e["securityStatus"] = "Vui lòng chọn một mục.";
+    if (!detail.incidentStatus) e["incidentStatus"] = "Vui lòng chọn một mục.";
+    if (!detail.advantageStatus)
+      e["advantageStatus"] = "Vui lòng chọn một mục.";
+    if (!detail.disadvantageStatus)
+      e["disadvantageStatus"] = "Vui lòng chọn một mục.";
+    if (!detail.pendingTaskStatus)
+      e["pendingTaskStatus"] = "Vui lòng chọn một mục.";
+
     if (detail.incidentStatus === "yes" && !detail.incidentDetail.trim())
       e["incidentDetail"] = "Nhập chi tiết khi chọn Có.";
-
+    if (detail.advantageStatus === "yes" && !detail.advantageDetail.trim())
+      e["advantageDetail"] = "Vui lòng nhập nội dung ưu điểm.";
+    if (
+      detail.disadvantageStatus === "yes" &&
+      !detail.disadvantageDetail.trim()
+    )
+      e["disadvantageDetail"] = "Vui lòng nhập nội dung khuyết điểm.";
+    if (detail.pendingTaskStatus === "yes" && !detail.pendingDetail.trim())
+      e["pendingDetail"] = "Vui lòng nhập nội dung cần giải quyết.";
     return e;
   };
 
@@ -1040,6 +1077,7 @@ export default function CreateReport() {
               </p>
               <RadioRow
                 value={detail.securityStatus}
+                hasError={!!errors["securityStatus"]}
                 options={[
                   { value: "safe", label: "Đảm bảo an toàn", tone: "success" },
                   {
@@ -1048,10 +1086,12 @@ export default function CreateReport() {
                     tone: "danger",
                   },
                 ]}
-                onChange={(v) =>
-                  setDetail((d) => ({ ...d, securityStatus: v }))
-                }
+                onChange={(v) => {
+                  setDetail((d) => ({ ...d, securityStatus: v }));
+                  clearError("securityStatus");
+                }}
               />
+              <FieldError msg={errors["securityStatus"]} />
             </div>
           </div>
 
@@ -1062,30 +1102,35 @@ export default function CreateReport() {
               </p>
               <RadioRow
                 value={detail.incidentStatus}
+                hasError={!!errors["incidentStatus"]}
                 options={[
                   { value: "yes", label: "Có", tone: "danger" },
                   { value: "no", label: "Không", tone: "success" },
                 ]}
-                onChange={(v) =>
+                onChange={(v) => {
                   setDetail((d) => ({
                     ...d,
                     incidentStatus: v,
                     incidentDetail: v === "no" ? "" : d.incidentDetail,
-                  }))
-                }
+                  }));
+                  clearError("incidentStatus");
+                  if (v === "no") clearError("incidentDetail");
+                }}
               />
+              <FieldError msg={errors["incidentStatus"]} />
               {detail.incidentStatus === "yes" && (
                 <>
                   <Textarea
                     rows={3}
                     placeholder="Nhập nội dung..."
                     value={detail.incidentDetail}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setDetail((d) => ({
                         ...d,
                         incidentDetail: e.target.value,
-                      }))
-                    }
+                      }));
+                      clearError("incidentDetail");
+                    }}
                     className={
                       errors["incidentDetail"]
                         ? "border-red-500 focus-visible:ring-red-500"
@@ -1103,30 +1148,42 @@ export default function CreateReport() {
               <p className="text-sm font-semibold">III. Ưu điểm trong ngày</p>
               <RadioRow
                 value={detail.advantageStatus}
+                hasError={!!errors["advantageStatus"]}
                 options={[
                   { value: "yes", label: "Có", tone: "success" },
                   { value: "no", label: "Không", tone: "danger" },
                 ]}
-                onChange={(v) =>
+                onChange={(v) => {
                   setDetail((d) => ({
                     ...d,
                     advantageStatus: v,
                     advantageDetail: v === "no" ? "" : d.advantageDetail,
-                  }))
-                }
+                  }));
+                  clearError("advantageStatus");
+                }}
               />
+              <FieldError msg={errors["advantageStatus"]} />
               {detail.advantageStatus === "yes" && (
-                <Textarea
-                  rows={3}
-                  placeholder="Nhập nội dung..."
-                  value={detail.advantageDetail}
-                  onChange={(e) =>
-                    setDetail((d) => ({
-                      ...d,
-                      advantageDetail: e.target.value,
-                    }))
-                  }
-                />
+                <>
+                  <Textarea
+                    rows={3}
+                    placeholder="Nhập nội dung..."
+                    value={detail.advantageDetail}
+                    onChange={(e) => {
+                      setDetail((d) => ({
+                        ...d,
+                        advantageDetail: e.target.value,
+                      }));
+                      clearError("advantageDetail");
+                    }}
+                    className={
+                      errors["advantageDetail"]
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }
+                  />
+                  <FieldError msg={errors["advantageDetail"]} />
+                </>
               )}
             </div>
           </div>
@@ -1138,30 +1195,37 @@ export default function CreateReport() {
               </p>
               <RadioRow
                 value={detail.disadvantageStatus}
+                hasError={!!errors["disadvantageStatus"]}
                 options={[
                   { value: "yes", label: "Có", tone: "danger" },
                   { value: "no", label: "Không", tone: "success" },
                 ]}
-                onChange={(v) =>
+                onChange={(v) => {
                   setDetail((d) => ({
                     ...d,
                     disadvantageStatus: v,
                     disadvantageDetail: v === "no" ? "" : d.disadvantageDetail,
-                  }))
-                }
+                  }));
+                  clearError("disadvantageStatus");
+                }}
               />
+              <FieldError msg={errors["disadvantageStatus"]} />
               {detail.disadvantageStatus === "yes" && (
-                <Textarea
-                  rows={3}
-                  placeholder="Nhập nội dung..."
-                  value={detail.disadvantageDetail}
-                  onChange={(e) =>
-                    setDetail((d) => ({
-                      ...d,
-                      disadvantageDetail: e.target.value,
-                    }))
-                  }
-                />
+                <>
+                  <Textarea
+                    rows={3}
+                    placeholder="Nhập nội dung..."
+                    value={detail.disadvantageDetail}
+                    onChange={(e) => {
+                      setDetail((d) => ({
+                        ...d,
+                        disadvantageDetail: e.target.value,
+                      }));
+                      clearError("disadvantageDetail");
+                    }}
+                  />
+                  <FieldError msg={errors["disadvantageDetail"]} />
+                </>
               )}
             </div>
           </div>
@@ -1173,27 +1237,37 @@ export default function CreateReport() {
               </p>
               <RadioRow
                 value={detail.pendingTaskStatus}
+                hasError={!!errors["pendingTaskStatus"]}
                 options={[
                   { value: "yes", label: "Có", tone: "danger" },
                   { value: "no", label: "Không", tone: "success" },
                 ]}
-                onChange={(v) =>
+                onChange={(v) => {
                   setDetail((d) => ({
                     ...d,
                     pendingTaskStatus: v,
                     pendingDetail: v === "no" ? "" : d.pendingDetail,
-                  }))
-                }
+                  }));
+                  clearError("pendingTaskStatus");
+                }}
               />
+              <FieldError msg={errors["pendingTaskStatus"]} />
               {detail.pendingTaskStatus === "yes" && (
-                <Textarea
-                  rows={3}
-                  placeholder="Nhập nội dung..."
-                  value={detail.pendingDetail}
-                  onChange={(e) =>
-                    setDetail((d) => ({ ...d, pendingDetail: e.target.value }))
-                  }
-                />
+                <>
+                  <Textarea
+                    rows={3}
+                    placeholder="Nhập nội dung..."
+                    value={detail.pendingDetail}
+                    onChange={(e) => {
+                      setDetail((d) => ({
+                        ...d,
+                        pendingDetail: e.target.value,
+                      }));
+                      clearError("pendingDetail");
+                    }}
+                  />
+                  <FieldError msg={errors["pendingDetail"]} />
+                </>
               )}
             </div>
           </div>
