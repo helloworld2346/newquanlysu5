@@ -62,6 +62,10 @@ const DailyReport = lazy(
   () => import("@/features/reports/DailyReport"),
 );
 
+const PoliticalWorkReport = lazy(
+  () => import("@/features/report-political-work/PoliticalWorkReport"),
+);
+
 const AuditLog = lazy(() => import("@/features/audit-log/AuditLog"));
 
 const SettingsPage = lazy(() => import("@/features/settings/Settings"));
@@ -133,7 +137,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "report-political-work",
     label: "Hoạt động CTĐ, CTCT",
     path: "/political-work-report",
-    component: Placeholder,
+    component: PoliticalWorkReport,
     icon: FileText,
     group: "reports",
     allowedRoles: ALL_REPORT_ROLES,

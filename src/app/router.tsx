@@ -9,6 +9,9 @@ import LoginPage from "@/features/auth/LoginPage";
 
 const CreateReport = lazy(() => import("@/features/reports/CreateReport"));
 const ReportDetail = lazy(() => import("@/features/reports/ReportDetail"));
+const CreatePoliticalWork = lazy(
+  () => import("@/features/report-political-work/CreatePoliticalWork"),
+);
 
 function Protected({ children }: { children: React.ReactNode }) {
   return (
@@ -55,6 +58,22 @@ export function AppRouter() {
         element={
           <Protected>
             <ReportDetail />
+          </Protected>
+        }
+      />
+      <Route
+        path="/political-work-report/create"
+        element={
+          <Protected>
+            <CreatePoliticalWork />
+          </Protected>
+        }
+      />
+      <Route
+        path="/political-work-report/edit/:id"
+        element={
+          <Protected>
+            <CreatePoliticalWork />
           </Protected>
         }
       />
