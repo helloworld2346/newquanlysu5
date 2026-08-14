@@ -93,6 +93,19 @@ export function usePoliticalMerged(
   };
 }
 
+export function useTongHopPolitical(
+  maDonVi: string | undefined,
+  ngay: string,
+  hasChildren = true,
+) {
+  return useQuery({
+    queryKey: [...politicalKey(maDonVi ?? "", ngay), "TONG_HOP_TAB"],
+    queryFn: () => politicalWorkApi.getByDonVi(maDonVi!, ngay, "TONG_HOP"),
+    enabled: !!maDonVi && !!ngay && hasChildren,
+    select: (res) => (res.Result ? [res.Result] : []),
+  });
+}
+
 export function usePoliticalDetail(id: string | undefined) {
   return useQuery({
     queryKey: ["political-detail", id],

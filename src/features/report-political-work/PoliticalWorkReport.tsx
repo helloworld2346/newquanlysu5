@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -46,18 +46,16 @@ import {
   normalizeStatus,
 } from "@/shared/report/status";
 import { useUnitHierarchy } from "@/shared/report/useUnitHierarchy";
-// ===== Batch 1 (điều chỉnh tên nếu bạn đặt khác) =====
 import {
-  useChildrenPoliticalMerged,
+  usePoliticalMerged,
   useTongHopPolitical,
-  useOwnPolitical,
   useSubmitPolitical,
   useApprovePolitical,
   useRefusePolitical,
-  POLITICAL_TONG_HOP_CAPS,
 } from "./queries";
-import { mapItemToPoliticalRow, createEmptyPoliticalWorkRow } from "./utils";
-import type { PoliticalWorkRow } from "./types";
+import { mapItemToRow, createEmptyPoliticalWorkRow } from "./utils";
+import type { PoliticalWorkRow } from "@/types/politicalWork";
+
 import RefuseDialog from "@/features/reports/components/RefuseDialog";
 
 function StatusBadge({
@@ -118,21 +116,21 @@ export default function PoliticalWorkReport() {
 
   const unitsReady = units.length > 0;
 
-  const { data: items = [], isLoading } = useChildrenPoliticalMerged(
-    maDonVi,
-    ngay,
-    capByUnit,
-    hasChildren,
-    unitsReady,
-  );
+const { data: items = [], isLoading } = usePoliticalMerged(
+  maDonVi,
+  ngay,
+  capByUnit,
+  hasChildren,
+  unitsReady,
+);
 
   const { data: tongHopItems = [], isLoading: tongHopLoading } =
     useTongHopPolitical(maDonVi, ngay, hasChildren);
 
-  const tongHopRows = useMemo(
-    () => tongHopItems.map(mapItemToPoliticalRow),
-    [tongHopItems],
-  );
+const tongHopRows = useMemo(
+  () => tongHopItems.map(mapItemToRow),
+  [tongHopItems],
+);
 
   const visibleTongHopRows = useMemo(
     () =>
@@ -142,12 +140,10 @@ export default function PoliticalWorkReport() {
     [tongHopRows, hideDraftForCommander],
   );
 
-  const { data: ownDonViItem } = useOwnPolitical(maDonVi, ngay, false);
-
   const rows = useMemo(() => {
     const byUnit = new Map(
       items.map((it) => {
-        const row = mapItemToPoliticalRow(it);
+        const row = mapItemToRow(it);
         return [row.donVi, row] as const;
       }),
     );
@@ -281,7 +277,6 @@ export default function PoliticalWorkReport() {
   const displayRows =
     effectiveTab === "consolidated" ? visibleTongHopRows : filteredRows;
 
-  // ==== Thống kê StatCard ====
   const totalUnits = hasChildren ? childRows.length : rows.length;
   const reported = (hasChildren ? childRows : rows).filter(
     (r) => !r.notSubmitted && normalizeStatus(r.status) === "Đã_Duyệt",
