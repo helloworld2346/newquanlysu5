@@ -117,6 +117,30 @@ function SignerRow({
   );
 }
 
+function stripMarks(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function isDbOrEbUnit(donVi?: {
+  tenDonvi?: string;
+  kyhieuDonvi?: string;
+}): boolean {
+  const name = stripMarks(donVi?.tenDonvi ?? "");
+  const symbol = stripMarks(donVi?.kyhieuDonvi ?? "");
+  const hay = `${name} ${symbol}`;
+  return (
+    hay.includes("d bo") ||
+    hay.includes("e bo") ||
+    hay.includes("dbo") ||
+    hay.includes("ebo") ||
+    symbol.includes("ch/e") ||
+    symbol.includes("ch/d")
+  );
+}
+
 export default function DailyReport() {
   const navigate = useNavigate();
   const { account, role } = useAuthInfo();
@@ -161,6 +185,20 @@ export default function DailyReport() {
     [units],
   );
 
+  const capDonViAcc =
+    account?.donVi?.capDonVi ?? capByUnit[maDonVi ?? ""] ?? null;
+
+  const hideDraftForCommander = useMemo(() => {
+    if (!isChiHuy) return false;
+    if (
+      capDonViAcc !== "TRUNG_DOAN" &&
+      capDonViAcc !== "TIEU_DOAN" &&
+      capDonViAcc !== "SU_DOAN"
+    )
+      return false;
+    return !isDbOrEbUnit(account?.donVi);
+  }, [isChiHuy, capDonViAcc, account?.donVi]);
+
   const hasChildren = useMemo(() => {
     if (!maDonVi) return false;
     return units.some((u) => {
@@ -188,6 +226,14 @@ export default function DailyReport() {
   const tongHopRows = useMemo(
     () => tongHopItems.map(mapItemToRow),
     [tongHopItems],
+  );
+
+  const visibleTongHopRows = useMemo(
+    () =>
+      hideDraftForCommander
+        ? tongHopRows.filter((r) => !r.notSubmitted && !isDraft(r.status))
+        : tongHopRows,
+    [tongHopRows, hideDraftForCommander],
   );
 
   const { data: ownDonViItem } = useOwnReport(maDonVi, ngay, false);
@@ -274,8 +320,14 @@ export default function DailyReport() {
     : `Tổng hợp (${approvedChildRows.length}/${totalRequiredCount})`;
 
   const visibleRows = useMemo(
-    () => rows.filter((r) => !isDraft(r.status) || r.donVi === maDonVi),
-    [rows, maDonVi],
+    () =>
+      rows.filter((r) => {
+        if (hideDraftForCommander) {
+          return !r.notSubmitted && !isDraft(r.status);
+        }
+        return !isDraft(r.status) || r.donVi === maDonVi;
+      }),
+    [rows, maDonVi, hideDraftForCommander],
   );
 
   const hasFilter = search.trim() !== "" || filterStatus !== "ALL";
@@ -325,13 +377,13 @@ export default function DailyReport() {
   );
 
   const tongHopTotals = useMemo(
-    () => buildDisplayTotals(tongHopRows),
-    [tongHopRows],
+    () => buildDisplayTotals(visibleTongHopRows),
+    [visibleTongHopRows],
   );
 
   const tongHopAbsent = useMemo(
     () =>
-      tongHopRows
+      visibleTongHopRows
         .filter((r) => !r.notSubmitted)
         .flatMap((r) =>
           r.chiTietVangList.map((qn) => ({
@@ -339,7 +391,7 @@ export default function DailyReport() {
             tenDonVi: r.kyhieuDonVi || r.tenDonVi,
           })),
         ),
-    [tongHopRows],
+    [visibleTongHopRows],
   );
 
   const tongHopDraft = useMemo(
@@ -527,7 +579,9 @@ export default function DailyReport() {
   ];
 
   const goDetail = (row: ReportRow) =>
-    navigate(`/daily-report/detail/${row.idDonBaoCao}?ngay=${ngay}`);
+    navigate(
+      `/daily-report/detail/${row.idDonBaoCao}?ngay=visibleTongHopRows${ngay}`,
+    );
 
   const goEditOrCreate = (row: ReportRow) => {
     if (row.idDonBaoCao) {
@@ -699,7 +753,7 @@ export default function DailyReport() {
                     ))}
                   </TableRow>
                 ))
-              ) : tongHopRows.length === 0 ? (
+              ) : visibleTongHopRows.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={22}
@@ -710,7 +764,7 @@ export default function DailyReport() {
                 </TableRow>
               ) : (
                 <>
-                  {tongHopRows.map((r) => {
+                  {visibleTongHopRows.map((r) => {
                     const isCommandBlock =
                       r.kyhieuDonVi === "CH/f" || r.kyhieuDonVi === "CH/e";
                     return (
