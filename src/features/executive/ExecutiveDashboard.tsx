@@ -29,6 +29,7 @@ import { DateInputVi } from "@/components/ui/date-input-vi";
 import { todayIso, formatNum } from "@/features/reports/utils";
 import { useThongKe } from "./queries";
 import type { DonViItem } from "./api";
+import { ChartTooltip } from "./ChartTooltip";
 
 const PRESENT_COLOR = "#059669";
 const ABSENT_COLOR = "#e11d48";
@@ -54,40 +55,19 @@ function inferUnitType(ten: string): keyof typeof CAP_ORDER {
   return "department";
 }
 
-type PieTooltipProps = {
-  active?: boolean;
-  payload?: Array<{
-    name: string;
-    value: number;
-    payload: { name: string; value: number; color: string };
-  }>;
-  total: number;
-};
-
-function PieTooltip({ active, payload, total }: PieTooltipProps) {
-  if (!active || !payload || payload.length === 0) return null;
-  const item = payload[0];
-  const color = item.payload.color;
-  const percent = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
-
+function YAxisTick({
+  x,
+  y,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value: string };
+}) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm">
-      <div className="flex items-center gap-2">
-        <span
-          className="inline-block size-2.5 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-        <span className="text-xs font-medium text-slate-600">{item.name}</span>
-      </div>
-      <div className="mt-1 flex items-baseline gap-1.5">
-        <span className="text-base font-bold tabular-nums" style={{ color }}>
-          {formatNum(item.value)}
-        </span>
-        <span className="text-xs font-semibold" style={{ color }}>
-          ({percent}%)
-        </span>
-      </div>
-    </div>
+    <text x={x} y={y} dy={4} textAnchor="end" fontSize={12} fill="#475569">
+      {payload?.value}
+    </text>
   );
 }
 
@@ -194,7 +174,9 @@ export default function ExecutiveDashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Cơ cấu hiện diện / vắng</CardTitle>
+            <CardTitle className="text-base">
+              Quân số hiện diện / vắng Sư đoàn 5
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -224,9 +206,9 @@ export default function ExecutiveDashboard() {
                         ))}
                       </Pie>
                       <RTooltip
-                        content={<PieTooltip total={tongQuanSo} />}
-                        wrapperStyle={{ outline: "none", zIndex: 50 }}
+                        content={<ChartTooltip total={tongQuanSo} />}
                         cursor={false}
+                        wrapperStyle={{ outline: "none", zIndex: 50 }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -348,7 +330,7 @@ export default function ExecutiveDashboard() {
               <BarChart
                 data={barData}
                 layout="vertical"
-                margin={{ left: 24, right: 16, top: 8, bottom: 8 }}
+                margin={{ left: 8, right: 16, top: 8, bottom: 8 }}
                 barGap={2}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -356,10 +338,14 @@ export default function ExecutiveDashboard() {
                 <YAxis
                   type="category"
                   dataKey="ten"
-                  width={140}
-                  tick={{ fontSize: 12 }}
+                  width={170}
+                  tick={<YAxisTick />}
                 />
-                <RTooltip formatter={(v: number) => formatNum(v)} />
+                <RTooltip
+                  content={<ChartTooltip />}
+                  cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
+                  wrapperStyle={{ outline: "none", zIndex: 50 }}
+                />
                 <Bar
                   dataKey="Hiện diện"
                   fill={PRESENT_COLOR}
