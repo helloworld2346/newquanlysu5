@@ -529,14 +529,12 @@ export default function ExecutiveDashboard() {
           ) : (
             <ResponsiveContainer
               width="100%"
-              height={Math.max(320, barData.length * 42)}
+              height={Math.max(320, barData.length * 34)}
             >
               <BarChart
-                key={`bar-${ngay}`}
                 data={barData}
                 layout="vertical"
                 margin={{ left: 8, right: 16, top: 8, bottom: 8 }}
-                barGap={2}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" allowDecimals={false} />
@@ -553,17 +551,15 @@ export default function ExecutiveDashboard() {
                 />
                 <Bar
                   dataKey="Hiện diện"
+                  stackId="qs"
                   fill={PRESENT_COLOR}
-                  radius={[0, 4, 4, 0]}
-                  isAnimationActive={true}
-                  animationDuration={ANIM_DURATION}
+                  radius={[4, 0, 0, 4]}
                 />
                 <Bar
                   dataKey="Vắng"
+                  stackId="qs"
                   fill={ABSENT_COLOR}
                   radius={[0, 4, 4, 0]}
-                  isAnimationActive={true}
-                  animationDuration={ANIM_DURATION}
                 />
               </BarChart>
             </ResponsiveContainer>

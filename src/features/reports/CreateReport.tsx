@@ -854,7 +854,7 @@ export default function CreateReport() {
           <Button
             size="sm"
             onClick={addRow}
-            className="bg-red-800 text-white hover:bg-slate-800"
+            className="bg-red-800 text-white hover:bg-red-700"
           >
             <Plus className="mr-2 size-4" /> Thêm quân nhân vắng
           </Button>
