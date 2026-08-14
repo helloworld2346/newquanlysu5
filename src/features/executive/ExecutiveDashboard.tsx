@@ -54,6 +54,43 @@ function inferUnitType(ten: string): keyof typeof CAP_ORDER {
   return "department";
 }
 
+type PieTooltipProps = {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: { name: string; value: number; color: string };
+  }>;
+  total: number;
+};
+
+function PieTooltip({ active, payload, total }: PieTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+  const item = payload[0];
+  const color = item.payload.color;
+  const percent = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm">
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-block size-2.5 rounded-full"
+          style={{ backgroundColor: color }}
+        />
+        <span className="text-xs font-medium text-slate-600">{item.name}</span>
+      </div>
+      <div className="mt-1 flex items-baseline gap-1.5">
+        <span className="text-base font-bold tabular-nums" style={{ color }}>
+          {formatNum(item.value)}
+        </span>
+        <span className="text-xs font-semibold" style={{ color }}>
+          ({percent}%)
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function ExecutiveDashboard() {
   const [ngay, setNgay] = useState(todayIso());
   const { data, isLoading } = useThongKe(ngay);
@@ -187,10 +224,9 @@ export default function ExecutiveDashboard() {
                         ))}
                       </Pie>
                       <RTooltip
-                        formatter={(v: number, n) => [
-                          `${formatNum(v)} (${pct(v)}%)`,
-                          n as string,
-                        ]}
+                        content={<PieTooltip total={tongQuanSo} />}
+                        wrapperStyle={{ outline: "none", zIndex: 50 }}
+                        cursor={false}
                       />
                     </PieChart>
                   </ResponsiveContainer>

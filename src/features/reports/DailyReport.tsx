@@ -579,9 +579,7 @@ export default function DailyReport() {
   ];
 
   const goDetail = (row: ReportRow) =>
-    navigate(
-      `/daily-report/detail/${row.idDonBaoCao}?ngay=visibleTongHopRows${ngay}`,
-    );
+    navigate(`/daily-report/detail/${row.idDonBaoCao}?ngay=${ngay}`);
 
   const goEditOrCreate = (row: ReportRow) => {
     if (row.idDonBaoCao) {
