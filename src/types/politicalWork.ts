@@ -1,0 +1,83 @@
+import type { LoaiDonBaoCao } from "./dailyReport";
+
+export interface PoliticalWorkDonVi {
+  maDonVi: string;
+  tenDonvi: string;
+  kyhieuDonvi?: string;
+  capDonVi?: string | null;
+}
+
+export interface PoliticalWorkRequest {
+  tinhHinh: string;
+  noiDungDotXuat: string;
+  ketQua: string;
+  trucBanNoiVu: string;
+  trucBanCtDangCt: string;
+  kienNghi: string;
+  thoiGianBaoCao: string;
+  donVi: string;
+  loaiDonBaoCao?: LoaiDonBaoCao;
+  chuKySo?: string;
+}
+
+export interface PoliticalWorkForm {
+  tinhHinh?: string;
+  noiDungDotXuat?: string;
+  ketQua?: string;
+  trucBanNoiVu?: string;
+  trucBanCtDangCt?: string;
+  kienNghi?: string;
+  donVi?: string;
+  chuKySo?: string;
+}
+
+export interface PoliticalWorkItem {
+  idCongtac: string;
+  tinhHinh: string;
+  noiDungDotXuat: string;
+  ketQua: string;
+  trucBanNoiVu: string;
+  trucBanCtDangCt: string;
+  kienNghi: string;
+  status: string;
+  ghiChu?: string | null;
+  donVi: PoliticalWorkDonVi;
+  loaiDonBaoCao?: LoaiDonBaoCao;
+  chuKySo?: string;
+}
+
+export interface RefuseRequest {
+  ghiChu: string;
+}
+
+export interface PoliticalWorkSingleResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  Result: PoliticalWorkItem;
+}
+
+export interface PoliticalWorkListResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  Result: PoliticalWorkItem[];
+}
+
+export interface PoliticalWorkRow {
+  idCongtac: string;
+  donVi: string;
+  tenDonVi: string;
+  kyhieuDonVi?: string;
+  tinhHinh: string;
+  noiDungDotXuat: string;
+  ketQua: string;
+  trucBanNoiVu: string;
+  trucBanCtDangCt: string;
+  kienNghi: string;
+  status: string;
+  ghiChu: string;
+  loaiDonBaoCao?: LoaiDonBaoCao;
+  notSubmitted?: boolean;
+  rawItem: PoliticalWorkItem;
+}
