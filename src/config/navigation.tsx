@@ -74,6 +74,10 @@ const DutyShifts = lazy(() => import("@/features/duty/DutyShifts"));
 
 const CreateDutyShift = lazy(() => import("@/features/duty/CreateDutyShift"));  
 
+const ExecutiveDashboard = lazy(
+  () => import("@/features/executive/ExecutiveDashboard"),
+);
+
 const ALL_REPORT_ROLES = [
   "Quản Trị Viên",
   "Trực ban tác chiến",
@@ -101,7 +105,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "executive",
     label: "Tổng hợp trong ngày",
     path: "/dashboard",
-    component: Placeholder,
+    component: ExecutiveDashboard,
     icon: LayoutDashboard,
     group: "dashboard",
     allowedRoles: TAC_CHIEN,
