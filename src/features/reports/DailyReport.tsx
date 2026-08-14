@@ -50,7 +50,6 @@ import InlineOwnReportRow from "./components/InlineOwnReportRow";
 import CaTrucCard from "./components/CaTrucCard";
 import RefuseDialog from "./components/RefuseDialog";
 import { reportApi } from "./api";
-import { useUnits } from "@/features/units/queries";
 import {
   mapItemToRow,
   buildDisplayTotals,
@@ -68,34 +67,15 @@ import type {
 } from "@/types/dailyReport";
 import ReportColGroup from "./components/ReportColGroup";
 import NhiemVuNgaySection from "./components/NhiemVuNgaySection";
-
-const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
-
-const DRAFT = ["Nháp", "Nhap", "DRAFT"];
-const isDraft = (s: string) => DRAFT.includes(s);
-
-const REFUSED = ["Từ_Chối", "Từ chối", "Tu_Choi"];
-const isRefused = (s: string) => REFUSED.includes(s);
-
-const STATUS_FILTERS = [
-  { value: "Chua_Nop", label: "Chưa nộp" },
-  { value: "Đã_Duyệt", label: "Đã duyệt" },
-];
-
-function normalizeStatus(s: string): string {
-  if (["Chờ_Duyệt", "Chờ duyệt"].includes(s)) return "Chờ_Duyệt";
-  if (["Đã_Duyệt", "Đã duyệt", "Da_Duyet"].includes(s)) return "Đã_Duyệt";
-  return s;
-}
-
-function parseJson<T>(raw: string | undefined | null, fallback: T): T {
-  if (!raw) return fallback;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
+import {
+  EDITABLE,
+  isDraft,
+  isRefused,
+  STATUS_FILTERS,
+  normalizeStatus,
+} from "@/shared/report/status";
+import { parseJson } from "@/shared/report/json";
+import { useUnitHierarchy } from "@/shared/report/useUnitHierarchy";
 
 function SignerRow({
   icon,
@@ -114,30 +94,6 @@ function SignerRow({
       </span>
       <span className="font-medium">{value || "—"}</span>
     </div>
-  );
-}
-
-function stripMarks(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function isDbOrEbUnit(donVi?: {
-  tenDonvi?: string;
-  kyhieuDonvi?: string;
-}): boolean {
-  const name = stripMarks(donVi?.tenDonvi ?? "");
-  const symbol = stripMarks(donVi?.kyhieuDonvi ?? "");
-  const hay = `${name} ${symbol}`;
-  return (
-    hay.includes("d bo") ||
-    hay.includes("e bo") ||
-    hay.includes("dbo") ||
-    hay.includes("ebo") ||
-    symbol.includes("ch/e") ||
-    symbol.includes("ch/d")
   );
 }
 
@@ -174,39 +130,12 @@ export default function DailyReport() {
   const [confirmApprove, setConfirmApprove] = useState<ReportRow | null>(null);
   const [refuseTarget, setRefuseTarget] = useState<ReportRow | null>(null);
 
-  const { data: units = [] } = useUnits();
-
-  const capByUnit = useMemo(
-    () =>
-      Object.fromEntries(units.map((u) => [u.maDonVi, u.capDonVi])) as Record<
-        string,
-        string | null | undefined
-      >,
-    [units],
-  );
-
-  const capDonViAcc =
-    account?.donVi?.capDonVi ?? capByUnit[maDonVi ?? ""] ?? null;
-
-  const hideDraftForCommander = useMemo(() => {
-    if (!isChiHuy) return false;
-    if (
-      capDonViAcc !== "TRUNG_DOAN" &&
-      capDonViAcc !== "TIEU_DOAN" &&
-      capDonViAcc !== "SU_DOAN"
-    )
-      return false;
-    return !isDbOrEbUnit(account?.donVi);
-  }, [isChiHuy, capDonViAcc, account?.donVi]);
-
-  const hasChildren = useMemo(() => {
-    if (!maDonVi) return false;
-    return units.some((u) => {
-      if (!u.maDonVi.startsWith(maDonVi + ".")) return false;
-      const suffix = u.maDonVi.slice(maDonVi.length + 1);
-      return !suffix.includes(".");
+  const { units, capByUnit, hideDraftForCommander, hasChildren } =
+    useUnitHierarchy({
+      maDonVi,
+      isChiHuy,
+      accountDonVi: account?.donVi,
     });
-  }, [units, maDonVi]);
 
   const unitsReady = units.length > 0;
 
@@ -591,7 +520,7 @@ export default function DailyReport() {
 
   const TONG_HOP_KYHIEU: Record<string, string> = {
     GS003: "f5",
-  };  
+  };
 
   return (
     <div>
