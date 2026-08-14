@@ -675,36 +675,38 @@ export default function ReportDetail() {
               <NhiemVuItem
                 index={1}
                 label="Nhiệm vụ các phân đội đóng quân canh phòng"
-                status={isSafe ? "Đảm bảo an toàn" : "Không đảm bảo an toàn"}
+                status={
+                  isSafe ? "✓ Đảm bảo an toàn" : "✕ Không đảm bảo an toàn"
+                }
                 accent={isSafe ? "success" : "danger"}
               />
               <NhiemVuItem
                 index={2}
                 label="Tình hình đột xuất"
-                status={hasDotXuat ? "Có" : "Không"}
+                status={hasDotXuat ? "⚠ Có phát sinh" : "✓ Không phát sinh"}
                 detail={nhiemVu.noiDungDotXuat}
-                accent={hasDotXuat ? "warning" : "neutral"}
+                accent={hasDotXuat ? "warning" : "success"}
               />
               <NhiemVuItem
                 index={3}
                 label="Ưu điểm trong ngày"
-                status={hasUuDiem ? "Có" : "Không"}
+                status={hasUuDiem ? "✓ Có" : "— Không có"}
                 detail={nhiemVu.noiDungUuDiem}
                 accent={hasUuDiem ? "success" : "neutral"}
               />
               <NhiemVuItem
                 index={4}
                 label="Khuyết điểm trong ngày"
-                status={hasKhuyetDiem ? "Có" : "Không"}
+                status={hasKhuyetDiem ? "✕ Có" : "✓ Không có"}
                 detail={nhiemVu.noiDungKhuyetDiem}
-                accent={hasKhuyetDiem ? "danger" : "neutral"}
+                accent={hasKhuyetDiem ? "danger" : "success"}
               />
               <NhiemVuItem
                 index={5}
                 label="Nhiệm vụ cần giải quyết"
-                status={hasCanGiaiQuyet ? "Có" : "Không"}
+                status={hasCanGiaiQuyet ? "⚠ Cần xử lý" : "✓ Không có"}
                 detail={nhiemVu.noiDungCanGiaiQuyet}
-                accent={hasCanGiaiQuyet ? "warning" : "neutral"}
+                accent={hasCanGiaiQuyet ? "warning" : "success"}
               />
             </>
           ) : (
