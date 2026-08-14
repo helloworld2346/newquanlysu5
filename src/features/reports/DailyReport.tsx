@@ -537,6 +537,10 @@ export default function DailyReport() {
     }
   };
 
+  const TONG_HOP_KYHIEU: Record<string, string> = {
+    GS003: "f5",
+  };
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between">
@@ -709,16 +713,15 @@ export default function DailyReport() {
                   {tongHopRows.map((r) => {
                     const isCommandBlock =
                       r.kyhieuDonVi === "CH/f" || r.kyhieuDonVi === "CH/e";
-                    const divisionKyHieu = units.find(
-                      (u) => u.maDonVi === maDonVi,
-                    )?.kyhieuDonvi;
                     return (
                       <ReportTableRow
                         key={r.idDonBaoCao}
                         row={r}
                         canEdit={false}
                         displayKyHieu={
-                          isCommandBlock ? divisionKyHieu : undefined
+                          isCommandBlock && maDonVi
+                            ? (TONG_HOP_KYHIEU[maDonVi] ?? r.kyhieuDonVi)
+                            : undefined
                         }
                         onViewDetail={goDetail}
                         onEdit={goEditOrCreate}
