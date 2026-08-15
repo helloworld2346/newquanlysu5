@@ -399,22 +399,23 @@ export default function CreatePoliticalWork() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Trực ban nội vụ</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TrucSection
-            title=""
-            value={noiVu}
-            onChange={setNoiVu}
-            prefix="noiVu"
-            errors={errors}
-            clearError={clearError}
-            disabled={isDaiDoi}
-          />
-        </CardContent>
-      </Card>
+      {!isDaiDoi && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Trực ban nội vụ</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TrucSection
+              title=""
+              value={noiVu}
+              onChange={setNoiVu}
+              prefix="noiVu"
+              errors={errors}
+              clearError={clearError}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
