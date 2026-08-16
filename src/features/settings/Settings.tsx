@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAuthInfo } from "@/features/auth/queries";
-import { useUnits } from "@/features/units/queries";
+import { useUnits, useQuanSoBienChe } from "@/features/units/queries";  
 import { Skeleton } from "@/components/ui/skeleton";
 import ProfileCard from "./components/ProfileCard";
 import PasswordForm from "./components/PasswordForm";
@@ -26,6 +26,7 @@ export default function Settings() {
   const { account } = useAuthInfo();
   const maDonVi = account?.donVi?.maDonVi;
   const { data: units = [], isLoading } = useUnits();
+  const { data: quanSoBienChe } = useQuanSoBienChe(maDonVi);  
 
   const fullDonVi = useMemo(
     () => units.find((u) => u.maDonVi === maDonVi) ?? null,
@@ -60,6 +61,7 @@ export default function Settings() {
                   donVi={fullDonVi}
                   childUnits={childUnits}
                   allUnits={units}
+                  quanSoBienChe={quanSoBienChe ?? null}
                 />
               )}
               <PasswordForm />

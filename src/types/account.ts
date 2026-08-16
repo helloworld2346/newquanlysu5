@@ -109,3 +109,19 @@ export interface UpdateChucNangRequest {
   chucNangThem: string[];
   chucNangBo: string[];
 }
+
+export interface QuanSoBienCheResult {
+  maDonVi: string;
+  tenDonvi: string;
+  quanSoTong: number;
+  quanSoHsqBs: number;
+  quanSoSiQuan: number;
+  quanSoQncn: number;
+}
+
+export interface QuanSoBienCheResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  Result: QuanSoBienCheResult;
+}

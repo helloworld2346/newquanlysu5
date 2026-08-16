@@ -24,3 +24,11 @@ export function useUpdateUnit() {
     onSuccess: () => qc.invalidateQueries({ queryKey: unitsKey }),
   });
 }
+
+export function useQuanSoBienChe(maDonVi: string | undefined) {
+  return useQuery({
+    queryKey: ["quanSoBienChe", maDonVi],
+    queryFn: () => donviApi.getQuanSoBienChe(maDonVi!),
+    enabled: !!maDonVi,
+  });
+}

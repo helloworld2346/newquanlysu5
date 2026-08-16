@@ -77,6 +77,42 @@ function StatusBadge({
   );
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  Chờ_Duyệt: "Chờ duyệt",
+  "Chờ duyệt": "Chờ duyệt",
+  Đã_Duyệt: "Đã duyệt",
+  Da_Duyet: "Đã duyệt",
+  Tu_Choi: "Từ chối",
+  Từ_Chối: "Từ chối",
+  "Từ chối": "Từ chối",
+  Nháp: "Nháp",
+  Nhap: "Nháp",
+};
+
+const STATUS_TONE: Record<string, string> = {
+  Chờ_Duyệt: "bg-amber-100 text-amber-700",
+  "Chờ duyệt": "bg-amber-100 text-amber-700",
+  Đã_Duyệt: "bg-emerald-100 text-emerald-700",
+  Da_Duyet: "bg-emerald-100 text-emerald-700",
+  "Đã duyệt": "bg-emerald-100 text-emerald-700",
+  Tu_Choi: "bg-rose-100 text-rose-700",
+  Từ_Chối: "bg-rose-100 text-rose-700",
+  "Từ chối": "bg-rose-100 text-rose-700",
+  Nháp: "bg-slate-100 text-slate-700",
+  Nhap: "bg-slate-100 text-slate-700",
+};
+
+function StatusPill({ status }: { status: string }) {
+  const tone = STATUS_TONE[status] ?? "bg-slate-100 text-slate-700";
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}
+    >
+      {STATUS_LABEL[status] ?? status}
+    </span>
+  );
+}
+
 export default function PoliticalWorkReport() {
   const navigate = useNavigate();
   const { account, role } = useAuthInfo();
@@ -116,21 +152,21 @@ export default function PoliticalWorkReport() {
 
   const unitsReady = units.length > 0;
 
-const { data: items = [], isLoading } = usePoliticalMerged(
-  maDonVi,
-  ngay,
-  capByUnit,
-  hasChildren,
-  unitsReady,
-);
+  const { data: items = [], isLoading } = usePoliticalMerged(
+    maDonVi,
+    ngay,
+    capByUnit,
+    hasChildren,
+    unitsReady,
+  );
 
   const { data: tongHopItems = [], isLoading: tongHopLoading } =
     useTongHopPolitical(maDonVi, ngay, hasChildren);
 
-const tongHopRows = useMemo(
-  () => tongHopItems.map(mapItemToRow),
-  [tongHopItems],
-);
+  const tongHopRows = useMemo(
+    () => tongHopItems.map(mapItemToRow),
+    [tongHopItems],
+  );
 
   const visibleTongHopRows = useMemo(
     () =>
@@ -567,14 +603,21 @@ const tongHopRows = useMemo(
               </TableRow>
             ) : (
               displayRows.map((r) => (
-                <TableRow key={r.idCongtac || r.donVi}>
-                  <TableCell className="font-medium">
+                <TableRow
+                  key={r.idCongtac || r.donVi}
+                  className={
+                    r.notSubmitted ? "bg-rose-50 hover:bg-rose-100" : undefined
+                  }
+                >
+                  <TableCell
+                    className={`font-medium ${r.notSubmitted ? "text-rose-700" : ""} `}
+                  >
                     {r.kyhieuDonVi || r.tenDonVi}
                   </TableCell>
-                  <TableCell className="max-w-[240px] truncate">
+                  <TableCell className="min-w-[240px] max-w-[360px] whitespace-normal break-words align-top">
                     {r.tinhHinh || "—"}
                   </TableCell>
-                  <TableCell className="max-w-[240px] truncate">
+                  <TableCell className="min-w-[240px] max-w-[360px] whitespace-normal break-words align-top">
                     {r.ketQua || "—"}
                   </TableCell>
                   <TableCell>
@@ -585,11 +628,11 @@ const tongHopRows = useMemo(
                   </TableCell>
                   <TableCell>
                     {r.notSubmitted ? (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
                         Chưa nộp
                       </span>
                     ) : (
-                      <span className="text-xs font-medium">{r.status}</span>
+                      <StatusPill status={r.status} />
                     )}
                   </TableCell>
                   <TableCell className="text-right">

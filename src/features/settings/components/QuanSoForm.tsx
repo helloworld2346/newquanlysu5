@@ -8,7 +8,7 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useAuthInfo } from "@/features/auth/queries";
 import { useUpdateUnit } from "@/features/units/queries";
 import { normalizeRoleName } from "@/lib/roles";
-import type { DonVi } from "@/types/account";
+import type { DonVi, QuanSoBienCheResult } from "@/types/account";
 
 const num = (v: number | null | undefined) => (v ?? 0).toLocaleString("vi-VN");
 
@@ -76,12 +76,14 @@ type Props = {
   donVi: DonVi;
   childUnits?: DonVi[];
   allUnits?: DonVi[];
+  quanSoBienChe?: QuanSoBienCheResult | null;
 };
 
 export default function QuanSoForm({
   donVi,
   childUnits = [],
   allUnits = [],
+  quanSoBienChe = null,
 }: Props) {
   const { account } = useAuthInfo();
   const updateUnit = useUpdateUnit();
@@ -128,9 +130,13 @@ export default function QuanSoForm({
 
   const tong = (siQuan ?? 0) + (qncn ?? 0) + (hsqBs ?? 0);
 
-  const aggSiQuan = (siQuan ?? 0) + childAgg.siQuan;
-  const aggQncn = (qncn ?? 0) + childAgg.qncn;
-  const aggHsqBs = (hsqBs ?? 0) + childAgg.hsqBs;
+  const localSiQuan = (siQuan ?? 0) + childAgg.siQuan;
+  const localQncn = (qncn ?? 0) + childAgg.qncn;
+  const localHsqBs = (hsqBs ?? 0) + childAgg.hsqBs;
+
+  const aggSiQuan = Math.max(localSiQuan, quanSoBienChe?.quanSoSiQuan ?? 0);
+  const aggQncn = Math.max(localQncn, quanSoBienChe?.quanSoQncn ?? 0);
+  const aggHsqBs = Math.max(localHsqBs, quanSoBienChe?.quanSoHsqBs ?? 0);
   const aggTong = aggSiQuan + aggQncn + aggHsqBs;
 
   const changed =
