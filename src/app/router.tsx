@@ -12,6 +12,9 @@ const ReportDetail = lazy(() => import("@/features/reports/ReportDetail"));
 const CreatePoliticalWork = lazy(
   () => import("@/features/report-political-work/CreatePoliticalWork"),
 );
+const PoliticalWorkDetail = lazy(
+  () => import("@/features/report-political-work/PoliticalWorkDetail"),
+);
 
 function Protected({ children }: { children: React.ReactNode }) {
   return (
@@ -74,6 +77,15 @@ export function AppRouter() {
         element={
           <Protected>
             <CreatePoliticalWork />
+          </Protected>
+        }
+      />
+
+      <Route
+        path="/political-work-report/detail/:id"
+        element={
+          <Protected>
+            <PoliticalWorkDetail />
           </Protected>
         }
       />

@@ -15,6 +15,8 @@ function getSubPageLabel(pathname: string): string | null {
   if (pathname.includes("/political-work-report/create")) return "Thêm báo cáo";
   if (pathname.includes("/political-work-report/edit/"))
     return "Chỉnh sửa báo cáo";
+  if (pathname.includes("/political-work-report/detail/"))
+    return "Xem chi tiết báo cáo";
   return null;
 }
 
