@@ -595,7 +595,11 @@ export default function PoliticalWorkReport() {
             : "Chưa có báo cáo cho ngày này"}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div
+          className={`grid grid-cols-1 gap-4 ${
+            displayRows.length === 1 ? "" : "lg:grid-cols-2"
+          }`}
+        >
           {displayRows.map((r) => {
             const canEdit =
               r.notSubmitted ||

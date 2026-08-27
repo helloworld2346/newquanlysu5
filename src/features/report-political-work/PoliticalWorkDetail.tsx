@@ -87,14 +87,16 @@ function TrucCard({
   label,
   data,
   accent,
+  fullWidth,
 }: {
   label: string;
   data: TrucNguoi;
   accent: string;
+  fullWidth?: boolean;
 }) {
   const hasInfo = data.hoTen || data.capBac || data.chucVu || data.soDienThoai;
   return (
-    <div className="w-full px-2 mb-4 lg:w-1/2">
+    <div className={`w-full px-2 mb-4 ${fullWidth ? "" : "lg:w-1/2"}`}>
       <div className={`h-full rounded-md border border-l-4 p-4 ${accent}`}>
         <div className="mb-3 flex items-center">
           <User className="mr-2 size-4 text-primary" />
@@ -154,6 +156,12 @@ export default function PoliticalWorkDetail() {
 
   const noiVu = useMemo(() => parseTruc(data?.trucBanNoiVu), [data]);
   const ctd = useMemo(() => parseTruc(data?.trucBanCtDangCt), [data]);
+  const noiVuHasInfo = !!(
+    noiVu.hoTen ||
+    noiVu.capBac ||
+    noiVu.chucVu ||
+    noiVu.soDienThoai
+  );
 
   if (isLoading) {
     return (
@@ -252,12 +260,15 @@ export default function PoliticalWorkDetail() {
             label="Trực CTĐ, CTCT"
             data={ctd}
             accent="border-l-blue-500"
+            fullWidth={!noiVuHasInfo}
           />
-          <TrucCard
-            label="Trực ban nội vụ"
-            data={noiVu}
-            accent="border-l-emerald-500"
-          />
+          {noiVuHasInfo && (
+            <TrucCard
+              label="Trực ban nội vụ"
+              data={noiVu}
+              accent="border-l-emerald-500"
+            />
+          )}
         </CardContent>
       </Card>
 
