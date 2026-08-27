@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useAuthInfo } from "@/features/auth/queries";
-import { useUnits } from "@/features/units/queries";
+import { useUnits, useQuanSoBienChe } from "@/features/units/queries";
 import { useChildrenReportsMerged } from "@/features/reports/queries";
 import {
   mapItemToRow,
@@ -15,6 +15,8 @@ export function useThongKeBreakdown(ngay: string) {
   const { account } = useAuthInfo();
   const maDonVi = account?.donVi?.maDonVi;
   const { data: units = [] } = useUnits();
+
+  const { data: qsbc } = useQuanSoBienChe(maDonVi);
 
   const capByUnit = useMemo(
     () =>
@@ -44,26 +46,14 @@ export function useThongKeBreakdown(ngay: string) {
   const rows = useMemo(() => items.map(mapItemToRow), [items]);
   const totals = useMemo(() => buildDisplayTotals(rows), [rows]);
 
-  const bienChe = useMemo(() => {
-    const isLeaf = (ma: string) =>
-      !units.some((u) => u.maDonVi.startsWith(ma + "."));
-    return units
-      .filter((u) =>
-        maDonVi
-          ? u.maDonVi === maDonVi || u.maDonVi.startsWith(maDonVi + ".")
-          : true,
-      )
-      .filter((u) => isLeaf(u.maDonVi))
-      .reduce(
-        (acc, u) => {
-          acc.siQuan += u.quanSoSiQuan ?? 0;
-          acc.qncn += u.quanSoQncn ?? 0;
-          acc.hsqBs += u.quanSoHsqBs ?? 0;
-          return acc;
-        },
-        { siQuan: 0, qncn: 0, hsqBs: 0 },
-      );
-  }, [units, maDonVi]);
+  const bienChe = useMemo(
+    () => ({
+      siQuan: qsbc?.quanSoSiQuan ?? 0,
+      qncn: qsbc?.quanSoQncn ?? 0,
+      hsqBs: qsbc?.quanSoHsqBs ?? 0,
+    }),
+    [qsbc],
+  );
 
   const tongHopVang: VangChiTiet = useMemo(() => {
     const v: VangChiTiet = { ...EMPTY_VANG };
