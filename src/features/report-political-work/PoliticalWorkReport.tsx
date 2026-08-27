@@ -16,16 +16,9 @@ import {
   Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import SearchBar from "@/components/common/SearchBar";
 import {
@@ -58,32 +51,13 @@ import type { PoliticalWorkRow } from "@/types/politicalWork";
 
 import RefuseDialog from "@/features/reports/components/RefuseDialog";
 
-function StatusBadge({
-  active,
-  danger,
-}: {
-  active: boolean;
-  danger?: boolean;
-}) {
-  const cls = !active
-    ? "bg-muted text-muted-foreground"
-    : danger
-      ? "bg-rose-100 text-rose-700"
-      : "bg-emerald-100 text-emerald-700";
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {active ? "Có" : "Không"}
-    </span>
-  );
-}
-
 const STATUS_LABEL: Record<string, string> = {
   Chờ_Duyệt: "Chờ duyệt",
   "Chờ duyệt": "Chờ duyệt",
   Đã_Duyệt: "Đã duyệt",
   Da_Duyet: "Đã duyệt",
   Tu_Choi: "Từ chối",
-  Từ_Chối: "Từ chối",
+  Từ_Chới: "Từ chối",
   "Từ chối": "Từ chối",
   Nháp: "Nháp",
   Nhap: "Nháp",
@@ -110,6 +84,36 @@ function StatusPill({ status }: { status: string }) {
     >
       {STATUS_LABEL[status] ?? status}
     </span>
+  );
+}
+
+function FlagDot({ active, label }: { active: boolean; label: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-xs font-medium ${
+        active ? "text-rose-700" : "text-muted-foreground"
+      }`}
+    >
+      <span
+        className={`inline-block size-2 rounded-full ${
+          active ? "bg-rose-500" : "bg-muted-foreground/30"
+        }`}
+      />
+      {label}
+    </span>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
+      <div className="whitespace-pre-wrap break-words text-sm">
+        {value || "—"}
+      </div>
+    </div>
   );
 }
 
@@ -415,6 +419,9 @@ export default function PoliticalWorkReport() {
   const submitting = submitReport.isPending;
   const approving = approveReport.isPending;
 
+  const cardsLoading =
+    effectiveTab === "consolidated" ? tongHopLoading : isLoading;
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between">
@@ -566,76 +573,67 @@ export default function PoliticalWorkReport() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border bg-background">
-        <Table className="w-full min-w-[960px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Đơn vị</TableHead>
-              <TableHead>Tình hình hoạt động</TableHead>
-              <TableHead>Kết quả</TableHead>
-              <TableHead>Đột xuất</TableHead>
-              <TableHead>Kiến nghị</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="text-right">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(effectiveTab === "consolidated" ? tongHopLoading : isLoading) ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <TableRow key={`sk-${i}`}>
-                  {Array.from({ length: 7 }).map((__, j) => (
-                    <TableCell key={`sk-${i}-${j}`}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : displayRows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  {hasFilter
-                    ? "Không tìm thấy báo cáo phù hợp"
-                    : "Chưa có báo cáo cho ngày này"}
-                </TableCell>
-              </TableRow>
-            ) : (
-              displayRows.map((r) => (
-                <TableRow
-                  key={r.idCongtac || r.donVi}
-                  className={
-                    r.notSubmitted ? "bg-rose-50 hover:bg-rose-100" : undefined
-                  }
-                >
-                  <TableCell
-                    className={`font-medium ${r.notSubmitted ? "text-rose-700" : ""} `}
-                  >
-                    {r.kyhieuDonVi || r.tenDonVi}
-                  </TableCell>
-                  <TableCell className="min-w-[240px] max-w-[360px] whitespace-normal break-words align-top">
-                    {r.tinhHinh || "—"}
-                  </TableCell>
-                  <TableCell className="min-w-[240px] max-w-[360px] whitespace-normal break-words align-top">
-                    {r.ketQua || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge active={!!r.noiDungDotXuat} danger />
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge active={!!r.kienNghi} danger />
-                  </TableCell>
-                  <TableCell>
-                    {r.notSubmitted ? (
-                      <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
-                        Chưa nộp
-                      </span>
-                    ) : (
-                      <StatusPill status={r.status} />
+      {cardsLoading ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={`sk-${i}`}>
+              <CardHeader>
+                <Skeleton className="h-5 w-40" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : displayRows.length === 0 ? (
+        <div className="flex h-40 items-center justify-center rounded-lg border bg-background text-muted-foreground">
+          {hasFilter
+            ? "Không tìm thấy báo cáo phù hợp"
+            : "Chưa có báo cáo cho ngày này"}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {displayRows.map((r) => {
+            const canEdit =
+              r.notSubmitted ||
+              ["Nháp", "Từ_Chối", "Từ chối"].includes(r.status);
+            return (
+              <Card
+                key={r.idCongtac || r.donVi}
+                className={
+                  r.notSubmitted ? "border-rose-200 bg-rose-50/60" : undefined
+                }
+              >
+                <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 pb-3">
+                  <div className="min-w-0">
+                    <div
+                      className={`truncate text-base font-semibold ${
+                        r.notSubmitted ? "text-rose-700" : ""
+                      }`}
+                    >
+                      {r.kyhieuDonVi || r.tenDonVi}
+                    </div>
+                    {r.kyhieuDonVi && (
+                      <div className="truncate text-xs text-muted-foreground">
+                        {r.tenDonVi}
+                      </div>
                     )}
-                  </TableCell>
-                  <TableCell className="text-right">
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      {r.notSubmitted ? (
+                        <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
+                          Chưa nộp
+                        </span>
+                      ) : (
+                        <StatusPill status={r.status} />
+                      )}
+                      <FlagDot active={!!r.noiDungDotXuat} label="Đột xuất" />
+                      <FlagDot active={!!r.kienNghi} label="Kiến nghị" />
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
                     {!r.notSubmitted && (
                       <Button
                         size="sm"
@@ -645,8 +643,7 @@ export default function PoliticalWorkReport() {
                         <Eye className="size-4" />
                       </Button>
                     )}
-                    {r.notSubmitted ||
-                    ["Nháp", "Từ_Chối", "Từ chối"].includes(r.status) ? (
+                    {canEdit && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -654,14 +651,38 @@ export default function PoliticalWorkReport() {
                       >
                         <PenLine className="size-4" />
                       </Button>
-                    ) : null}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Field label="Tình hình hoạt động" value={r.tinhHinh} />
+                  <Field label="Kết quả" value={r.ketQua} />
+                  {r.noiDungDotXuat && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                        Việc đột xuất
+                      </div>
+                      <div className="whitespace-pre-wrap break-words text-sm text-amber-900">
+                        {r.noiDungDotXuat}
+                      </div>
+                    </div>
+                  )}
+                  {r.kienNghi && (
+                    <div className="rounded-md border border-sky-200 bg-sky-50 p-3">
+                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+                        Kiến nghị
+                      </div>
+                      <div className="whitespace-pre-wrap break-words text-sm text-sky-900">
+                        {r.kienNghi}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <ConfirmDialog
         open={confirmSubmit}
