@@ -2,19 +2,17 @@ import { useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Info,
   User,
   Activity,
   FileText,
   Zap,
   MessageSquare,
-  Building2,
-  CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePoliticalDetail } from "./queries";
+import TrucInfoCard from "@/features/reports/components/TrucInfoCard";
 
 interface TrucNguoi {
   hoTen: string;
@@ -72,50 +70,6 @@ const STATUS_TONE: Record<string, string> = {
   Nhap: "bg-slate-100 text-slate-700",
 };
 
-function TrucRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between px-3 py-2 text-sm">
-      <span className="mr-3 shrink-0 text-muted-foreground">{label}</span>
-      <span className="min-w-0 break-words text-right font-medium">
-        {value || "—"}
-      </span>
-    </div>
-  );
-}
-
-function TrucCard({
-  label,
-  data,
-  accent,
-  fullWidth,
-}: {
-  label: string;
-  data: TrucNguoi;
-  accent: string;
-  fullWidth?: boolean;
-}) {
-  const hasInfo = data.hoTen || data.capBac || data.chucVu || data.soDienThoai;
-  return (
-    <div className={`w-full px-2 mb-4 ${fullWidth ? "" : "lg:w-1/2"}`}>
-      <div className={`h-full rounded-md border border-l-4 p-4 ${accent}`}>
-        <div className="mb-3 flex items-center">
-          <User className="mr-2 size-4 text-primary" />
-          <span className="text-sm font-semibold">{label}</span>
-        </div>
-        {hasInfo ? (
-          <div className="divide-y rounded-md border bg-background/70">
-            <TrucRow label="Họ và tên" value={data.hoTen} />
-            <TrucRow label="Cấp bậc" value={data.capBac} />
-            <TrucRow label="Chức vụ" value={data.chucVu} />
-            <TrucRow label="Số điện thoại" value={data.soDienThoai} />
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">— Chưa có thông tin —</p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function TextSection({
   icon: Icon,
@@ -162,12 +116,6 @@ export default function PoliticalWorkDetail() {
 
   const noiVu = useMemo(() => parseTruc(data?.trucBanNoiVu), [data]);
   const ctd = useMemo(() => parseTruc(data?.trucBanCtDangCt), [data]);
-  const noiVuHasInfo = !!(
-    noiVu.hoTen ||
-    noiVu.capBac ||
-    noiVu.chucVu ||
-    noiVu.soDienThoai
-  );
 
   if (isLoading) {
     return (
@@ -234,47 +182,12 @@ export default function PoliticalWorkDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-base">
-            <Info className="mr-2 size-4 text-sky-500" /> Thông tin chung
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y">
-          <div className="flex items-center justify-between px-1 py-2 text-sm">
-            <span className="flex items-center text-muted-foreground">
-              <Building2 className="mr-1.5 size-4" /> Đơn vị
-            </span>
-            <span className="font-medium">{data.donVi.tenDonvi}</span>
-          </div>
-          {data.ghiChu ? (
-            <div className="flex items-center justify-between px-1 py-2 text-sm">
-              <span className="flex items-center text-muted-foreground">
-                <CalendarClock className="mr-1.5 size-4" /> Ghi chú
-              </span>
-              <span className="font-medium">{data.ghiChu}</span>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-base">
             <User className="mr-2 size-4 text-blue-500" /> Trực ban
           </CardTitle>
         </CardHeader>
         <CardContent className="-mx-2 flex flex-wrap">
-          <TrucCard
-            label="Trực CTĐ, CTCT"
-            data={ctd}
-            accent="border-l-blue-500"
-            fullWidth={!noiVuHasInfo}
-          />
-          {noiVuHasInfo && (
-            <TrucCard
-              label="Trực ban nội vụ"
-              data={noiVu}
-              accent="border-l-emerald-500"
-            />
-          )}
+          <TrucInfoCard label="Trực CTĐ, CTCT" data={ctd} accent="violet" />
+          <TrucInfoCard label="Trực ban nội vụ" data={noiVu} accent="emerald" />
         </CardContent>
       </Card>
 
