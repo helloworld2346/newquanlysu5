@@ -1,3 +1,4 @@
+// src/features/report-political-work/PoliticalWorkReport.tsx
 import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -57,7 +58,7 @@ const STATUS_LABEL: Record<string, string> = {
   Đã_Duyệt: "Đã duyệt",
   Da_Duyet: "Đã duyệt",
   Tu_Choi: "Từ chối",
-  Từ_Chới: "Từ chối",
+  Từ_Chối: "Từ chối",
   "Từ chối": "Từ chối",
   Nháp: "Nháp",
   Nhap: "Nháp",
@@ -104,14 +105,30 @@ function FlagDot({ active, label }: { active: boolean; label: string }) {
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function Section({
+  label,
+  value,
+  tone,
+  labelTone,
+  textTone,
+  empty = "—",
+}: {
+  label: string;
+  value: string;
+  tone: string;
+  labelTone: string;
+  textTone: string;
+  empty?: string;
+}) {
   return (
-    <div>
-      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className={`rounded-md border p-3 ${tone}`}>
+      <div
+        className={`mb-1 text-xs font-semibold uppercase tracking-wide ${labelTone}`}
+      >
         {label}
       </div>
-      <div className="whitespace-pre-wrap break-words text-sm">
-        {value || "—"}
+      <div className={`whitespace-pre-wrap break-words text-sm ${textTone}`}>
+        {value || empty}
       </div>
     </div>
   );
@@ -611,33 +628,8 @@ export default function PoliticalWorkReport() {
                   r.notSubmitted ? "border-rose-200 bg-rose-50/60" : undefined
                 }
               >
-                <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 pb-3">
-                  <div className="min-w-0">
-                    <div
-                      className={`truncate text-base font-semibold ${
-                        r.notSubmitted ? "text-rose-700" : ""
-                      }`}
-                    >
-                      {r.kyhieuDonVi || r.tenDonVi}
-                    </div>
-                    {r.kyhieuDonVi && (
-                      <div className="truncate text-xs text-muted-foreground">
-                        {r.tenDonVi}
-                      </div>
-                    )}
-                    <div className="mt-2 flex flex-wrap items-center gap-3">
-                      {r.notSubmitted ? (
-                        <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
-                          Chưa nộp
-                        </span>
-                      ) : (
-                        <StatusPill status={r.status} />
-                      )}
-                      <FlagDot active={!!r.noiDungDotXuat} label="Đột xuất" />
-                      <FlagDot active={!!r.kienNghi} label="Kiến nghị" />
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
+                <CardHeader className="relative space-y-0 pb-3">
+                  <div className="absolute right-4 top-4 flex shrink-0 items-center gap-1">
                     {!r.notSubmitted && (
                       <Button
                         size="sm"
@@ -657,30 +649,63 @@ export default function PoliticalWorkReport() {
                       </Button>
                     )}
                   </div>
+                  <div className="flex flex-col items-center px-10 text-center">
+                    <div
+                      className={`text-3xl font-bold ${
+                        r.notSubmitted ? "text-rose-700" : ""
+                      }`}
+                    >
+                      {r.kyhieuDonVi || r.tenDonVi}
+                    </div>
+                    {r.kyhieuDonVi && (
+                      <div className="mt-0.5 text-sm text-muted-foreground">
+                        {r.tenDonVi}
+                      </div>
+                    )}
+                    <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+                      {r.notSubmitted ? (
+                        <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
+                          Chưa nộp
+                        </span>
+                      ) : (
+                        <StatusPill status={r.status} />
+                      )}
+                      <FlagDot active={!!r.noiDungDotXuat} label="Đột xuất" />
+                      <FlagDot active={!!r.kienNghi} label="Kiến nghị" />
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <Field label="Tình hình hoạt động" value={r.tinhHinh} />
-                  <Field label="Kết quả" value={r.ketQua} />
-                  {r.noiDungDotXuat && (
-                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
-                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
-                        Việc đột xuất
-                      </div>
-                      <div className="whitespace-pre-wrap break-words text-sm text-amber-900">
-                        {r.noiDungDotXuat}
-                      </div>
-                    </div>
-                  )}
-                  {r.kienNghi && (
-                    <div className="rounded-md border border-sky-200 bg-sky-50 p-3">
-                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
-                        Kiến nghị
-                      </div>
-                      <div className="whitespace-pre-wrap break-words text-sm text-sky-900">
-                        {r.kienNghi}
-                      </div>
-                    </div>
-                  )}
+                <CardContent className="space-y-3">
+                  <Section
+                    label="Tình hình hoạt động"
+                    value={r.tinhHinh}
+                    tone="border-emerald-200 bg-emerald-50/60"
+                    labelTone="text-emerald-700"
+                    textTone="text-emerald-900"
+                  />
+                  <Section
+                    label="Kết quả"
+                    value={r.ketQua}
+                    tone="border-blue-200 bg-blue-50/60"
+                    labelTone="text-blue-700"
+                    textTone="text-blue-900"
+                  />
+                  <Section
+                    label="Việc đột xuất"
+                    value={r.noiDungDotXuat}
+                    tone="border-amber-200 bg-amber-50"
+                    labelTone="text-amber-700"
+                    textTone="text-amber-900"
+                    empty="—"
+                  />
+                  <Section
+                    label="Kiến nghị"
+                    value={r.kienNghi}
+                    tone="border-rose-200 bg-rose-50"
+                    labelTone="text-rose-700"
+                    textTone="text-rose-900"
+                    empty="—"
+                  />
                 </CardContent>
               </Card>
             );
