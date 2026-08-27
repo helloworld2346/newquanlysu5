@@ -114,7 +114,7 @@ function TrucSection({
       <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
         <ReqLabel required>Họ và tên</ReqLabel>
         <Input
-          className={errClass("ten")}
+          className={"bg-background " + errClass("ten")}
           placeholder="Nhập họ và tên..."
           value={value.hoTen}
           disabled={disabled}
@@ -136,7 +136,7 @@ function TrucSection({
             clearError(`${prefix}.capBac`);
           }}
         >
-          <SelectTrigger className={errClass("capBac")}>
+          <SelectTrigger className={"bg-background " + errClass("capBac")}>
             <SelectValue placeholder="Chọn cấp bậc" />
           </SelectTrigger>
           <SelectContent>
@@ -153,7 +153,7 @@ function TrucSection({
       <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
         <ReqLabel required>Chức vụ</ReqLabel>
         <Input
-          className={errClass("chucVu")}
+          className={"bg-background " + errClass("chucVu")}
           placeholder="Nhập chức vụ..."
           value={value.chucVu}
           disabled={disabled}
@@ -168,6 +168,7 @@ function TrucSection({
       <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
         <ReqLabel>Số điện thoại</ReqLabel>
         <Input
+          className="bg-background"
           placeholder="Nhập số điện thoại..."
           value={value.soDienThoai}
           disabled={disabled}
@@ -381,9 +382,9 @@ export default function CreatePoliticalWork() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="border-violet-200 bg-violet-50/70">
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-base text-violet-700">
             Trực công tác đảng, công tác chính trị
           </CardTitle>
         </CardHeader>
@@ -400,9 +401,11 @@ export default function CreatePoliticalWork() {
       </Card>
 
       {!isDaiDoi && (
-        <Card>
+        <Card className="border-sky-200 bg-sky-50/70">
           <CardHeader>
-            <CardTitle className="text-base">Trực ban nội vụ</CardTitle>
+            <CardTitle className="text-base text-sky-700">
+              Trực ban nội vụ
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <TrucSection
@@ -417,9 +420,9 @@ export default function CreatePoliticalWork() {
         </Card>
       )}
 
-      <Card>
+      <Card className="border-emerald-200 bg-emerald-50/70">
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-base text-emerald-700">
             Tình hình hoạt động CTĐ, CTCT trong ngày{" "}
             <span className="text-red-500">*</span>
           </CardTitle>
@@ -430,7 +433,9 @@ export default function CreatePoliticalWork() {
             maxLength={MAX_ACTIVITY}
             placeholder="Nhập tình hình hoạt động CTĐ, CTCT trong ngày..."
             value={activity}
-            className={errors["activity"] ? "border-red-500" : ""}
+            className={
+              "bg-background " + (errors["activity"] ? "border-red-500" : "")
+            }
             onChange={(e) => {
               setActivity(e.target.value);
               clearError("activity");
@@ -443,9 +448,9 @@ export default function CreatePoliticalWork() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-blue-200 bg-blue-50/70">
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-base text-blue-700">
             Kết quả <span className="text-red-500">*</span>
           </CardTitle>
         </CardHeader>
@@ -455,7 +460,9 @@ export default function CreatePoliticalWork() {
             maxLength={MAX_RESULT}
             placeholder="Nhập kết quả đạt được trong ngày..."
             value={result}
-            className={errors["result"] ? "border-red-500" : ""}
+            className={
+              "bg-background " + (errors["result"] ? "border-red-500" : "")
+            }
             onChange={(e) => {
               setResult(e.target.value);
               clearError("result");
@@ -468,9 +475,9 @@ export default function CreatePoliticalWork() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-amber-200 bg-amber-50/70">
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-base text-amber-700">
             Những vụ việc đột xuất xảy ra trong ngày
           </CardTitle>
         </CardHeader>
@@ -492,7 +499,10 @@ export default function CreatePoliticalWork() {
                 maxLength={MAX_INCIDENT}
                 placeholder="Nhập nội dung chi tiết các vụ việc đột xuất..."
                 value={incidentDetail}
-                className={errors["incidentDetail"] ? "border-red-500" : ""}
+                className={
+                  "bg-background " +
+                  (errors["incidentDetail"] ? "border-red-500" : "")
+                }
                 onChange={(e) => {
                   setIncidentDetail(e.target.value);
                   clearError("incidentDetail");
@@ -504,9 +514,11 @@ export default function CreatePoliticalWork() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-rose-200 bg-rose-50/70">
         <CardHeader>
-          <CardTitle className="text-base">Kiến nghị, đề xuất</CardTitle>
+          <CardTitle className="text-base text-rose-700">
+            Kiến nghị, đề xuất
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <RadioRow
@@ -526,7 +538,10 @@ export default function CreatePoliticalWork() {
                 maxLength={MAX_PROPOSAL}
                 placeholder="Nhập các kiến nghị, đề xuất từ đơn vị..."
                 value={proposalDetail}
-                className={errors["proposalDetail"] ? "border-red-500" : ""}
+                className={
+                  "bg-background " +
+                  (errors["proposalDetail"] ? "border-red-500" : "")
+                }
                 onChange={(e) => {
                   setProposalDetail(e.target.value);
                   clearError("proposalDetail");
