@@ -46,6 +46,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useReportDetail, useNhiemVuNgayDetail } from "./queries";
 import { LY_DO_OPTIONS, formatNum } from "./utils";
 import type { AbsentRow, TrucNguoiInfo } from "@/types/dailyReport";
+import TrucInfoCard, { type TrucInfo } from "./components/TrucInfoCard";
 
 const LY_DO_LABEL: Record<string, string> = Object.fromEntries(
   LY_DO_OPTIONS.map((o) => [o.value, o.label]),
@@ -70,6 +71,16 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+const toTrucInfo = (t: TrucNguoiInfo | null): TrucInfo | null =>
+  t
+    ? {
+        hoTen: t.tenNguoitruc,
+        capBac: t.capbacNguoitruc,
+        chucVu: t.chucvuNguoitruc,
+        soDienThoai: t.sodienthoai,
+      }
+    : null;
 
 function parseJson<T>(raw: string | undefined | null, fallback: T): T {
   if (!raw) return fallback;
@@ -112,47 +123,7 @@ function InfoField({
   );
 }
 
-function TrucRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between px-3 py-2 text-sm">
-      <span className="mr-3 shrink-0 text-muted-foreground">{label}</span>
-      <span className="min-w-0 break-words text-right font-medium">
-        {value || "—"}
-      </span>
-    </div>
-  );
-}
 
-function TrucCard({
-  label,
-  data,
-  accent,
-}: {
-  label: string;
-  data: TrucNguoiInfo | null;
-  accent: string;
-}) {
-  return (
-    <div className="w-full px-2 mb-4 lg:w-1/2">
-      <div className={`h-full rounded-md border border-l-4 p-4 ${accent}`}>
-        <div className="mb-3 flex items-center">
-          <User className="mr-2 size-4 text-primary" />
-          <span className="text-sm font-semibold">{label}</span>
-        </div>
-        {data && data.tenNguoitruc ? (
-          <div className="divide-y rounded-md border bg-background/70">
-            <TrucRow label="Họ và tên" value={data.tenNguoitruc} />
-            <TrucRow label="Cấp bậc" value={data.capbacNguoitruc} />
-            <TrucRow label="Chức vụ" value={data.chucvuNguoitruc} />
-            <TrucRow label="Số điện thoại" value={data.sodienthoai} />
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">— Chưa có thông tin —</p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function KySoInfoRow({
   icon,
@@ -526,16 +497,16 @@ export default function ReportDetail() {
           </CardTitle>
         </CardHeader>
         <CardContent className="-mx-2 flex flex-wrap">
-          <TrucCard
+          <TrucInfoCard
             label="Trực chỉ huy"
-            data={trucChiHuy}
-            accent="border-l-blue-500"
+            data={toTrucInfo(trucChiHuy)}
+            accent="blue"
           />
-          <TrucCard
+          <TrucInfoCard
             label="Trực ban tác chiến / nội vụ"
-            data={trucTacChien}
-            accent="border-l-emerald-500"
-          />
+            data={toTrucInfo(trucTacChien)}
+            accent="emerald"
+          />  
         </CardContent>
       </Card>
 
