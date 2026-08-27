@@ -123,20 +123,26 @@ function TextSection({
   title,
   content,
   empty,
+  tone,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   iconTone: string;
   title: string;
-  content: string;
+  content: string | undefined | null;
   empty: string;
+  tone: string;
 }) {
   return (
-    <div className="mb-4 rounded-md border p-4">
-      <div className="mb-2 flex items-center">
-        <Icon className={`mr-2 size-4 ${iconTone}`} />
+    <div className={`rounded-lg border p-4 ${tone}`}>
+      <div className="mb-2 flex items-center gap-2.5">
+        <span
+          className={`flex size-8 shrink-0 items-center justify-center rounded-full ${iconTone}`}
+        >
+          <Icon className="size-4" />
+        </span>
         <h3 className="text-sm font-semibold">{title}</h3>
       </div>
-      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
         {content?.trim() ? content : empty}
       </p>
     </div>
@@ -282,31 +288,35 @@ export default function PoliticalWorkDetail() {
         <CardContent>
           <TextSection
             icon={Activity}
-            iconTone="text-emerald-500"
-            title="Tình hình hoạt động CTĐ, CTCT trong ngày"
+            iconTone="bg-emerald-100 text-emerald-600"
+            title="Tình hình hoạt động"
             content={data.tinhHinh}
             empty="—"
+            tone="bg-emerald-50/60"
           />
           <TextSection
             icon={FileText}
-            iconTone="text-blue-500"
+            iconTone="bg-blue-100 text-blue-600"
             title="Kết quả"
             content={data.ketQua}
             empty="—"
+            tone="bg-blue-50/60"
           />
           <TextSection
             icon={Zap}
-            iconTone="text-amber-500"
+            iconTone="bg-amber-100 text-amber-600"
             title="Vụ việc đột xuất trong ngày"
             content={data.noiDungDotXuat}
             empty="Không có"
+            tone="bg-amber-50/60"
           />
           <TextSection
             icon={MessageSquare}
-            iconTone="text-rose-500"
+            iconTone="bg-rose-100 text-rose-600"
             title="Kiến nghị, đề xuất"
             content={data.kienNghi}
             empty="Không có"
+            tone="bg-rose-50/60"
           />
         </CardContent>
       </Card>
