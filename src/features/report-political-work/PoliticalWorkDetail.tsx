@@ -7,6 +7,11 @@ import {
   FileText,
   Zap,
   MessageSquare,
+  PenLine,
+  ShieldCheck,
+  Award,
+  Briefcase,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,6 +105,110 @@ function TextSection({
         {content?.trim() ? content : empty}
       </p>
     </div>
+  );
+}
+
+function KySoInfoRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value?: string;
+}) {
+  if (!value) return null;
+  return (
+    <div className="flex items-center justify-between px-3 py-2 text-sm">
+      <span className="flex items-center text-muted-foreground">
+        <span className="mr-1.5 text-primary">{icon}</span>
+        {label}
+      </span>
+      <span className="min-w-0 break-words text-right font-medium">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function KySoCard({
+  chuKySo,
+  signer,
+  donViLabel,
+}: {
+  chuKySo?: string;
+  signer: TrucNguoi;
+  donViLabel: string;
+}) {
+  const hasSign = !!chuKySo && chuKySo.trim() !== "";
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center text-base">
+          <PenLine className="mr-2 size-4 text-primary" /> Ký số
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="-mx-2 flex flex-wrap">
+        <div className="mb-4 w-full px-2 lg:w-1/2">
+          <div className="rounded-lg border bg-primary/5 p-4">
+            <div className="mb-2 flex items-center text-sm font-medium text-primary">
+              <ShieldCheck className="mr-1.5 size-4" />
+              {hasSign ? "Đã ký số" : "Chưa ký số"}
+            </div>
+            <div
+              className="flex h-40 items-center justify-center overflow-hidden rounded-md border bg-white"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, rgba(31,92,63,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(31,92,63,0.06) 1px, transparent 1px)",
+                backgroundSize: "16px 16px",
+              }}
+            >
+              {hasSign ? (
+                <img
+                  src={chuKySo}
+                  alt="Chữ ký số"
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  Chưa có chữ ký
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4 w-full px-2 lg:w-1/2">
+          <div className="h-full rounded-lg border">
+            <div className="border-b px-3 py-2 text-sm font-semibold">
+              Thông tin người ký
+            </div>
+            <div className="divide-y">
+              <KySoInfoRow
+                icon={<User className="size-3.5" />}
+                label="Người ký"
+                value={signer.hoTen}
+              />
+              <KySoInfoRow
+                icon={<Award className="size-3.5" />}
+                label="Cấp bậc"
+                value={signer.capBac}
+              />
+              <KySoInfoRow
+                icon={<Briefcase className="size-3.5" />}
+                label="Chức vụ"
+                value={signer.chucVu}
+              />
+              <KySoInfoRow
+                icon={<Building2 className="size-3.5" />}
+                label="Đơn vị"
+                value={donViLabel}
+              />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -233,6 +342,7 @@ export default function PoliticalWorkDetail() {
           />
         </CardContent>
       </Card>
+      <KySoCard chuKySo={data.chuKySo} signer={ctd} donViLabel={unitLabel} />
     </div>
   );
 }

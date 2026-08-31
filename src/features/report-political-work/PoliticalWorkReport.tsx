@@ -794,6 +794,11 @@ export default function PoliticalWorkReport() {
                       ) : (
                         <StatusPill status={r.status} />
                       )}
+                      {!r.notSubmitted && !!r.rawItem?.chuKySo?.trim() && (
+                        <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                          Đã ký
+                        </span>
+                      )}
                       <FlagDot active={!!r.noiDungDotXuat} label="Đột xuất" />
                       <FlagDot active={!!r.kienNghi} label="Kiến nghị" />
                     </div>
