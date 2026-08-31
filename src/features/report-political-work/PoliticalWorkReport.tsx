@@ -394,10 +394,7 @@ export default function PoliticalWorkReport() {
   );
 
   const canConsolidate =
-    hasChildren &&
-    !tongHopDone &&
-    totalRequiredCount > 0 &&
-    approvedChildRows.length === totalRequiredCount;
+    hasChildren && !tongHopDone && approvedChildRows.length > 0;
 
   const consolidateLabel = tongHopDone
     ? "Đã tổng hợp"
