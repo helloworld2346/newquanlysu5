@@ -1,7 +1,7 @@
 import { ShieldCheck, UserCog } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOwnPoliticalReport } from "./queries";
+import { useOwnPoliticalReport } from "../queries";
 
 const WEEKDAYS = [
   "Chủ nhật",

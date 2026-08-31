@@ -81,3 +81,10 @@ export interface PoliticalWorkRow {
   notSubmitted?: boolean;
   rawItem: PoliticalWorkItem;
 }
+
+export interface TrucNguoi {
+  hoTen: string;
+  capBac: string;
+  chucVu: string;
+  soDienThoai: string;
+}

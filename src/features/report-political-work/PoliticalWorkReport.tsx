@@ -61,16 +61,10 @@ import {
   accountIsBanChinhTri,
   parentMaDonVi,
 } from "./politicalUnits";
-import PoliticalCaTrucCard from "./PoliticalCaTrucCard";
+import PoliticalCaTrucCard from "./components/PoliticalCaTrucCard";
 import PoliticalReportCard from "./components/PoliticalReportCard";
 import KySoCard from "./components/KySoCard";
-
-interface TrucNguoi {
-  hoTen: string;
-  capBac: string;
-  chucVu: string;
-  soDienThoai: string;
-}
+import { TrucNguoi } from "@/types/politicalWork";
 
 function parseTruc(raw: string | undefined | null): TrucNguoi | null {
   if (!raw) return null;

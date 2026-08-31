@@ -11,13 +11,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface TrucNguoi {
-  hoTen: string;
-  capBac: string;
-  chucVu: string;
-  soDienThoai: string;
-}
+import type { TrucNguoi } from "@/types/politicalWork";
 
 function SignerRow({
   icon,
