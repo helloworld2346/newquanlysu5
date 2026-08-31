@@ -1,4 +1,4 @@
-import { ShieldCheck, UserCog } from "lucide-react";
+import { ShieldCheck, UserCog, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOwnReport } from "../queries";
@@ -33,61 +33,132 @@ function parseTruc(raw: string | undefined | null): TrucNguoiInfo | null {
   }
 }
 
-function CaTrucPerson({
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "?";
+  const last = parts[parts.length - 1]?.[0] ?? "";
+  const first = parts[0]?.[0] ?? "";
+  return (first + last).toUpperCase();
+}
+
+type BadgeTone = {
+  headerBg: string;
+  headerText: string;
+  avatarBg: string;
+  avatarText: string;
+  ring: string;
+  iconText: string;
+};
+
+const CHIHUY_TONE: BadgeTone = {
+  headerBg: "bg-primary/5",
+  headerText: "text-primary",
+  avatarBg: "bg-primary/10",
+  avatarText: "text-primary",
+  ring: "ring-primary/20",
+  iconText: "text-primary",
+};
+
+const TACCHIEN_TONE: BadgeTone = {
+  headerBg: "bg-gold/10",
+  headerText: "text-amber-700",
+  avatarBg: "bg-gold/20",
+  avatarText: "text-amber-700",
+  ring: "ring-gold/30",
+  iconText: "text-amber-600",
+};
+
+function IdBadge({
   label,
   p,
-  accent,
   icon,
+  tone,
 }: {
   label: string;
-  p?: TrucNguoiInfo | null;
-  accent: string;
+  p: TrucNguoiInfo | null;
   icon: React.ReactNode;
+  tone: BadgeTone;
 }) {
   return (
-    <div className={`h-full rounded-lg border border-l-4 ${accent} p-4`}>
-      <div className="mb-2 flex items-center text-sm font-bold uppercase tracking-wide">
-        <span className="mr-2 text-primary">{icon}</span>
-        {label}
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+      <div
+        className={`flex items-center justify-center gap-2 border-b border-slate-200 ${tone.headerBg} px-4 py-3`}
+      >
+        <span className={tone.iconText}>{icon}</span>
+        <span
+          className={`text-sm font-bold uppercase tracking-wide ${tone.headerText}`}
+        >
+          {label}
+        </span>
       </div>
+
       {p ? (
-        <div className="text-sm">
-          <p className="font-semibold">{p.tenNguoitruc}</p>
-          <p className="text-muted-foreground">
-            {[p.capbacNguoitruc, p.chucvuNguoitruc].filter(Boolean).join(" · ")}
-          </p>
+        <div className="flex flex-col items-center px-6 py-5">
+          <div
+            className={`flex size-20 items-center justify-center rounded-full ${tone.avatarBg} text-2xl font-bold ${tone.avatarText} ring-4 ${tone.ring} ring-offset-2 ring-offset-white`}
+          >
+            {initials(p.tenNguoitruc)}
+          </div>
+
+          <h4 className="mt-3 text-center text-lg font-bold uppercase tracking-wide text-slate-800">
+            {p.tenNguoitruc}
+          </h4>
+          {p.chucvuNguoitruc && (
+            <p className="text-center text-sm font-medium text-muted-foreground">
+              {p.chucvuNguoitruc}
+            </p>
+          )}
+
+          <div className="mt-4 w-full space-y-1.5 text-center text-sm">
+            {p.capbacNguoitruc && (
+              <p className="text-slate-600">
+                <span className="font-medium text-slate-500">Cấp bậc: </span>
+                {p.capbacNguoitruc}
+              </p>
+            )}
+            <p className="flex items-center justify-center gap-1.5 text-slate-600">
+              <Phone className={`size-3.5 ${tone.iconText}`} />
+              {p.sodienthoai || "—"}
+            </p>
+          </div>
         </div>
       ) : (
-        <p className="text-sm italic text-muted-foreground">
-          Chưa có thông tin
-        </p>
+        <div className="flex flex-col items-center px-6 py-8">
+          <div className="flex size-20 items-center justify-center rounded-full bg-slate-50 text-slate-300 ring-4 ring-slate-100 ring-offset-2 ring-offset-white">
+            {icon}
+          </div>
+          <p className="mt-3 text-sm italic text-muted-foreground">
+            Chưa có thông tin
+          </p>
+        </div>
       )}
     </div>
   );
 }
-export default function CaTrucCard({  
-  ngay,  
-  maDonVi,  
-  isAggregating,  
-  capDonVi,  
-}: {  
-  ngay: string;  
-  maDonVi: string | undefined;  
-  isAggregating: boolean;  
-  capDonVi: string | null | undefined;  
-}) {  
-  const { data: report, isLoading } = useOwnReport(  
-    maDonVi,  
-    ngay,  
-    isAggregating,  
-  );  
-  
-  const trucChiHuy = parseTruc(report?.trucBanChiHuy);  
-  const trucTacChien = parseTruc(report?.trucBanTacChien);  
-  
-  const tacChienLabel =  
-    capDonVi === "TRUNG_DOAN" || capDonVi === "SU_DOAN"  
-      ? "Trực ban tác chiến"  
+
+export default function CaTrucCard({
+  ngay,
+  maDonVi,
+  isAggregating,
+  capDonVi,
+}: {
+  ngay: string;
+  maDonVi: string | undefined;
+  isAggregating: boolean;
+  capDonVi: string | null | undefined;
+}) {
+  const { data: report, isLoading } = useOwnReport(
+    maDonVi,
+    ngay,
+    isAggregating,
+  );
+
+  const trucChiHuy = parseTruc(report?.trucBanChiHuy);
+  const trucTacChien = parseTruc(report?.trucBanTacChien);
+
+  const tacChienLabel =
+    capDonVi === "TRUNG_DOAN" || capDonVi === "SU_DOAN"
+      ? "Trực ban tác chiến"
       : "Trực ban nội vụ";
 
   return (
@@ -103,40 +174,33 @@ export default function CaTrucCard({
         </div>
 
         {isLoading ? (
-          <div className="-mx-2 flex flex-wrap items-stretch">
-            <div className="w-full px-2 mb-3 lg:mb-0 lg:w-1/2">
-              <div className="h-full rounded-lg border border-l-4 border-l-blue-500 p-4">
-                <Skeleton className="mb-2 h-4 w-32" />
-                <Skeleton className="mb-1.5 h-4 w-40" />
-                <Skeleton className="h-3 w-28" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {[0, 1].map((i) => (
+              <div
+                key={i}
+                className="flex flex-col items-center rounded-2xl border border-slate-200 p-6"
+              >
+                <Skeleton className="size-20 rounded-full" />
+                <Skeleton className="mt-3 h-5 w-40" />
+                <Skeleton className="mt-2 h-4 w-28" />
+                <Skeleton className="mt-4 h-4 w-32" />
               </div>
-            </div>
-            <div className="w-full px-2 lg:w-1/2">
-              <div className="h-full rounded-lg border border-l-4 border-l-emerald-500 p-4">
-                <Skeleton className="mb-2 h-4 w-40" />
-                <Skeleton className="mb-1.5 h-4 w-40" />
-                <Skeleton className="h-3 w-28" />
-              </div>
-            </div>
+            ))}
           </div>
         ) : (
-          <div className="-mx-2 flex flex-wrap items-stretch">
-            <div className="w-full px-2 mb-3 lg:mb-0 lg:w-1/2">
-              <CaTrucPerson
-                label="Trực chỉ huy"
-                p={trucChiHuy}
-                accent="border-l-blue-500"
-                icon={<ShieldCheck className="size-4" />}
-              />
-            </div>
-            <div className="w-full px-2 lg:w-1/2">
-              <CaTrucPerson
-                label={tacChienLabel}
-                p={trucTacChien}
-                accent="border-l-emerald-500"
-                icon={<UserCog className="size-4" />}
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <IdBadge
+              label="Trực chỉ huy"
+              p={trucChiHuy}
+              icon={<ShieldCheck className="size-8" />}
+              tone={CHIHUY_TONE}
+            />
+            <IdBadge
+              label={tacChienLabel}
+              p={trucTacChien}
+              icon={<UserCog className="size-8" />}
+              tone={TACCHIEN_TONE}
+            />
           </div>
         )}
       </CardContent>
