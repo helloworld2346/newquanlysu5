@@ -7,16 +7,17 @@ type UnitLike = {
   capDonVi?: string | null;
 };
 
-export function isPctUnit(u?: UnitLike): boolean {
-  const ky = (u?.kyhieuDonvi ?? "").toLowerCase();
-  const ten = stripMarks(u?.tenDonvi ?? "");
-  return ky.includes("pct") || ten.includes("chinh tri");
-}
-
 export function isBctUnit(u?: UnitLike): boolean {
   const ky = (u?.kyhieuDonvi ?? "").toLowerCase();
   const ten = stripMarks(u?.tenDonvi ?? "");
   return ky.includes("bct") || ten.includes("ban chinh tri");
+}
+
+export function isPctUnit(u?: UnitLike): boolean {
+  if (isBctUnit(u)) return false;
+  const ky = (u?.kyhieuDonvi ?? "").toLowerCase();
+  const ten = stripMarks(u?.tenDonvi ?? "");
+  return ky.includes("pct") || ten.includes("phong chinh tri");
 }
 
 export function accountIsPoliticalOffice(

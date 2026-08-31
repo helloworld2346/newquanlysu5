@@ -59,7 +59,13 @@ import type {
   PoliticalWorkForm,
 } from "@/types/politicalWork";
 import RefuseDialog from "@/features/reports/components/RefuseDialog";
-import { isPctUnit, isBctUnit } from "./politicalUnits";
+import {
+  isPctUnit,
+  isBctUnit,
+  accountIsPoliticalOffice,
+  accountIsBanChinhTri,
+  parentMaDonVi,
+} from "./politicalUnits";
 
 interface TrucNguoi {
   hoTen: string;
@@ -191,8 +197,22 @@ function Section({
 export default function PoliticalWorkReport() {
   const navigate = useNavigate();
   const { account, role } = useAuthInfo();
-  const maDonVi = account?.donVi?.maDonVi;
+  const ownMaDonVi = account?.donVi?.maDonVi;
+  const isPctAccount = accountIsPoliticalOffice(
+    account?.tenDangNhap,
+    account?.donVi,
+  );
+  const isBctAccount = accountIsBanChinhTri(account?.donVi);
+  const isPctOrBctAccount = isPctAccount || isBctAccount;
+
+  const maDonVi = isPctAccount
+    ? "GS003"
+    : isBctAccount
+      ? (parentMaDonVi(ownMaDonVi) ?? ownMaDonVi)
+      : ownMaDonVi;
+
   const isChiHuy = role === "Trực chỉ huy";
+  const isCommanderView = isChiHuy && !isPctOrBctAccount;
 
   const [searchParams, setSearchParams] = useSearchParams();
   const ngay = searchParams.get("ngay") || todayIso();
@@ -227,7 +247,11 @@ export default function PoliticalWorkReport() {
   const refuseReport = useRefusePolitical();
 
   const { units, capByUnit, hideDraftForCommander, hasChildren } =
-    useUnitHierarchy({ maDonVi, isChiHuy, accountDonVi: account?.donVi });
+    useUnitHierarchy({
+      maDonVi,
+      isChiHuy: isCommanderView,
+      accountDonVi: account?.donVi,
+    });
 
   const unitsReady = units.length > 0;
 
@@ -237,6 +261,7 @@ export default function PoliticalWorkReport() {
     capByUnit,
     hasChildren,
     unitsReady,
+    units,
   );
 
   const capSelf = capByUnit[maDonVi ?? ""] ?? "";
@@ -266,7 +291,10 @@ export default function PoliticalWorkReport() {
     maDonVi,
     consolidatedChild?.maDonVi,
     ngay,
-    { enabled: useChildConsolidated, approvedOnly: capSelf === "SU_DOAN" },
+    {
+      enabled: useChildConsolidated,
+      approvedOnly: capSelf === "SU_DOAN" && !isPctOrBctAccount,
+    },
   );
 
   const ownCons = useTongHopPolitical(
@@ -326,14 +354,16 @@ export default function PoliticalWorkReport() {
     );
   }, [items, units, maDonVi]);
 
+  const ownKey = isPctOrBctAccount ? ownMaDonVi : maDonVi;
+
   const ownDraft = useMemo(
-    () => rows.find((r) => r.donVi === maDonVi && isDraft(r.status)) ?? null,
-    [rows, maDonVi],
+    () => rows.find((r) => r.donVi === ownKey && isDraft(r.status)) ?? null,
+    [rows, ownKey],
   );
 
   const ownReport = useMemo(
-    () => rows.find((r) => r.donVi === maDonVi && !r.notSubmitted) ?? null,
-    [rows, maDonVi],
+    () => rows.find((r) => r.donVi === ownKey && !r.notSubmitted) ?? null,
+    [rows, ownKey],
   );
 
   const childRows = useMemo(
@@ -387,9 +417,12 @@ export default function PoliticalWorkReport() {
   );
 
   const canApprove =
-    isChiHuy &&
+    isCommanderView &&
     !!commanderReport &&
     normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
+
+  const effectiveTab =
+    isCommanderView && hasChildren ? "consolidated" : activeTab;
 
   const activeDraft = hasChildren ? tongHopDraft : ownDraft;
 
@@ -398,8 +431,6 @@ export default function PoliticalWorkReport() {
     () => parseTruc(signerSource?.trucBanCtDangCt),
     [signerSource],
   );
-
-  const effectiveTab = isChiHuy && hasChildren ? "consolidated" : activeTab;
 
   const visibleRows = useMemo(
     () =>
@@ -626,7 +657,7 @@ export default function PoliticalWorkReport() {
             className="mr-2 w-[280px]"
           />
           {hasChildren ? (
-            isChiHuy ? (
+            isCommanderView ? (
               canApprove && commanderReport ? (
                 <>
                   <Button
@@ -730,7 +761,7 @@ export default function PoliticalWorkReport() {
         )}
       </div>
 
-      {hasChildren && !isChiHuy && (
+      {hasChildren && !isCommanderView && (
         <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1">
           <button
             type="button"

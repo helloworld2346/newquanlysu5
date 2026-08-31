@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import {
   useMutation,
-  useQuery,
   useQueries,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { politicalWorkApi } from "./api";
-import { stripMarks } from "@/shared/report/visibility";
 import { normalizeStatus } from "@/shared/report/status";
+import { isBctUnit } from "./politicalUnits";
 import type {
   PoliticalWorkItem,
   PoliticalWorkRequest,
@@ -25,28 +25,6 @@ type UnitLite = {
   kyhieuDonvi?: string;
   capDonVi?: string | null;
 };
-
-export function isBctUnit(u?: {
-  kyhieuDonvi?: string;
-  tenDonvi?: string;
-}): boolean {
-  if (!u) return false;
-  const sym = stripMarks(u.kyhieuDonvi ?? "");
-  const name = stripMarks(u.tenDonvi ?? "");
-  return sym.includes("bct") || name.includes("ban chinh tri");
-}
-
-export function isPctUnit(u?: {
-  kyhieuDonvi?: string;
-  tenDonvi?: string;
-}): boolean {
-  if (!u) return false;
-  const sym = stripMarks(u.kyhieuDonvi ?? "");
-  const name = stripMarks(u.tenDonvi ?? "");
-  return sym.includes("pct") || name.includes("chinh tri");
-}
-
-const isApproved = (status: string) => normalizeStatus(status) === "Đã_Duyệt";
 
 export function usePoliticalMerged(
   maDonVi: string | undefined,
@@ -81,35 +59,31 @@ export function usePoliticalMerged(
     select: (res) => res.Result ?? [],
   });
 
-  const directChildren = useMemo(() => {
-    if (!maDonVi) return [] as UnitLite[];
-    return units.filter((u) => {
-      if (!u.maDonVi.startsWith(maDonVi + ".")) return false;
-      const suffix = u.maDonVi.slice(maDonVi.length + 1);
-      return !suffix.includes(".");
-    });
-  }, [units, maDonVi]);
-
   const isSuDoanView = (capByUnit[maDonVi ?? ""] ?? "") === "SU_DOAN";
-
   const trungDoanChildren = useMemo(
-    () => directChildren.filter((u) => u.capDonVi === "TRUNG_DOAN"),
-    [directChildren],
+    () =>
+      isSuDoanView && maDonVi
+        ? units.filter(
+            (u) =>
+              u.maDonVi.startsWith(maDonVi + ".") &&
+              !u.maDonVi.slice(maDonVi.length + 1).includes(".") &&
+              u.capDonVi === "TRUNG_DOAN",
+          )
+        : [],
+    [isSuDoanView, maDonVi, units],
   );
 
-  const bct = useQueries({
-    queries: (isSuDoanView ? trungDoanChildren : []).map((td) => ({
-      queryKey: [...politicalKey(maDonVi ?? "", ngay), "BCT_OF", td.maDonVi],
+  const bctQueries = useQueries({
+    queries: trungDoanChildren.map((td) => ({
+      queryKey: [...politicalKey(td.maDonVi, ngay), "TD_BCT_CONS"],
       queryFn: () =>
         politicalWorkApi.getByDonViChildren(td.maDonVi, ngay, "TONG_HOP"),
-      enabled: baseEnabled && hasChildren && isSuDoanView,
+      enabled: baseEnabled && hasChildren,
       select: (res: { Result?: PoliticalWorkItem[] }) => res.Result ?? [],
     })),
-    combine: (results) => ({
-      data: results.map((r) => (r.data as PoliticalWorkItem[]) ?? []),
-      isLoading: results.some((r) => r.isLoading),
-    }),
   });
+
+  const bctSignal = bctQueries.map((q) => q.dataUpdatedAt).join(",");
 
   const data = useMemo(() => {
     if (!hasChildren) {
@@ -142,14 +116,14 @@ export function usePoliticalMerged(
       }
     }
 
-    bct.data.forEach((items, idx) => {
-      const td = trungDoanChildren[idx];
-      if (!td) return;
-      const bctItem = items.find((it) => isBctUnit(it.donVi));
-      if (bctItem && isApproved(bctItem.status)) {
+    trungDoanChildren.forEach((td, i) => {
+      const list = bctQueries[i]?.data ?? [];
+      const bctItem = list.find((it) => isBctUnit(it.donVi));
+      if (bctItem && normalizeStatus(bctItem.status) === "Đã_Duyệt") {
         map.set(td.maDonVi, {
           ...bctItem,
           donVi: {
+            ...bctItem.donVi,
             maDonVi: td.maDonVi,
             tenDonvi: td.tenDonvi ?? bctItem.donVi.tenDonvi,
             kyhieuDonvi: td.kyhieuDonvi ?? bctItem.donVi.kyhieuDonvi,
@@ -160,6 +134,7 @@ export function usePoliticalMerged(
     });
 
     return Array.from(map.values());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     hasChildren,
     maDonVi,
@@ -167,16 +142,48 @@ export function usePoliticalMerged(
     donViQuery.data,
     tongHopQuery.data,
     capByUnit,
-    bct.data,
     trungDoanChildren,
+    bctSignal,
   ]);
 
   return {
     data,
     isLoading: hasChildren
-      ? donViQuery.isLoading || tongHopQuery.isLoading || bct.isLoading
+      ? donViQuery.isLoading || tongHopQuery.isLoading
       : selfQuery.isLoading,
   };
+}
+
+export function useConsolidatedForUnit(
+  viewMaDonVi: string | undefined,
+  sourceMaDonVi: string | undefined,
+  ngay: string,
+  opts?: { enabled?: boolean; approvedOnly?: boolean },
+) {
+  const enabled =
+    (opts?.enabled ?? true) && !!viewMaDonVi && !!sourceMaDonVi && !!ngay;
+  const approvedOnly = opts?.approvedOnly ?? false;
+
+  const query = useQuery({
+    queryKey: [
+      ...politicalKey(sourceMaDonVi ?? "", ngay),
+      "CONS_FOR",
+      viewMaDonVi ?? "",
+    ],
+    queryFn: () =>
+      politicalWorkApi.getByDonVi(sourceMaDonVi!, ngay, "TONG_HOP"),
+    enabled,
+    select: (res) => res.Result ?? null,
+  });
+
+  const data = useMemo(() => {
+    const item = query.data;
+    if (!item) return [];
+    if (approvedOnly && normalizeStatus(item.status) !== "Đã_Duyệt") return [];
+    return [{ ...item, donVi: { ...item.donVi, maDonVi: viewMaDonVi! } }];
+  }, [query.data, approvedOnly, viewMaDonVi]);
+
+  return { data, isLoading: query.isLoading };
 }
 
 export function useTongHopPolitical(
@@ -189,35 +196,6 @@ export function useTongHopPolitical(
     queryFn: () => politicalWorkApi.getByDonVi(maDonVi!, ngay, "TONG_HOP"),
     enabled: !!maDonVi && !!ngay && hasChildren,
     select: (res) => (res.Result ? [res.Result] : []),
-  });
-}
-
-export function useConsolidatedForUnit(
-  parentMaDonVi: string | undefined,
-  consolidatedMaDonVi: string | undefined,
-  ngay: string,
-  opts: { enabled?: boolean; approvedOnly?: boolean } = {},
-) {
-  const { enabled = true, approvedOnly = false } = opts;
-  return useQuery({
-    queryKey: [
-      ...politicalKey(consolidatedMaDonVi ?? "", ngay),
-      "CONS_FOR",
-      parentMaDonVi ?? "",
-    ],
-    queryFn: () =>
-      politicalWorkApi.getByDonVi(consolidatedMaDonVi!, ngay, "TONG_HOP"),
-    enabled: !!parentMaDonVi && !!consolidatedMaDonVi && !!ngay && enabled,
-    select: (res) => {
-      const item = res.Result;
-      if (!item) return [] as PoliticalWorkItem[];
-      if (approvedOnly && !isApproved(item.status)) return [];
-      const remapped: PoliticalWorkItem = {
-        ...item,
-        donVi: { ...item.donVi, maDonVi: parentMaDonVi! },
-      };
-      return [remapped];
-    },
   });
 }
 
