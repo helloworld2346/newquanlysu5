@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -13,16 +13,11 @@ import {
   CheckCircle2,
   XCircle,
   X,
-  Eye,
-  ImagePlus,
-  User,
-  Award,
-  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import SearchBar from "@/components/common/SearchBar";
 import {
@@ -67,6 +62,8 @@ import {
   parentMaDonVi,
 } from "./politicalUnits";
 import PoliticalCaTrucCard from "./PoliticalCaTrucCard";
+import PoliticalReportCard from "./components/PoliticalReportCard";
+import KySoCard from "./components/KySoCard";
 
 interface TrucNguoi {
   hoTen: string;
@@ -91,108 +88,6 @@ function parseTruc(raw: string | undefined | null): TrucNguoi | null {
   } catch {
     return { hoTen: raw, capBac: "", chucVu: "", soDienThoai: "" };
   }
-}
-
-function SignerRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between px-3 py-2">
-      <span className="flex items-center text-muted-foreground">
-        <span className="mr-1.5">{icon}</span>
-        {label}
-      </span>
-      <span className="font-medium">{value || "—"}</span>
-    </div>
-  );
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  Chờ_Duyệt: "Chờ duyệt",
-  "Chờ duyệt": "Chờ duyệt",
-  Đã_Duyệt: "Đã duyệt",
-  Da_Duyet: "Đã duyệt",
-  Tu_Choi: "Từ chối",
-  Từ_Chối: "Từ chối",
-  "Từ chối": "Từ chối",
-  Nháp: "Nháp",
-  Nhap: "Nháp",
-};
-
-const STATUS_TONE: Record<string, string> = {
-  Chờ_Duyệt: "bg-amber-100 text-amber-700",
-  "Chờ duyệt": "bg-amber-100 text-amber-700",
-  Đã_Duyệt: "bg-emerald-100 text-emerald-700",
-  Da_Duyet: "bg-emerald-100 text-emerald-700",
-  "Đã duyệt": "bg-emerald-100 text-emerald-700",
-  Tu_Choi: "bg-rose-100 text-rose-700",
-  Từ_Chối: "bg-rose-100 text-rose-700",
-  "Từ chối": "bg-rose-100 text-rose-700",
-  Nháp: "bg-slate-100 text-slate-700",
-  Nhap: "bg-slate-100 text-slate-700",
-};
-
-function StatusPill({ status }: { status: string }) {
-  const tone = STATUS_TONE[status] ?? "bg-slate-100 text-slate-700";
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}
-    >
-      {STATUS_LABEL[status] ?? status}
-    </span>
-  );
-}
-
-function FlagDot({ active, label }: { active: boolean; label: string }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 text-xs font-medium ${
-        active ? "text-rose-700" : "text-muted-foreground"
-      }`}
-    >
-      <span
-        className={`inline-block size-2 rounded-full ${
-          active ? "bg-rose-500" : "bg-muted-foreground/30"
-        }`}
-      />
-      {label}
-    </span>
-  );
-}
-
-function Section({
-  label,
-  value,
-  tone,
-  labelTone,
-  textTone,
-  empty = "—",
-}: {
-  label: string;
-  value: string;
-  tone: string;
-  labelTone: string;
-  textTone: string;
-  empty?: string;
-}) {
-  return (
-    <div className={`rounded-md border p-3 ${tone}`}>
-      <div
-        className={`mb-1 text-xs font-semibold uppercase tracking-wide ${labelTone}`}
-      >
-        {label}
-      </div>
-      <div className={`whitespace-pre-wrap break-words text-sm ${textTone}`}>
-        {value || empty}
-      </div>
-    </div>
-  );
 }
 
 export default function PoliticalWorkReport() {
@@ -232,7 +127,6 @@ export default function PoliticalWorkReport() {
   const [activeTab, setActiveTab] = useState<"child" | "consolidated">("child");
 
   const [chuKySo, setChuKySo] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [confirmApprove, setConfirmApprove] = useState<PoliticalWorkRow | null>(
@@ -540,25 +434,6 @@ export default function PoliticalWorkReport() {
     navigate(`/political-work-report/create?ngay=${ngay}&tongHop=1`);
   };
 
-  const handlePickSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Vui lòng chọn file ảnh (PNG/JPG).");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Ảnh chữ ký tối đa 2MB.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setChuKySo(String(reader.result));
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  };
-
-  const clearSignature = () => setChuKySo("");
-
   const doSubmit = async () => {
     const target = hasChildren ? tongHopDraft : ownDraft;
     if (!target) return;
@@ -854,104 +729,14 @@ export default function PoliticalWorkReport() {
             displayRows.length === 1 ? "" : "lg:grid-cols-2"
           }`}
         >
-          {displayRows.map((r) => {
-            const canEdit =
-              r.notSubmitted ||
-              ["Nháp", "Từ_Chối", "Từ chối"].includes(r.status);
-            return (
-              <Card
-                key={r.idCongtac || r.donVi}
-                className={
-                  r.notSubmitted ? "border-rose-200 bg-rose-50/60" : undefined
-                }
-              >
-                <CardHeader className="relative space-y-0 pb-3">
-                  <div className="absolute right-4 top-4 flex shrink-0 items-center gap-1">
-                    {!r.notSubmitted && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => goDetail(r)}
-                      >
-                        <Eye className="size-4" />
-                      </Button>
-                    )}
-                    {canEdit && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => goEditOrCreate(r)}
-                      >
-                        <PenLine className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-center px-10 text-center">
-                    <div
-                      className={`text-3xl font-bold ${
-                        r.notSubmitted ? "text-rose-700" : ""
-                      }`}
-                    >
-                      {r.kyhieuDonVi || r.tenDonVi}
-                    </div>
-                    {r.kyhieuDonVi && (
-                      <div className="mt-0.5 text-sm text-muted-foreground">
-                        {r.tenDonVi}
-                      </div>
-                    )}
-                    <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-                      {r.notSubmitted ? (
-                        <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
-                          Chưa nộp
-                        </span>
-                      ) : (
-                        <StatusPill status={r.status} />
-                      )}
-                      {!r.notSubmitted && !!r.rawItem?.chuKySo?.trim() && (
-                        <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                          Đã ký
-                        </span>
-                      )}
-                      <FlagDot active={!!r.noiDungDotXuat} label="Đột xuất" />
-                      <FlagDot active={!!r.kienNghi} label="Kiến nghị" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Section
-                    label="Tình hình hoạt động"
-                    value={r.tinhHinh}
-                    tone="border-emerald-200 bg-emerald-50/60"
-                    labelTone="text-emerald-700"
-                    textTone="text-emerald-900"
-                  />
-                  <Section
-                    label="Kết quả"
-                    value={r.ketQua}
-                    tone="border-blue-200 bg-blue-50/60"
-                    labelTone="text-blue-700"
-                    textTone="text-blue-900"
-                  />
-                  <Section
-                    label="Việc đột xuất"
-                    value={r.noiDungDotXuat}
-                    tone="border-amber-200 bg-amber-50"
-                    labelTone="text-amber-700"
-                    textTone="text-amber-900"
-                    empty="—"
-                  />
-                  <Section
-                    label="Kiến nghị"
-                    value={r.kienNghi}
-                    tone="border-rose-200 bg-rose-50"
-                    labelTone="text-rose-700"
-                    textTone="text-rose-900"
-                    empty="—"
-                  />
-                </CardContent>
-              </Card>
-            );
-          })}
+          {displayRows.map((r) => (
+            <PoliticalReportCard
+              key={r.idCongtac || r.donVi}
+              row={r}
+              onDetail={goDetail}
+              onEditOrCreate={goEditOrCreate}
+            />
+          ))}
         </div>
       )}
       <PoliticalCaTrucCard ngay={ngay} maDonVi={ownMaDonVi} />
@@ -959,106 +744,7 @@ export default function PoliticalWorkReport() {
       {((activeDraft && !hasChildren) ||
         (activeDraft && hasChildren && !isChiHuy) ||
         canApprove) && (
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle className="flex items-center text-base">
-              <PenLine className="mr-2 size-4 text-primary" />
-              Ký số báo cáo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg"
-              className="hidden"
-              onChange={handlePickSignature}
-            />
-
-            <div className="-mx-2 flex flex-wrap items-stretch">
-              <div className="mb-2 w-full px-2 md:w-2/3">
-                {chuKySo ? (
-                  <div className="flex h-full items-center justify-center rounded-lg border bg-[length:16px_16px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%),linear-gradient(-45deg,#f1f5f9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f1f5f9_75%),linear-gradient(-45deg,transparent_75%,#f1f5f9_75%)] p-4">
-                    <img
-                      src={chuKySo}
-                      alt="Chữ ký"
-                      className="max-h-40 object-contain"
-                    />
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                  >
-                    <ImagePlus className="mb-2 size-8" />
-                    Bấm để chọn ảnh chữ ký (PNG/JPG, tối đa 2MB)
-                  </button>
-                )}
-              </div>
-
-              <div className="mb-2 w-full px-2 md:w-1/3">
-                <div className="flex h-full flex-col justify-between rounded-lg border bg-muted/30 p-4">
-                  <div>
-                    {chuKySo ? (
-                      <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                        <CheckCircle2 className="mr-1.5 size-4" />
-                        Đã ký số
-                      </div>
-                    ) : (
-                      <div className="mb-3 inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700">
-                        <PenLine className="mr-1.5 size-4" />
-                        Chưa ký số
-                      </div>
-                    )}
-                    <p className="mb-3 text-sm text-muted-foreground">
-                      Ký số vào báo cáo nháp trước khi bấm "Trình phê duyệt".
-                      Ảnh chữ ký định dạng PNG/JPG.
-                    </p>
-
-                    <div className="divide-y rounded-lg border bg-background/70 text-sm">
-                      <SignerRow
-                        icon={<User className="size-3.5" />}
-                        label="Người ký"
-                        value={signer?.hoTen}
-                      />
-                      <SignerRow
-                        icon={<Award className="size-3.5" />}
-                        label="Cấp bậc"
-                        value={signer?.capBac}
-                      />
-                      <SignerRow
-                        icon={<Briefcase className="size-3.5" />}
-                        label="Chức vụ"
-                        value={signer?.chucVu}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex flex-col">
-                    <Button
-                      variant="outline"
-                      className="mb-2 w-full"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <ImagePlus className="mr-2 size-4" />
-                      {chuKySo ? "Đổi ảnh chữ ký" : "Chọn ảnh chữ ký"}
-                    </Button>
-                    {chuKySo && (
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={clearSignature}
-                      >
-                        <X className="mr-2 size-4" /> Xóa chữ ký
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <KySoCard chuKySo={chuKySo} setChuKySo={setChuKySo} signer={signer} />
       )}
 
       <ConfirmDialog
