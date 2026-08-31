@@ -299,8 +299,8 @@ export default function PoliticalWorkReport() {
     {
       enabled: useChildConsolidated,
       approvedOnly: capSelf === "SU_DOAN" && !isPctOrBctAccount,
-      viewTenDonvi: viewUnit?.tenDonvi,
-      viewKyhieuDonvi: viewUnit?.kyhieuDonvi,
+      viewTenDonvi: isPctAccount ? "f5" : viewUnit?.tenDonvi,
+      viewKyhieuDonvi: isPctAccount ? "f5" : viewUnit?.kyhieuDonvi,
     },
   );
 
@@ -683,29 +683,63 @@ export default function PoliticalWorkReport() {
                   </Button>
                 </>
               ) : null
-            ) : tongHopRefused ? (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  navigate(
-                    `/political-work-report/edit/${tongHopRefused.idCongtac}`,
-                  )
-                }
-              >
-                <PenLine className="mr-2 size-4" /> Chỉnh sửa báo cáo
-              </Button>
-            ) : tongHopDraft ? (
-              <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
-                <Send className="mr-2 size-4" /> Trình phê duyệt
-              </Button>
-            ) : tongHopDone ? (
-              <span className="text-sm text-muted-foreground">
-                Đã có báo cáo cho ngày này
-              </span>
             ) : (
-              <Button onClick={handleConsolidate} disabled={!canConsolidate}>
-                <Layers className="mr-2 size-4" /> {consolidateLabel}
-              </Button>
+              <>
+                {isPctOrBctAccount &&
+                  (ownDraft ? (
+                    <Button
+                      className="mr-2"
+                      onClick={() =>
+                        navigate(
+                          `/political-work-report/edit/${ownDraft.idCongtac}?ngay=${ngay}`,
+                        )
+                      }
+                    >
+                      <PenLine className="mr-2 size-4" /> Sửa báo cáo đơn vị
+                    </Button>
+                  ) : ownReport ? null : (
+                    <Button
+                      className="mr-2"
+                      onClick={() =>
+                        navigate(`/political-work-report/create?ngay=${ngay}`)
+                      }
+                    >
+                      <Plus className="mr-2 size-4" /> Thêm báo cáo
+                    </Button>
+                  ))}
+
+                {tongHopRefused ? (
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      navigate(
+                        `/political-work-report/edit/${tongHopRefused.idCongtac}`,
+                      )
+                    }
+                  >
+                    <PenLine className="mr-2 size-4" /> Chỉnh sửa báo cáo
+                  </Button>
+                ) : tongHopDraft ? (
+                  <Button
+                    onClick={onClickSubmit}
+                    disabled={!chuKySo || submitting}
+                  >
+                    <Send className="mr-2 size-4" /> Trình phê duyệt
+                  </Button>
+                ) : tongHopDone ? (
+                  <span className="text-sm text-muted-foreground">
+                    Đã có báo cáo cho ngày này
+                  </span>
+                ) : (
+                  <Button
+                    className="bg-amber-500 text-white hover:bg-amber-600"
+                    onClick={handleConsolidate}
+                    disabled={!canConsolidate}
+                  >
+                    <Layers className="mr-2 size-4" /> {consolidateLabel}
+                  </Button>
+                )}
+              </>
             )
           ) : ownDraft ? (
             <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
