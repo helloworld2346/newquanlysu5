@@ -61,9 +61,9 @@ const CHIHUY_TONE: BadgeTone = {
 
 const TACCHIEN_TONE: BadgeTone = {
   headerBg: "bg-gold/10",
-  headerText: "text-amber-700",
+  headerText: "text-amber-700 dark:text-amber-300",
   avatarBg: "bg-gold/20",
-  avatarText: "text-amber-700",
+  avatarText: "text-amber-700 dark:text-amber-300",
   ring: "ring-gold/30",
   iconText: "text-amber-600",
 };
@@ -165,7 +165,7 @@ export default function CaTrucCard({
     <Card className="mt-4">
       <CardContent className="pt-6">
         <div className="mb-4 text-center">
-          <h3 className="text-lg font-bold uppercase tracking-wide text-slate-700">
+          <h3 className="text-lg font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">
             Thông tin ca trực
           </h3>
           <p className="mt-1 text-sm font-medium uppercase text-muted-foreground">

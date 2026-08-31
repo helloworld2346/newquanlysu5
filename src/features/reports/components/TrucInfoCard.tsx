@@ -18,17 +18,17 @@ const ACCENT: Record<
   },
   emerald: {
     header: "bg-emerald-50",
-    label: "text-emerald-700",
+    label: "text-emerald-700 dark:text-emerald-300",
     value: "text-emerald-900",
   },
   rose: {
     header: "bg-rose-50",
-    label: "text-rose-700",
+    label: "text-rose-700 dark:text-rose-300",
     value: "text-rose-900",
   },
   amber: {
     header: "bg-amber-50",
-    label: "text-amber-700",
+    label: "text-amber-700 dark:text-amber-300",
     value: "text-amber-900",
   },
   violet: {

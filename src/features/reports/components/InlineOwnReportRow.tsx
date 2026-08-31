@@ -27,7 +27,7 @@ import type {
   VangChiTiet,
 } from "@/types/dailyReport";
 
-const rowBase = "border-l-4 border-l-primary bg-primary/5 transition-colors";
+const rowBase = "border-l-4 border-l-primary bg-primary/5 transition-colors dark:border-l-emerald-500 dark:bg-emerald-500/10";
 const td = "border text-center tabular-nums break-words px-1";
 
 const cellInput =
@@ -44,7 +44,7 @@ const EMPTY_TRUC = {
 
 function UnitBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+    <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary dark:bg-emerald-400/15 dark:text-emerald-300">
       {label}
     </span>
   );
@@ -133,7 +133,7 @@ export default function InlineOwnReportRow({
           </TableCell>
         ))}
         <TableCell className={td}>
-          <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+          <span className="inline-block rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
             Đã nộp
           </span>
         </TableCell>
@@ -158,7 +158,7 @@ export default function InlineOwnReportRow({
   if (!editing) {
     return (
       <TableRow
-        className={`cursor-pointer hover:bg-primary/10 ${rowBase}`}
+        className={`cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-500/15 ${rowBase}`}
         onClick={startEdit}
       >
         <TableCell className={`${td} font-medium`}>
@@ -169,7 +169,7 @@ export default function InlineOwnReportRow({
           className={`${td} text-left text-muted-foreground`}
         >
           <span className="inline-flex items-center gap-1.5">
-            <MousePointerClick className="size-4 text-primary/70" />
+            <MousePointerClick className="size-4 text-primary/70 dark:text-emerald-400" />
             Bấm để nhập số liệu báo cáo {label}...
           </span>
         </TableCell>
@@ -207,10 +207,10 @@ export default function InlineOwnReportRow({
       >
         {formatNum(quanSoTong)}
       </TableCell>
-      <TableCell className={`${td} font-medium text-emerald-700`}>
+      <TableCell className={`${td} font-medium text-emerald-700 dark:text-emerald-300`}>
         {formatNum(quanSoHienDien)}
       </TableCell>
-      <TableCell className={`${td} font-medium text-rose-600`}>
+      <TableCell className={`${td} font-medium text-rose-600 dark:text-rose-400`}>
         {formatNum(quanSoVang)}
       </TableCell>
       {VANG_KEYS.map((k) => (
@@ -225,7 +225,7 @@ export default function InlineOwnReportRow({
         </TableCell>
       ))}
       <TableCell className={td}>
-        <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+        <span className="inline-block rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
           Nháp
         </span>
       </TableCell>
@@ -255,11 +255,11 @@ export default function InlineOwnReportRow({
               }}
               disabled={saving}
             >
-              <Save className="mr-2 size-4 text-emerald-600" /> Lưu và trình
+              <Save className="mr-2 size-4 text-emerald-600 dark:text-emerald-400" /> Lưu và trình
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-rose-600 focus:text-rose-600"
+              className="text-rose-600 dark:text-rose-400 focus:text-rose-600"
               onClick={() => setEditing(false)}
               disabled={saving}
             >

@@ -154,7 +154,7 @@ export default function ReportTotalRow({
                         <TC>{m.capBac || "—"}</TC>
                         <TC>{m.chucVu || "—"}</TC>
                         <TC>
-                          <span className="inline-block rounded bg-amber-100 px-2 py-0.5 text-amber-700">
+                          <span className="inline-block rounded bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-amber-700 dark:text-amber-300">
                             {LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "—"}
                           </span>
                         </TC>
