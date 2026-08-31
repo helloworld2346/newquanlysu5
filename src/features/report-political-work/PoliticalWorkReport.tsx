@@ -48,6 +48,7 @@ import {
   usePoliticalMerged,
   useTongHopPolitical,
   useSubmitPolitical,
+  useConsolidatedForUnit,
   useApprovePolitical,
   useRefusePolitical,
   useUpdatePolitical,
@@ -57,8 +58,8 @@ import type {
   PoliticalWorkRow,
   PoliticalWorkForm,
 } from "@/types/politicalWork";
-
 import RefuseDialog from "@/features/reports/components/RefuseDialog";
+import { isPctUnit, isBctUnit } from "./politicalUnits";
 
 interface TrucNguoi {
   hoTen: string;
@@ -238,8 +239,50 @@ export default function PoliticalWorkReport() {
     unitsReady,
   );
 
-  const { data: tongHopItems = [], isLoading: tongHopLoading } =
-    useTongHopPolitical(maDonVi, ngay, hasChildren);
+  const capSelf = capByUnit[maDonVi ?? ""] ?? "";
+
+  const directChildren = useMemo(
+    () =>
+      units.filter((u) => {
+        if (!maDonVi || !u.maDonVi.startsWith(maDonVi + ".")) return false;
+        return !u.maDonVi.slice(maDonVi.length + 1).includes(".");
+      }),
+    [units, maDonVi],
+  );
+
+  const consolidatedChild = useMemo(
+    () =>
+      capSelf === "SU_DOAN"
+        ? directChildren.find((u) => isPctUnit(u))
+        : capSelf === "TRUNG_DOAN"
+          ? directChildren.find((u) => isBctUnit(u))
+          : undefined,
+    [capSelf, directChildren],
+  );
+
+  const useChildConsolidated = !!consolidatedChild;
+
+  const childCons = useConsolidatedForUnit(
+    maDonVi,
+    consolidatedChild?.maDonVi,
+    ngay,
+    { enabled: useChildConsolidated, approvedOnly: capSelf === "SU_DOAN" },
+  );
+
+  const ownCons = useTongHopPolitical(
+    maDonVi,
+    ngay,
+    hasChildren && !useChildConsolidated,
+  );
+
+  const tongHopItems = useMemo(
+    () =>
+      useChildConsolidated ? (childCons.data ?? []) : (ownCons.data ?? []),
+    [useChildConsolidated, childCons.data, ownCons.data],
+  );
+  const tongHopLoading = useChildConsolidated
+    ? childCons.isLoading
+    : ownCons.isLoading;
 
   const tongHopRows = useMemo(
     () => tongHopItems.map(mapItemToRow),
