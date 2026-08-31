@@ -101,7 +101,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[460px]">
         <section
           aria-labelledby="login-title"
-          className="w-full rounded-2xl border border-white/80 border-t-4 border-t-primary bg-white/95 px-6 pb-6 pt-8 shadow-2xl dark:bg-[rgba(28,40,34,0.97)] sm:px-9 sm:pb-9 sm:pt-10"
+          className="w-full rounded-2xl border border-white/80 border-t-4 border-t-primary bg-card/95 px-6 pb-6 pt-8 shadow-2xl dark:bg-[rgba(28,40,34,0.97)] sm:px-9 sm:pb-9 sm:pt-10"
         >
           <div className="relative mx-auto mb-4 h-28 w-28 select-none sm:mb-5 sm:h-32 sm:w-32">
             <div

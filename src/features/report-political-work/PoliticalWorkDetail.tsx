@@ -156,7 +156,7 @@ function KySoCard({
               {hasSign ? "Đã ký số" : "Chưa ký số"}
             </div>
             <div
-              className="flex h-40 items-center justify-center overflow-hidden rounded-md border bg-white"
+              className="flex h-40 items-center justify-center overflow-hidden rounded-md border bg-card"
               style={{
                 backgroundImage:
                   "linear-gradient(to right, rgba(31,92,63,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(31,92,63,0.06) 1px, transparent 1px)",

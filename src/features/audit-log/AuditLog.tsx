@@ -272,7 +272,7 @@ export default function AuditLog() {
                     <span
                       className={`rounded-full px-2 py-0.5 text-sm font-medium ${
                         HANH_DONG_BADGE[log.hanhDong] ??
-                        "bg-slate-100 text-slate-600"
+                        "bg-slate-100 text-muted-foreground"
                       }`}
                     >
                       {HANH_DONG_LABEL[log.hanhDong] ?? log.hanhDong}

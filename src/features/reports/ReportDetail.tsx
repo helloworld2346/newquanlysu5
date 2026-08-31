@@ -177,7 +177,7 @@ function KySoCard({
               {hasSign ? "Đã ký số" : "Chưa ký số"}
             </div>
             <div
-              className="flex h-40 items-center justify-center overflow-hidden rounded-md border bg-white"
+              className="flex h-40 items-center justify-center overflow-hidden rounded-md border bg-card"
               style={{
                 backgroundImage:
                   "linear-gradient(to right, rgba(31,92,63,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(31,92,63,0.06) 1px, transparent 1px)",
@@ -262,7 +262,7 @@ function NhiemVuItem({
     success: "bg-emerald-100 text-emerald-700",
     danger: "bg-rose-100 text-rose-700",
     warning: "bg-amber-100 text-amber-700",
-    neutral: "bg-slate-100 text-slate-600",
+    neutral: "bg-slate-100 text-muted-foreground",
   }[accent];
 
   return (

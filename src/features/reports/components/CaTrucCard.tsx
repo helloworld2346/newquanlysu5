@@ -80,9 +80,9 @@ function IdBadge({
   tone: BadgeTone;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
       <div
-        className={`flex items-center justify-center gap-2 border-b border-slate-200 ${tone.headerBg} px-4 py-3`}
+        className={`flex items-center justify-center gap-2 border-b border-border ${tone.headerBg} px-4 py-3`}
       >
         <span className={tone.iconText}>{icon}</span>
         <span
@@ -100,7 +100,7 @@ function IdBadge({
             {initials(p.tenNguoitruc)}
           </div>
 
-          <h4 className="mt-3 text-center text-lg font-bold uppercase tracking-wide text-slate-800">
+          <h4 className="mt-3 text-center text-lg font-bold uppercase tracking-wide text-foreground">
             {p.tenNguoitruc}
           </h4>
           {p.chucvuNguoitruc && (
@@ -111,12 +111,12 @@ function IdBadge({
 
           <div className="mt-4 w-full space-y-1.5 text-center text-sm">
             {p.capbacNguoitruc && (
-              <p className="text-slate-600">
-                <span className="font-medium text-slate-500">Cấp bậc: </span>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-muted-foreground">Cấp bậc: </span>
                 {p.capbacNguoitruc}
               </p>
             )}
-            <p className="flex items-center justify-center gap-1.5 text-slate-600">
+            <p className="flex items-center justify-center gap-1.5 text-muted-foreground">
               <Phone className={`size-3.5 ${tone.iconText}`} />
               {p.sodienthoai || "—"}
             </p>
@@ -178,7 +178,7 @@ export default function CaTrucCard({
             {[0, 1].map((i) => (
               <div
                 key={i}
-                className="flex flex-col items-center rounded-2xl border border-slate-200 p-6"
+                className="flex flex-col items-center rounded-2xl border border-border p-6"
               >
                 <Skeleton className="size-20 rounded-full" />
                 <Skeleton className="mt-3 h-5 w-40" />

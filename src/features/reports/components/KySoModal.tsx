@@ -55,7 +55,7 @@ export default function KySoModal({
       <DialogContent className="w-[calc(100%-2rem)] max-w-md overflow-hidden p-0">  
         <DialogHeader className="space-y-0 bg-gradient-to-r from-primary to-primary/80 px-5 py-4 text-left">  
           <div className="flex items-center">  
-            <span className="mr-3 flex size-9 items-center justify-center rounded-full bg-white/20">  
+            <span className="mr-3 flex size-9 items-center justify-center rounded-full bg-card/20">  
               <ShieldCheck className="size-5 text-primary-foreground" />  
             </span>  
             <div>  
@@ -84,7 +84,7 @@ export default function KySoModal({
           </div>  
   
           <div  
-            className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-4"  
+            className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-card p-4"  
             style={{  
               backgroundImage:  
                 "linear-gradient(#f1f5f9 1px, transparent 1px), linear-gradient(90deg, #f1f5f9 1px, transparent 1px)",  
