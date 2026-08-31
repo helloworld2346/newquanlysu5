@@ -66,6 +66,7 @@ import {
   accountIsBanChinhTri,
   parentMaDonVi,
 } from "./politicalUnits";
+import PoliticalCaTrucCard from "./PoliticalCaTrucCard";
 
 interface TrucNguoi {
   hoTen: string;
@@ -953,6 +954,7 @@ export default function PoliticalWorkReport() {
           })}
         </div>
       )}
+      <PoliticalCaTrucCard ngay={ngay} maDonVi={ownMaDonVi} />
 
       {((activeDraft && !hasChildren) ||
         (activeDraft && hasChildren && !isChiHuy) ||

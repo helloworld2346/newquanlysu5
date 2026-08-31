@@ -216,6 +216,19 @@ export function useTongHopPolitical(
   });
 }
 
+export function useOwnPoliticalReport(
+  maDonVi: string | undefined,
+  ngay: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: [...politicalKey(maDonVi ?? "", ngay), "OWN_DON_VI"],
+    queryFn: () => politicalWorkApi.getByDonVi(maDonVi!, ngay, "DON_VI"),
+    enabled: enabled && !!maDonVi && !!ngay,
+    select: (res) => res.Result ?? null,
+  });
+}
+
 export function usePoliticalDetail(id: string | undefined) {
   return useQuery({
     queryKey: ["political-detail", id],
