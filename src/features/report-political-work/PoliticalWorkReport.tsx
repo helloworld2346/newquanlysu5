@@ -287,6 +287,11 @@ export default function PoliticalWorkReport() {
 
   const useChildConsolidated = !!consolidatedChild;
 
+  const viewUnit = useMemo(
+    () => units.find((u) => u.maDonVi === maDonVi),
+    [units, maDonVi],
+  );
+
   const childCons = useConsolidatedForUnit(
     maDonVi,
     consolidatedChild?.maDonVi,
@@ -294,6 +299,8 @@ export default function PoliticalWorkReport() {
     {
       enabled: useChildConsolidated,
       approvedOnly: capSelf === "SU_DOAN" && !isPctOrBctAccount,
+      viewTenDonvi: viewUnit?.tenDonvi,
+      viewKyhieuDonvi: viewUnit?.kyhieuDonvi,
     },
   );
 

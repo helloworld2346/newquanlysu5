@@ -111,7 +111,7 @@ export function usePoliticalMerged(
       const cap = capByUnit[ma] ?? "";
       const isAggregating = TONG_HOP_CAPS.includes(cap) && unitHasChildren(ma);
       const isSelf = ma === maDonVi;
-      if (isAggregating || isSelf || !map.has(ma)) {
+      if (isAggregating || isSelf) {
         map.set(ma, item);
       }
     }
@@ -158,11 +158,18 @@ export function useConsolidatedForUnit(
   viewMaDonVi: string | undefined,
   sourceMaDonVi: string | undefined,
   ngay: string,
-  opts?: { enabled?: boolean; approvedOnly?: boolean },
+  opts?: {
+    enabled?: boolean;
+    approvedOnly?: boolean;
+    viewTenDonvi?: string;
+    viewKyhieuDonvi?: string;
+  },
 ) {
   const enabled =
     (opts?.enabled ?? true) && !!viewMaDonVi && !!sourceMaDonVi && !!ngay;
   const approvedOnly = opts?.approvedOnly ?? false;
+  const viewTenDonvi = opts?.viewTenDonvi;
+  const viewKyhieuDonvi = opts?.viewKyhieuDonvi;
 
   const query = useQuery({
     queryKey: [
@@ -180,8 +187,18 @@ export function useConsolidatedForUnit(
     const item = query.data;
     if (!item) return [];
     if (approvedOnly && normalizeStatus(item.status) !== "Đã_Duyệt") return [];
-    return [{ ...item, donVi: { ...item.donVi, maDonVi: viewMaDonVi! } }];
-  }, [query.data, approvedOnly, viewMaDonVi]);
+    return [
+      {
+        ...item,
+        donVi: {
+          ...item.donVi,
+          maDonVi: viewMaDonVi!,
+          tenDonvi: viewTenDonvi ?? item.donVi.tenDonvi,
+          kyhieuDonvi: viewKyhieuDonvi ?? item.donVi.kyhieuDonvi,
+        },
+      },
+    ];
+  }, [query.data, approvedOnly, viewMaDonVi, viewTenDonvi, viewKyhieuDonvi]);
 
   return { data, isLoading: query.isLoading };
 }
