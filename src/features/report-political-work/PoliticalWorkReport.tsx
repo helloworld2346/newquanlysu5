@@ -1,5 +1,4 @@
-// src/features/report-political-work/PoliticalWorkReport.tsx
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -15,11 +14,15 @@ import {
   XCircle,
   X,
   Eye,
+  ImagePlus,
+  User,
+  Award,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import SearchBar from "@/components/common/SearchBar";
 import {
@@ -40,17 +43,67 @@ import {
   normalizeStatus,
 } from "@/shared/report/status";
 import { useUnitHierarchy } from "@/shared/report/useUnitHierarchy";
+import { politicalWorkApi } from "./api";
 import {
   usePoliticalMerged,
   useTongHopPolitical,
   useSubmitPolitical,
   useApprovePolitical,
   useRefusePolitical,
+  useUpdatePolitical,
 } from "./queries";
 import { mapItemToRow, createEmptyPoliticalWorkRow } from "./utils";
-import type { PoliticalWorkRow } from "@/types/politicalWork";
+import type {
+  PoliticalWorkRow,
+  PoliticalWorkForm,
+} from "@/types/politicalWork";
 
 import RefuseDialog from "@/features/reports/components/RefuseDialog";
+
+interface TrucNguoi {
+  hoTen: string;
+  capBac: string;
+  chucVu: string;
+  soDienThoai: string;
+}
+
+function parseTruc(raw: string | undefined | null): TrucNguoi | null {
+  if (!raw) return null;
+  try {
+    const p = JSON.parse(raw);
+    if (p && typeof p === "object" && "hoTen" in p) {
+      return {
+        hoTen: p.hoTen ?? "",
+        capBac: p.capBac ?? "",
+        chucVu: p.chucVu ?? "",
+        soDienThoai: p.soDienThoai ?? "",
+      };
+    }
+    return null;
+  } catch {
+    return { hoTen: raw, capBac: "", chucVu: "", soDienThoai: "" };
+  }
+}
+
+function SignerRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-3 py-2">
+      <span className="flex items-center text-muted-foreground">
+        <span className="mr-1.5">{icon}</span>
+        {label}
+      </span>
+      <span className="font-medium">{value || "—"}</span>
+    </div>
+  );
+}
 
 const STATUS_LABEL: Record<string, string> = {
   Chờ_Duyệt: "Chờ duyệt",
@@ -156,6 +209,9 @@ export default function PoliticalWorkReport() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [activeTab, setActiveTab] = useState<"child" | "consolidated">("child");
 
+  const [chuKySo, setChuKySo] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [confirmApprove, setConfirmApprove] = useState<PoliticalWorkRow | null>(
     null,
@@ -164,6 +220,7 @@ export default function PoliticalWorkReport() {
     null,
   );
 
+  const updateReport = useUpdatePolitical();
   const submitReport = useSubmitPolitical();
   const approveReport = useApprovePolitical();
   const refuseReport = useRefusePolitical();
@@ -291,6 +348,14 @@ export default function PoliticalWorkReport() {
     !!commanderReport &&
     normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
 
+  const activeDraft = hasChildren ? tongHopDraft : ownDraft;
+
+  const signerSource = activeDraft ?? (canApprove ? commanderReport : null);
+  const signer = useMemo(
+    () => parseTruc(signerSource?.trucBanCtDangCt),
+    [signerSource],
+  );
+
   const effectiveTab = isChiHuy && hasChildren ? "consolidated" : activeTab;
 
   const visibleRows = useMemo(
@@ -396,23 +461,88 @@ export default function PoliticalWorkReport() {
     navigate(`/political-work-report/create?ngay=${ngay}&tongHop=1`);
   };
 
+  const handlePickSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh (PNG/JPG).");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ảnh chữ ký tối đa 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setChuKySo(String(reader.result));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const clearSignature = () => setChuKySo("");
+
   const doSubmit = async () => {
     const target = hasChildren ? tongHopDraft : ownDraft;
     if (!target) return;
     try {
+      const detail = (await politicalWorkApi.getById(target.idCongtac)).Result;
+      const payload: PoliticalWorkForm = {
+        tinhHinh: detail.tinhHinh,
+        noiDungDotXuat: detail.noiDungDotXuat,
+        ketQua: detail.ketQua,
+        trucBanNoiVu: detail.trucBanNoiVu,
+        trucBanCtDangCt: detail.trucBanCtDangCt,
+        kienNghi: detail.kienNghi,
+        donVi: detail.donVi.maDonVi,
+        chuKySo,
+      };
+      await updateReport.mutateAsync({ id: target.idCongtac, data: payload });
       await submitReport.mutateAsync(target.idCongtac);
       toast.success("Đã trình báo cáo lên cấp trên phê duyệt.");
+      setChuKySo("");
       setConfirmSubmit(false);
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
   };
 
+  const onClickSubmit = () => {
+    if (!chuKySo) {
+      toast.error("Vui lòng ký số trước khi trình phê duyệt.");
+      return;
+    }
+    setConfirmSubmit(true);
+  };
+
+  const onClickApprove = (row: PoliticalWorkRow) => {
+    if (!chuKySo) {
+      toast.error("Vui lòng ký số trước khi phê duyệt.");
+      return;
+    }
+    setConfirmApprove(row);
+  };
+
   const doApprove = async () => {
     if (!confirmApprove) return;
     try {
+      const detail = (await politicalWorkApi.getById(confirmApprove.idCongtac))
+        .Result;
+      const payload: PoliticalWorkForm = {
+        tinhHinh: detail.tinhHinh,
+        noiDungDotXuat: detail.noiDungDotXuat,
+        ketQua: detail.ketQua,
+        trucBanNoiVu: detail.trucBanNoiVu,
+        trucBanCtDangCt: detail.trucBanCtDangCt,
+        kienNghi: detail.kienNghi,
+        donVi: detail.donVi.maDonVi,
+        chuKySo,
+      };
+      await updateReport.mutateAsync({
+        id: confirmApprove.idCongtac,
+        data: payload,
+      });
       await approveReport.mutateAsync(confirmApprove.idCongtac);
       toast.success("Đã phê duyệt báo cáo tổng hợp.");
+      setChuKySo("");
       setConfirmApprove(null);
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -433,8 +563,8 @@ export default function PoliticalWorkReport() {
     }
   };
 
-  const submitting = submitReport.isPending;
-  const approving = approveReport.isPending;
+  const submitting = updateReport.isPending || submitReport.isPending;
+  const approving = updateReport.isPending || approveReport.isPending;
 
   const cardsLoading =
     effectiveTab === "consolidated" ? tongHopLoading : isLoading;
@@ -457,8 +587,8 @@ export default function PoliticalWorkReport() {
               canApprove && commanderReport ? (
                 <>
                   <Button
-                    onClick={() => setConfirmApprove(commanderReport)}
-                    disabled={approving}
+                    onClick={() => onClickApprove(commanderReport)}
+                    disabled={!chuKySo || approving}
                   >
                     <CheckCircle2 className="mr-2 size-4" /> Phê duyệt
                   </Button>
@@ -484,10 +614,7 @@ export default function PoliticalWorkReport() {
                 <PenLine className="mr-2 size-4" /> Chỉnh sửa báo cáo
               </Button>
             ) : tongHopDraft ? (
-              <Button
-                onClick={() => setConfirmSubmit(true)}
-                disabled={submitting}
-              >
+              <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
                 <Send className="mr-2 size-4" /> Trình phê duyệt
               </Button>
             ) : tongHopDone ? (
@@ -500,10 +627,7 @@ export default function PoliticalWorkReport() {
               </Button>
             )
           ) : ownDraft ? (
-            <Button
-              onClick={() => setConfirmSubmit(true)}
-              disabled={submitting}
-            >
+            <Button onClick={onClickSubmit} disabled={!chuKySo || submitting}>
               <Send className="mr-2 size-4" /> Trình phê duyệt
             </Button>
           ) : ownReport ? (
@@ -711,6 +835,111 @@ export default function PoliticalWorkReport() {
             );
           })}
         </div>
+      )}
+
+      {((activeDraft && !hasChildren) ||
+        (activeDraft && hasChildren && !isChiHuy) ||
+        canApprove) && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="flex items-center text-base">
+              <PenLine className="mr-2 size-4 text-primary" />
+              Ký số báo cáo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg"
+              className="hidden"
+              onChange={handlePickSignature}
+            />
+
+            <div className="-mx-2 flex flex-wrap items-stretch">
+              <div className="mb-2 w-full px-2 md:w-2/3">
+                {chuKySo ? (
+                  <div className="flex h-full items-center justify-center rounded-lg border bg-[length:16px_16px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%),linear-gradient(-45deg,#f1f5f9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f1f5f9_75%),linear-gradient(-45deg,transparent_75%,#f1f5f9_75%)] p-4">
+                    <img
+                      src={chuKySo}
+                      alt="Chữ ký"
+                      className="max-h-40 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <ImagePlus className="mb-2 size-8" />
+                    Bấm để chọn ảnh chữ ký (PNG/JPG, tối đa 2MB)
+                  </button>
+                )}
+              </div>
+
+              <div className="mb-2 w-full px-2 md:w-1/3">
+                <div className="flex h-full flex-col justify-between rounded-lg border bg-muted/30 p-4">
+                  <div>
+                    {chuKySo ? (
+                      <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                        <CheckCircle2 className="mr-1.5 size-4" />
+                        Đã ký số
+                      </div>
+                    ) : (
+                      <div className="mb-3 inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700">
+                        <PenLine className="mr-1.5 size-4" />
+                        Chưa ký số
+                      </div>
+                    )}
+                    <p className="mb-3 text-sm text-muted-foreground">
+                      Ký số vào báo cáo nháp trước khi bấm "Trình phê duyệt".
+                      Ảnh chữ ký định dạng PNG/JPG.
+                    </p>
+
+                    <div className="divide-y rounded-lg border bg-background/70 text-sm">
+                      <SignerRow
+                        icon={<User className="size-3.5" />}
+                        label="Người ký"
+                        value={signer?.hoTen}
+                      />
+                      <SignerRow
+                        icon={<Award className="size-3.5" />}
+                        label="Cấp bậc"
+                        value={signer?.capBac}
+                      />
+                      <SignerRow
+                        icon={<Briefcase className="size-3.5" />}
+                        label="Chức vụ"
+                        value={signer?.chucVu}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-col">
+                    <Button
+                      variant="outline"
+                      className="mb-2 w-full"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <ImagePlus className="mr-2 size-4" />
+                      {chuKySo ? "Đổi ảnh chữ ký" : "Chọn ảnh chữ ký"}
+                    </Button>
+                    {chuKySo && (
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={clearSignature}
+                      >
+                        <X className="mr-2 size-4" /> Xóa chữ ký
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <ConfirmDialog
