@@ -62,12 +62,12 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_TONE: Record<string, string> = {
-  Chờ_Duyệt: "bg-amber-100 text-amber-700",
-  "Chờ duyệt": "bg-amber-100 text-amber-700",
-  Đã_Duyệt: "bg-emerald-100 text-emerald-700",
-  Da_Duyet: "bg-emerald-100 text-emerald-700",
-  Tu_Choi: "bg-rose-100 text-rose-700",
-  Từ_Chối: "bg-rose-100 text-rose-700",
+  Chờ_Duyệt: "bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300",
+  "Chờ duyệt": "bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300",
+  Đã_Duyệt: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300",
+  Da_Duyet: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300",
+  Tu_Choi: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300",
+  Từ_Chối: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300",
 };
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -253,16 +253,16 @@ function NhiemVuItem({
   accent: "success" | "danger" | "warning" | "neutral";
 }) {
   const accentBorder = {
-    success: "border-l-emerald-500 bg-emerald-50/40",
-    danger: "border-l-rose-500 bg-rose-50/40",
-    warning: "border-l-amber-500 bg-amber-50/40",
-    neutral: "border-l-slate-300",
+    success: "border-l-emerald-500 dark:border-l-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:bg-emerald-950/30 dark:bg-emerald-950/40/40",
+    danger: "border-l-rose-500 dark:border-l-rose-600 bg-rose-50 dark:bg-rose-950/30 dark:bg-rose-950/40/40",
+    warning: "border-l-amber-500 dark:border-l-amber-600 bg-amber-50/40 dark:bg-amber-950/30",
+    neutral: "border-l-slate-300 dark:border-l-slate-600",
   }[accent];
   const badgeTone = {
-    success: "bg-emerald-100 text-emerald-700",
-    danger: "bg-rose-100 text-rose-700",
-    warning: "bg-amber-100 text-amber-700",
-    neutral: "bg-slate-100 text-muted-foreground",
+    success: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300",
+    danger: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300",
+    warning: "bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300",
+    neutral: "bg-slate-100 dark:bg-slate-900/40 text-muted-foreground",
   }[accent];
 
   return (
@@ -435,7 +435,7 @@ export default function ReportDetail() {
         </div>
         <span
           className={`rounded-full px-3 py-1 text-sm font-medium ${
-            STATUS_TONE[data.status] ?? "bg-slate-100 text-slate-700"
+            STATUS_TONE[data.status] ?? "bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 dark:text-slate-300 dark:text-slate-300 dark:text-slate-300"
           }`}
         >
           {STATUS_LABEL[data.status] ?? data.status}
@@ -453,38 +453,38 @@ export default function ReportDetail() {
             label="Đơn vị"
             value={data.donVi.tenDonvi}
             icon={Info}
-            tone="bg-sky-50 text-sky-700"
+            tone="bg-sky-50 dark:bg-sky-950/30 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 dark:text-sky-300"
           />
           <InfoField
             label="Ngày báo cáo"
             value={ngay}
             icon={ClipboardList}
-            tone="bg-violet-50 text-violet-700"
+            tone="bg-violet-50 dark:bg-violet-950/30 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 dark:text-violet-300"
           />
           <InfoField
             label="Tổng quân số"
             value={formatNum(data.quanSoTong)}
             icon={Users}
-            tone="bg-blue-50 text-blue-700"
+            tone="bg-blue-50 dark:bg-blue-950/30 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 dark:text-blue-300"
           />
           <InfoField
             label="Hiện diện"
             value={formatNum(data.quanSoHienDien)}
             icon={UserCheck}
-            tone="bg-emerald-50 text-emerald-700"
+            tone="bg-emerald-50 dark:bg-emerald-950/30 dark:bg-emerald-950/30 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300"
           />
           <InfoField
             label="Tổng vắng"
             value={formatNum(data.quanSoVang)}
             icon={UserX}
-            tone="bg-rose-50 text-rose-700"
+            tone="bg-rose-50 dark:bg-rose-950/30 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300"
           />
           {data.ghiChu ? (
             <InfoField
               label="Ghi chú"
               value={data.ghiChu}
               icon={ClipboardList}
-              tone="bg-slate-50 text-slate-700"
+              tone="bg-slate-50 dark:bg-slate-900 dark:bg-slate-950/40 text-slate-700 dark:text-slate-200 dark:text-slate-300 dark:text-slate-300 dark:text-slate-300"
             />
           ) : null}
         </CardContent>
@@ -546,7 +546,7 @@ export default function ReportDetail() {
                         <TableCell>{m.capBac || "—"}</TableCell>
                         <TableCell>{m.chucVu || "—"}</TableCell>
                         <TableCell>
-                          <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-sm font-medium text-amber-700">
+                          <span className="inline-block rounded-full bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 px-2 py-0.5 text-sm font-medium text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300">
                             {LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "—"}
                           </span>
                         </TableCell>

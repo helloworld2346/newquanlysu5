@@ -80,7 +80,7 @@ export default function KySoCard({
         <div className="-mx-2 flex flex-wrap items-stretch">
           <div className="mb-2 w-full px-2 md:w-2/3">
             {chuKySo ? (
-              <div className="flex h-full items-center justify-center rounded-lg border bg-[length:16px_16px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%),linear-gradient(-45deg,#f1f5f9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f1f5f9_75%),linear-gradient(-45deg,transparent_75%,#f1f5f9_75%)] p-4">
+              <div className="flex h-full items-center justify-center rounded-lg border bg-muted/30 p-4">
                 <img
                   src={chuKySo}
                   alt="Chữ ký"
@@ -108,7 +108,7 @@ export default function KySoCard({
                     Đã ký số
                   </div>
                 ) : (
-                  <div className="mb-3 inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700">
+                  <div className="mb-3 inline-flex items-center rounded-full bg-amber-10 dark:bg-amber-900/40 px-3 py-1 text-sm font-medium text-amber-700 dark:text-amber-300">
                     <PenLine className="mr-1.5 size-4" />
                     Chưa ký số
                   </div>

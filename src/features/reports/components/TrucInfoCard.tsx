@@ -12,31 +12,31 @@ const ACCENT: Record<
   { header: string; label: string; value: string }
 > = {
   blue: {
-    header: "bg-blue-50",
-    label: "text-blue-700",
-    value: "text-blue-900",
+    header: "bg-blue-50 dark:bg-blue-950/40",
+    label: "text-blue-700 dark:text-blue-300",
+    value: "text-blue-900 dark:text-blue-200",
   },
   emerald: {
-    header: "bg-emerald-50",
-    label: "text-emerald-700 dark:text-emerald-300",
-    value: "text-emerald-900",
+    header: "bg-emerald-50 dark:bg-emerald-950/40",
+    label: "text-emerald-700 dark:text-emerald-300 dark:text-emerald-300",
+    value: "text-emerald-900 dark:text-emerald-200",
   },
   rose: {
-    header: "bg-rose-50",
-    label: "text-rose-700 dark:text-rose-300",
-    value: "text-rose-900",
+    header: "bg-rose-50 dark:bg-rose-950/40",
+    label: "text-rose-700 dark:text-rose-300 dark:text-rose-300",
+    value: "text-rose-900 dark:text-rose-200",
   },
   amber: {
-    header: "bg-amber-50",
-    label: "text-amber-700 dark:text-amber-300",
-    value: "text-amber-900",
+    header: "bg-amber-50 dark:bg-amber-950/40",
+    label: "text-amber-700 dark:text-amber-300 dark:text-amber-300",
+    value: "text-amber-900 dark:text-amber-200",
   },
   violet: {
-    header: "bg-violet-50",
-    label: "text-violet-700",
-    value: "text-violet-900",
+    header: "bg-violet-50 dark:bg-violet-950/40",
+    label: "text-violet-700 dark:text-violet-300",
+    value: "text-violet-900 dark:text-violet-200",
   },
-  sky: { header: "bg-sky-50", label: "text-sky-700", value: "text-sky-900" },
+  sky: { header: "bg-sky-50 dark:bg-sky-950/40", label: "text-sky-700 dark:text-sky-300", value: "text-sky-900 dark:text-sky-200" },
 };
 
 function Row({ label, value }: { label: string; value?: string }) {
