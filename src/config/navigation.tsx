@@ -48,9 +48,9 @@ export type NavItem = {
   allowedRoles?: string[];
 };
 
-const Placeholder = lazy(
-  () => import("@/features/_placeholder/PagePlaceholder"),
-);
+// const Placeholder = lazy(
+//   () => import("@/features/_placeholder/PagePlaceholder"),
+// );
 
 const UnitManagement = lazy(() => import("@/features/units/UnitManagement"));
 
@@ -80,6 +80,10 @@ const CreateDutyShift = lazy(() => import("@/features/duty/CreateDutyShift"));
 
 const ExecutiveDashboard = lazy(
   () => import("@/features/executive/ExecutiveDashboard"),
+);
+
+const PoliticalDashboard = lazy(
+  () => import("@/features/political-dashboard/PoliticalDashboard"),
 );
 
 const ALL_REPORT_ROLES = [
@@ -118,7 +122,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     id: "executive-political-work",
     label: "Tổng hợp CTĐ, CTCT",
     path: "/political-dashboard",
-    component: Placeholder,
+    component: PoliticalDashboard,
     icon: Flag,
     group: "dashboard",
     allowedRoles: TAC_CHIEN,
