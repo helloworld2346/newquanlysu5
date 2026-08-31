@@ -63,16 +63,16 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_TONE: Record<string, string> = {
-  Chờ_Duyệt: "bg-amber-100 text-amber-700",
-  "Chờ duyệt": "bg-amber-100 text-amber-700",
-  Đã_Duyệt: "bg-emerald-100 text-emerald-700",
-  Da_Duyet: "bg-emerald-100 text-emerald-700",
-  "Đã duyệt": "bg-emerald-100 text-emerald-700",
-  Tu_Choi: "bg-rose-100 text-rose-700",
-  Từ_Chối: "bg-rose-100 text-rose-700",
-  "Từ chối": "bg-rose-100 text-rose-700",
-  Nháp: "bg-slate-100 text-slate-700",
-  Nhap: "bg-slate-100 text-slate-700",
+  Chờ_Duyệt: "tone-warning border",
+  "Chờ duyệt": "tone-warning border",
+  Đã_Duyệt: "tone-success border",
+  Da_Duyet: "tone-success border",
+  "Đã duyệt": "tone-success border",
+  Tu_Choi: "tone-danger border",
+  Từ_Chối: "tone-danger border",
+  "Từ chối": "tone-danger border",
+  Nháp: "tone-neutral border",
+  Nhap: "tone-neutral border",
 };
 
 
@@ -281,7 +281,7 @@ export default function PoliticalWorkDetail() {
         </div>
         <span
           className={`rounded-full px-3 py-1 text-sm font-medium ${
-            STATUS_TONE[data.status] ?? "bg-slate-100 text-slate-700"
+            STATUS_TONE[data.status] ?? "tone-neutral border"
           }`}
         >
           {STATUS_LABEL[data.status] ?? data.status}

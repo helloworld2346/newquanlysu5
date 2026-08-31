@@ -67,14 +67,14 @@ const HANH_DONG_LABEL: Record<string, string> = {
 
 const HANH_DONG_BADGE: Record<string, string> = {
   LOGIN: "bg-sky-100 text-sky-700",
-  LOGOUT: "bg-slate-100 text-slate-700",
-  CREATE: "bg-emerald-100 text-emerald-700",
-  UPDATE: "bg-amber-100 text-amber-700",
-  DELETE: "bg-rose-100 text-rose-700",
-  APPROVE: "bg-emerald-100 text-emerald-700",
-  REJECT: "bg-rose-100 text-rose-700",
-  LOCK: "bg-rose-100 text-rose-700",
-  UNLOCK: "bg-emerald-100 text-emerald-700",
+  LOGOUT: "tone-neutral border",
+  CREATE: "tone-success border",
+  UPDATE: "tone-warning border",
+  DELETE: "tone-danger border",
+  APPROVE: "tone-success border",
+  REJECT: "tone-danger border",
+  LOCK: "tone-danger border",
+  UNLOCK: "tone-success border",
   UPDATE_FUNCTION: "bg-violet-100 text-violet-700",
 };
 

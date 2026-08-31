@@ -83,6 +83,30 @@
   --login-text: 150 28% 14%;  
   --login-text-muted: 149 12% 33%;  
   --login-border: 144 12% 83%;  
+
+  --tone-success-bg: 152 55% 95%;  
+  --tone-success-fg: 152 55% 26%;  
+  --tone-success-border: 152 40% 82%;  
+  
+  --tone-danger-bg: 0 85% 96%;  
+  --tone-danger-fg: 0 63% 42%;  
+  --tone-danger-border: 0 75% 88%;  
+  
+  --tone-warning-bg: 45 95% 94%;  
+  --tone-warning-fg: 32 80% 38%;  
+  --tone-warning-border: 45 85% 82%;  
+  
+  --tone-info-bg: 214 90% 96%;  
+  --tone-info-fg: 214 70% 42%;  
+  --tone-info-border: 214 80% 86%;  
+  
+  --tone-neutral-bg: 210 20% 96%;  
+  --tone-neutral-fg: 215 16% 40%;  
+  --tone-neutral-border: 214 20% 88%;  
+  
+  --tone-violet-bg: 270 70% 97%;  
+  --tone-violet-fg: 271 50% 45%;  
+  --tone-violet-border: 270 60% 88%;
 }
   
 .dark {  
@@ -112,6 +136,30 @@
   --login-text: 150 22% 87%;  
   --login-text-muted: 150 8% 66%;  
   --login-border: 150 12% 24%;  
+
+  --tone-success-bg: 152 40% 12%;  
+  --tone-success-fg: 152 50% 72%;  
+  --tone-success-border: 152 30% 24%;  
+  
+  --tone-danger-bg: 0 45% 15%;  
+  --tone-danger-fg: 0 75% 76%;  
+  --tone-danger-border: 0 35% 28%;  
+  
+  --tone-warning-bg: 38 45% 14%;  
+  --tone-warning-fg: 45 85% 68%;  
+  --tone-warning-border: 38 35% 26%;  
+  
+  --tone-info-bg: 214 45% 15%;  
+  --tone-info-fg: 214 80% 76%;  
+  --tone-info-border: 214 35% 28%;  
+  
+  --tone-neutral-bg: 215 20% 18%;  
+  --tone-neutral-fg: 215 15% 70%;  
+  --tone-neutral-border: 215 18% 28%;  
+  
+  --tone-violet-bg: 271 35% 17%;  
+  --tone-violet-fg: 271 60% 78%;  
+  --tone-violet-border: 271 30% 30%;
 }
 
 @layer base {  
@@ -123,4 +171,13 @@
     background-color: hsl(var(--background));  
     color: hsl(var(--foreground));  
   }  
+}
+
+@layer components {  
+  .tone-success { background-color: hsl(var(--tone-success-bg)); color: hsl(var(--tone-success-fg)); border-color: hsl(var(--tone-success-border)); }  
+  .tone-danger  { background-color: hsl(var(--tone-danger-bg));  color: hsl(var(--tone-danger-fg));  border-color: hsl(var(--tone-danger-border)); }  
+  .tone-warning { background-color: hsl(var(--tone-warning-bg)); color: hsl(var(--tone-warning-fg)); border-color: hsl(var(--tone-warning-border)); }  
+  .tone-info    { background-color: hsl(var(--tone-info-bg));    color: hsl(var(--tone-info-fg));    border-color: hsl(var(--tone-info-border)); }  
+  .tone-neutral { background-color: hsl(var(--tone-neutral-bg)); color: hsl(var(--tone-neutral-fg)); border-color: hsl(var(--tone-neutral-border)); }  
+  .tone-violet  { background-color: hsl(var(--tone-violet-bg));  color: hsl(var(--tone-violet-fg));  border-color: hsl(var(--tone-violet-border)); }  
 }

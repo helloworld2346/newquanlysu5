@@ -71,9 +71,9 @@ function matchFilter(name: string, filter: FilterKey): boolean {
 }
 
 function statusTone(status: string): string {
-  if (status === "Tốt") return "bg-emerald-100 text-emerald-700";
-  if (status === "Cần chú ý") return "bg-amber-100 text-amber-700";
-  return "bg-rose-100 text-rose-700";
+  if (status === "Tốt") return "tone-success border";
+  if (status === "Cần chú ý") return "tone-warning border";
+  return "tone-danger border";
 }
 
 function YAxisTick({

@@ -47,14 +47,14 @@ export default function PoliticalReportCard({
           )}
           <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
             {r.notSubmitted ? (
-              <span className="inline-block rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
+              <span className="inline-block rounded-full tone-danger px-2 py-0.5 text-xs font-medium">
                 Chưa nộp
               </span>
             ) : (
               <StatusPill status={r.status} />
             )}
             {!r.notSubmitted && !!r.rawItem?.chuKySo?.trim() && (
-              <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+              <span className="inline-block rounded-full tone-success px-2 py-0.5 text-xs font-medium">
                 Đã ký
               </span>
             )}
@@ -67,31 +67,15 @@ export default function PoliticalReportCard({
         <Section
           label="Tình hình hoạt động"
           value={r.tinhHinh}
-          tone="border-emerald-200 bg-emerald-50/60"
-          labelTone="text-emerald-700"
-          textTone="text-emerald-900"
+          tone="tone-success"
         />
-        <Section
-          label="Kết quả"
-          value={r.ketQua}
-          tone="border-blue-200 bg-blue-50/60"
-          labelTone="text-blue-700"
-          textTone="text-blue-900"
-        />
+        <Section label="Kết quả" value={r.ketQua} tone="tone-info" />
         <Section
           label="Việc đột xuất"
           value={r.noiDungDotXuat}
-          tone="border-amber-200 bg-amber-50"
-          labelTone="text-amber-700"
-          textTone="text-amber-900"
+          tone="tone-warning"
         />
-        <Section
-          label="Kiến nghị"
-          value={r.kienNghi}
-          tone="border-rose-200 bg-rose-50"
-          labelTone="text-rose-700"
-          textTone="text-rose-900"
-        />
+        <Section label="Kiến nghị" value={r.kienNghi} tone="tone-danger" />
       </CardContent>
     </Card>
   );

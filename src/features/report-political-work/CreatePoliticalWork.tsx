@@ -203,8 +203,8 @@ function RadioRow({
         const active = value === o.value;
         const activeCls =
           o.tone === "danger"
-            ? "border-rose-200 bg-rose-100 text-rose-700"
-            : "border-emerald-200 bg-emerald-100 text-emerald-700";
+            ? "border-rose-200 tone-danger border"
+            : "border-emerald-200 tone-success border";
         const idleCls =
           o.tone === "danger"
             ? "border-input bg-background text-foreground hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
