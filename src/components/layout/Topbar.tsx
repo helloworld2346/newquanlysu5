@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { Bell, Moon, Sun, LogOut } from "lucide-react";
 import { useAuthInfo, useLogout } from "@/features/auth/queries";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -11,32 +11,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const THEME_KEY = "theme";
-
 export default function Topbar() {
   const { account } = useAuthInfo();
   const logout = useLogout();
+  const { dark, toggle } = useTheme();
 
   const displayName =
     account?.tenTaiKhoan || account?.tenDangNhap || "Người dùng";
   const initial = displayName.trim().charAt(0).toUpperCase() || "?";
 
-  const [dark, setDark] = useState(
-    () => localStorage.getItem(THEME_KEY) === "dark",
-  );
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (dark) root.classList.add("dark");
-    else root.classList.remove("dark");
-    localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
-  }, [dark]);
-
   return (
     <div className="flex items-center">
       <button
         type="button"
-        onClick={() => setDark((v) => !v)}
+        onClick={toggle}
         aria-label="Chuyển chế độ sáng/tối"
         title={dark ? "Chế độ sáng" : "Chế độ tối"}
         className="mr-2 grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-accent"

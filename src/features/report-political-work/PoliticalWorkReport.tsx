@@ -670,14 +670,14 @@ export default function PoliticalWorkReport() {
       </div>
 
       {hasChildren && !isCommanderView && (
-        <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1">
+        <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1 dark:border-emerald-900/50 dark:bg-emerald-950/30">
           <button
             type="button"
             onClick={() => setActiveTab("child")}
             className={`mr-1 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "child"
-                ? "bg-background text-primary shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-background text-primary shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
+                : "text-muted-foreground hover:text-foreground dark:text-emerald-400/70 dark:hover:text-emerald-200"
             }`}
           >
             Báo cáo đơn vị
@@ -687,8 +687,8 @@ export default function PoliticalWorkReport() {
             onClick={() => setActiveTab("consolidated")}
             className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "consolidated"
-                ? "bg-background text-primary shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-background text-primary shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
+                : "text-muted-foreground hover:text-foreground dark:text-emerald-400/70 dark:hover:text-emerald-200"
             }`}
           >
             Báo cáo tổng hợp

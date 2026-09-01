@@ -19,7 +19,11 @@ export default function PoliticalReportCard({
 
   return (
     <Card
-      className={r.notSubmitted ? "border-rose-200 bg-rose-50/60" : undefined}
+      className={
+        r.notSubmitted
+          ? "border-rose-200 bg-rose-50/60 dark:border-rose-900/50 dark:bg-rose-950/30"
+          : undefined
+      }
     >
       <CardHeader className="relative space-y-0 pb-3">
         <div className="absolute right-4 top-4 flex shrink-0 items-center gap-1">
@@ -36,7 +40,9 @@ export default function PoliticalReportCard({
         </div>
         <div className="flex flex-col items-center px-10 text-center">
           <div
-            className={`text-3xl font-bold ${r.notSubmitted ? "text-rose-700" : ""}`}
+            className={`text-3xl font-bold ${
+              r.notSubmitted ? "text-rose-700 dark:text-rose-300" : ""
+            }`}
           >
             {r.kyhieuDonVi || r.tenDonVi}
           </div>
