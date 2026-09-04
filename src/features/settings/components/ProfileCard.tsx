@@ -1,6 +1,4 @@
-import { UserCog } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import type { Account } from "@/types/account";
 
 export default function ProfileCard({ account }: { account: Account }) {
@@ -19,35 +17,28 @@ export default function ProfileCard({ account }: { account: Account }) {
   ];
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center">
-        <UserCog className="mr-2 size-5 text-primary" />
-        <CardTitle className="text-base">Thông tin tài khoản</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col items-center">
-          <Avatar className="mb-2 size-16">
-            <AvatarFallback className="bg-primary text-xl font-bold text-primary-foreground">
-              {initial}
-            </AvatarFallback>
-          </Avatar>
-          <p className="mb-2 text-lg font-semibold">{displayName}</p>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-            {account.vaiTro?.tenVaiTro || "Chưa phân vai trò"}
-          </span>
-        </div>
-        <div className="divide-y rounded-lg border">
-          {rows.map((r) => (
-            <div
-              key={r.label}
-              className="flex items-center justify-between px-4 py-2.5 text-sm"
-            >
-              <span className="text-muted-foreground">{r.label}</span>
-              <span className="font-medium">{r.value}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
+    <Card className="flex flex-col items-center border-t-4 border-t-primary p-7 text-center">
+      <div className="mb-4 grid size-20 place-items-center rounded-full bg-primary text-4xl font-bold text-primary-foreground">
+        {initial}
+      </div>
+      <h2 className="mb-2 text-lg font-bold">{displayName}</h2>
+      <span className="rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-[13px] font-bold text-primary">
+        {account.vaiTro?.tenVaiTro || "Chưa phân vai trò"}
+      </span>
+
+      <div className="mt-6 w-full space-y-3 border-t pt-4">
+        {rows.map((r) => (
+          <div
+            key={r.label}
+            className="flex flex-col items-start gap-1 rounded-lg border border-l-4 border-l-primary bg-muted/40 px-3.5 py-2.5 text-left"
+          >
+            <span className="text-[11px] font-bold uppercase tracking-wide text-primary/65">
+              {r.label}
+            </span>
+            <span className="break-words font-bold">{r.value}</span>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 }
