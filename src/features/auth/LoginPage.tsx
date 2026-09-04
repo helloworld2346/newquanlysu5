@@ -125,7 +125,7 @@ export default function LoginPage() {
 
             <div className="mb-2 flex items-center justify-center">
               <span className="mr-3 inline-block h-px w-6 bg-gold align-middle sm:w-8" />
-              <span className="text-[26px] font-extrabold uppercase leading-none tracking-wide text-primary drop-shadow-sm sm:text-[32px]">
+              <span className="text-[26px] font-extrabold uppercase leading-none tracking-wide text-primary-text drop-shadow-sm sm:text-[32px]">
                 Sư đoàn 5
               </span>
               <span className="ml-3 inline-block h-px w-6 bg-gold align-middle sm:w-8" />

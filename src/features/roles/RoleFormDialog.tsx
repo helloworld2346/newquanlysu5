@@ -99,7 +99,7 @@ function DialogInner({ onOpenChange, editingRole, onSaved }: Props) {
                   key={opt.value}
                   className={`mb-2 mx-1 flex w-[calc(50%-0.5rem)] cursor-pointer items-center rounded-md border px-3 py-2 text-sm ${
                     checked
-                      ? "border-primary bg-primary/5 font-medium text-primary"
+                      ? "border-primary bg-primary/5 font-medium text-primary-text"
                       : "border-input"
                   }`}
                 >

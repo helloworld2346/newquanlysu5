@@ -224,7 +224,7 @@ export default function DutyPersonnel() {
       <Card className="h-full">
         <CardHeader>
           <CardTitle className="flex items-center text-base">
-            <UsersRound className="mr-2 size-5 text-primary" />
+            <UsersRound className="mr-2 size-5 text-primary-text" />
             {title}
           </CardTitle>
         </CardHeader>
@@ -240,7 +240,7 @@ export default function DutyPersonnel() {
       key={person.idNguoitruc}
       className="mb-2 flex items-center rounded-lg border p-3"
     >
-      <div className="mr-3 flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+      <div className="mr-3 flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary-text">
         {getInitials(person.tenNguoitruc)}
       </div>
       <div className="min-w-0 flex-1">
@@ -290,7 +290,7 @@ export default function DutyPersonnel() {
       <Card className="h-full">
         <CardHeader>
           <CardTitle className="flex items-center text-base">
-            <UsersRound className="mr-2 size-5 text-primary" />
+            <UsersRound className="mr-2 size-5 text-primary-text" />
             {title}
             <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-sm font-medium text-muted-foreground">
               {list.length}

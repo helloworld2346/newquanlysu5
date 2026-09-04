@@ -190,7 +190,7 @@ export default function RoleManagement() {
                         {r.tenChucnang.map((c) => (
                           <span
                             key={c}
-                            className="mx-0.5 my-0.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-medium text-primary"
+                            className="mx-0.5 my-0.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-medium text-primary-text"
                           >
                             {getChucNangLabel(c)}
                           </span>

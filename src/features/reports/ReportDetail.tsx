@@ -164,7 +164,7 @@ function KySoInfoRow({
   return (
     <div className="flex items-center justify-between px-3 py-2 text-sm">
       <span className="flex items-center text-muted-foreground">
-        <span className="mr-1.5 text-primary">{icon}</span>
+        <span className="mr-1.5 text-primary-text">{icon}</span>
         {label}
       </span>
       <span className="min-w-0 break-words text-right font-medium">
@@ -191,13 +191,13 @@ function KySoCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center text-base">
-          <PenLine className="mr-2 size-4 text-primary" /> Ký số
+          <PenLine className="mr-2 size-4 text-primary-text" /> Ký số
         </CardTitle>
       </CardHeader>
       <CardContent className="-mx-2 flex flex-wrap">
         <div className="w-full px-2 mb-4 lg:w-1/2">
           <div className="rounded-lg border bg-primary/5 p-4">
-            <div className="mb-2 flex items-center text-sm font-medium text-primary">
+            <div className="mb-2 flex items-center text-sm font-medium text-primary-text">
               <ShieldCheck className="mr-1.5 size-4" />
               {hasSign ? "Đã ký số" : "Chưa ký số"}
             </div>

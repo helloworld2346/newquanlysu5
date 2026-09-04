@@ -68,11 +68,11 @@ type BadgeTone = {
 
 const CTDCT_TONE: BadgeTone = {
   headerBg: "bg-primary/5",
-  headerText: "text-primary",
+  headerText: "text-primary-text",
   avatarBg: "bg-primary/10",
-  avatarText: "text-primary",
+  avatarText: "text-primary-text",
   ring: "ring-primary/20",
-  iconText: "text-primary",
+  iconText: "text-primary-text",
 };
 
 const NOIVU_TONE: BadgeTone = {

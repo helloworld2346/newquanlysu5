@@ -676,7 +676,7 @@ export default function PoliticalWorkReport() {
             onClick={() => setActiveTab("child")}
             className={`mr-1 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "child"
-                ? "bg-background text-primary shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
+                ? "bg-background text-primary-text shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
                 : "text-muted-foreground hover:text-foreground dark:text-emerald-400/70 dark:hover:text-emerald-200"
             }`}
           >
@@ -687,7 +687,7 @@ export default function PoliticalWorkReport() {
             onClick={() => setActiveTab("consolidated")}
             className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "consolidated"
-                ? "bg-background text-primary shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
+                ? "bg-background text-primary-text shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
                 : "text-muted-foreground hover:text-foreground dark:text-emerald-400/70 dark:hover:text-emerald-200"
             }`}
           >

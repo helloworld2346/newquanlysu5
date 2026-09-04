@@ -44,7 +44,7 @@ const EMPTY_TRUC = {
 
 function UnitBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary dark:bg-emerald-400/15 dark:text-emerald-300">
+    <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary-text dark:bg-emerald-400/15 dark:text-emerald-300">
       {label}
     </span>
   );

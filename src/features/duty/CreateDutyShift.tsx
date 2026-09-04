@@ -119,7 +119,7 @@ function PreviewPerson({
 }) {  
   return (  
     <div className={`flex h-full flex-col rounded-lg border border-l-4 ${accent} p-4`}>  
-      <div className="mb-2 flex items-center text-sm font-bold uppercase tracking-wide text-primary">  
+      <div className="mb-2 flex items-center text-sm font-bold uppercase tracking-wide text-primary-text">  
         <span className="mr-2">{icon}</span>  
         {label}  
       </div>  
@@ -132,7 +132,7 @@ function PreviewPerson({
             {p.chucvuNguoitruc}  
           </p>  
           {p.sodienthoai && (  
-            <p className="mt-0.5 text-sm font-semibold text-primary">  
+            <p className="mt-0.5 text-sm font-semibold text-primary-text">  
               {p.sodienthoai}  
             </p>  
           )}  
@@ -212,7 +212,7 @@ function PreviewCard({
   
         {ghichu && (  
           <div className="mt-1 w-full rounded-r-lg border border-l-4 border-l-primary bg-primary/5 p-4">  
-            <div className="text-sm font-bold uppercase tracking-wide text-primary">  
+            <div className="text-sm font-bold uppercase tracking-wide text-primary-text">  
               Ghi chú  
             </div>  
             <p className="mt-1 text-sm italic leading-relaxed">{ghichu}</p>  

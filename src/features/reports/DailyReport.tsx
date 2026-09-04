@@ -694,7 +694,7 @@ const effectiveTab = activeTab;
             onClick={() => setActiveTab("child")}
             className={`mr-1 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "child"
-                ? "bg-background text-primary shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
+                ? "bg-background text-primary-text shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
                 : "text-muted-foreground hover:text-foreground dark:text-emerald-400/70 dark:hover:text-emerald-200"
             }`}
           >
@@ -707,7 +707,7 @@ const effectiveTab = activeTab;
             onClick={() => setActiveTab("consolidated")}
             className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "consolidated"
-                ? "bg-background text-primary shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
+                ? "bg-background text-primary-text shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
                 : "text-muted-foreground hover:text-foreground dark:text-emerald-400/70 dark:hover:text-emerald-200"
             }`}
           >
@@ -848,7 +848,7 @@ const effectiveTab = activeTab;
         <Card className="mt-4">
           <CardHeader>
             <CardTitle className="flex items-center text-base">
-              <PenLine className="mr-2 size-4 text-primary" />
+              <PenLine className="mr-2 size-4 text-primary-text" />
               Ký số báo cáo
             </CardTitle>
           </CardHeader>
@@ -875,7 +875,7 @@ const effectiveTab = activeTab;
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                    className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary-text"
                   >
                     <ImagePlus className="mb-2 size-8" />
                     Bấm để chọn ảnh chữ ký (PNG/JPG, tối đa 2MB)
@@ -887,7 +887,7 @@ const effectiveTab = activeTab;
                 <div className="flex h-full flex-col justify-between rounded-lg border bg-muted/30 p-4">
                   <div>
                     {chuKySo ? (
-                      <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                      <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary-text">
                         <CheckCircle2 className="mr-1.5 size-4" />
                         Đã ký số
                       </div>

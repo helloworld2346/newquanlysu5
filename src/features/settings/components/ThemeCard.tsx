@@ -6,14 +6,14 @@ export default function ThemeCard() {
   const { dark, toggle } = useTheme();
 
   return (
-    <Card className="border-t-4 border-t-primary">
+    <Card className="rounded-2xl shadow-sm">
       <CardHeader className="flex-row items-center border-b">
         {dark ? (
-          <Moon className="mr-2 size-5 text-primary" />
+          <Moon className="mr-2 size-5 text-primary-text" />
         ) : (
-          <Sun className="mr-2 size-5 text-primary" />
+          <Sun className="mr-2 size-5 text-primary-text" />
         )}
-        <CardTitle className="text-base text-primary">Giao diện</CardTitle>
+        <CardTitle className="text-base text-primary-text">Giao diện</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -34,7 +34,7 @@ export default function ThemeCard() {
               className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
                 !dark
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-primary"
+                  : "text-muted-foreground hover:text-primary-text"
               }`}
             >
               <Sun className="size-4" />
@@ -47,7 +47,7 @@ export default function ThemeCard() {
               className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
                 dark
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-primary"
+                  : "text-muted-foreground hover:text-primary-text"
               }`}
             >
               <Moon className="size-4" />

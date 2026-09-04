@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         type="button"
         onClick={toggle}
         aria-label="Thu gọn/mở rộng menu"
-        className={`absolute top-1/2 z-20 grid size-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-primary text-primary-foreground shadow-md transition-[left,background-color,color] duration-300 ease-in-out hover:bg-gold hover:text-primary ${
+        className={`absolute top-1/2 z-20 grid size-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-primary text-primary-foreground shadow-md transition-[left,background-color,color] duration-300 ease-in-out hover:bg-gold hover:text-primary-text ${
           collapsed ? "left-28" : "left-72"
         }`}
       >

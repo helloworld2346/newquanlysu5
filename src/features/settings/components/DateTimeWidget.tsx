@@ -28,14 +28,14 @@ export default function DateTimeWidget() {
   return (
     <div className="flex flex-col gap-1 rounded-xl border bg-card px-4 py-2 text-sm shadow-sm">
       <div className="flex items-center gap-2">
-        <CalendarDays className="size-4 text-primary" />
+        <CalendarDays className="size-4 text-primary-text" />
         <span className="font-medium">
           {weekday}, {dateStr}
         </span>
       </div>
       <div className="h-px bg-border" />
       <div className="flex items-center gap-2">
-        <Clock className="size-4 text-primary" />
+        <Clock className="size-4 text-primary-text" />
         <span className="font-medium tabular-nums">{timeStr}</span>
       </div>
     </div>

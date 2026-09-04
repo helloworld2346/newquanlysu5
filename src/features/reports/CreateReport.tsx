@@ -794,7 +794,7 @@ export default function CreateReport() {
       </div>
 
       {isTongHop && (
-        <div className="flex items-center rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary">
+        <div className="flex items-center rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary-text">
           <Layers className="mr-2 size-4 shrink-0" />
           {aggLoading
             ? "Đang tổng hợp số liệu từ các đơn vị đã duyệt..."

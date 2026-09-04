@@ -64,7 +64,8 @@
   /* xanh lục quân đội #1f5c3f */  
   --primary: 152 50% 24%;  
   --primary-foreground: 0 0% 100%;  
-  
+    --primary-text: 152 50% 24%;
+
   --secondary: 210 40% 96.1%;  
   --secondary-foreground: 222.2 47.4% 11.2%;  
   --muted: 210 40% 96.1%;  
@@ -119,6 +120,7 @@
   
   --primary: 152 36% 20%;  
   --primary-foreground: 0 0% 96%;  
+  --primary-text: 152 45% 70%; 
   
   --secondary: 150 10% 16%;  
   --secondary-foreground: 150 10% 92%;  

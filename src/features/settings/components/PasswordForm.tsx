@@ -57,7 +57,7 @@ export default function PasswordForm() {
   return (
     <Card>
       <CardHeader className="flex-row items-center">
-        <Lock className="mr-2 size-5 text-primary" />
+        <Lock className="mr-2 size-5 text-primary-text" />
         <CardTitle className="text-base">Đổi mật khẩu</CardTitle>
       </CardHeader>
       <CardContent>

@@ -38,7 +38,7 @@ function InfoRow({
   return (
     <div className="flex items-center justify-between px-3 py-2">
       <span className="flex items-center text-muted-foreground">
-        <span className="mr-1.5 text-primary">{icon}</span>
+        <span className="mr-1.5 text-primary-text">{icon}</span>
         {label}
       </span>
       <span className="font-medium">{value}</span>
@@ -79,12 +79,12 @@ export default function KySoModal({
 
         <div className="px-5 pb-5 pt-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary-text">
               <PenLine className="mr-1.5 size-3.5" />
               {chucVu}
             </span>
             {hasSign && (
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary-text ring-1 ring-inset ring-primary/20">
                 <ShieldCheck className="mr-1 size-3.5" />
                 Đã xác thực
               </span>

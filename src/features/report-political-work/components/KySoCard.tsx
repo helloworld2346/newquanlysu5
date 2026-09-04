@@ -65,7 +65,7 @@ export default function KySoCard({
     <Card className="mt-4">
       <CardHeader>
         <CardTitle className="flex items-center text-base">
-          <PenLine className="mr-2 size-4 text-primary" />
+          <PenLine className="mr-2 size-4 text-primary-text" />
           Ký số báo cáo
         </CardTitle>
       </CardHeader>
@@ -91,7 +91,7 @@ export default function KySoCard({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                className="flex h-full min-h-[180px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-muted/30 py-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary-text"
               >
                 <ImagePlus className="mb-2 size-8" />
                 Bấm để chọn ảnh chữ ký (PNG/JPG, tối đa 2MB)
@@ -103,7 +103,7 @@ export default function KySoCard({
             <div className="flex h-full flex-col justify-between rounded-lg border bg-muted/30 p-4">
               <div>
                 {chuKySo ? (
-                  <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary-text">
                     <CheckCircle2 className="mr-1.5 size-4" />
                     Đã ký số
                   </div>
