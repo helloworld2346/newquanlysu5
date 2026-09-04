@@ -19,6 +19,7 @@ import {
   XCircle,
   AlertTriangle,
   MinusCircle,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +48,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { useReportDetail, useNhiemVuNgayDetail } from "./queries";
 import { LY_DO_OPTIONS, formatNum } from "./utils";
 import type { AbsentRow, TrucNguoiInfo } from "@/types/dailyReport";
@@ -389,6 +391,7 @@ export default function ReportDetail() {
   const topRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
 
   const trucChiHuy = useMemo(
     () => parseJson<TrucNguoiInfo | null>(data?.trucBanChiHuy, null),
@@ -403,9 +406,23 @@ export default function ReportDetail() {
     [data?.chiTietVang],
   );
 
-  const totalPages = Math.max(1, Math.ceil(absentRows.length / pageSize));
+  const filteredAbsent = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return absentRows;
+    return absentRows.filter((m) =>
+      [
+        m.hoTen,
+        m.capBac,
+        m.chucVu,
+        m.ghiChu,
+        LY_DO_LABEL[m.lyDoVang] || m.lyDoVang,
+      ].some((f) => (f ?? "").toLowerCase().includes(q)),
+    );
+  }, [absentRows, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAbsent.length / pageSize));
   const safePage = Math.min(page, totalPages);
-  const paginatedAbsent = absentRows.slice(
+  const paginatedAbsent = filteredAbsent.slice(
     (safePage - 1) * pageSize,
     safePage * pageSize,
   );
@@ -535,11 +552,25 @@ export default function ReportDetail() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-3">
           <CardTitle className="flex items-center text-base">
             <UsersRound className="mr-2 size-4 text-rose-500" /> Danh sách quân
             nhân vắng ({absentRows.length})
           </CardTitle>
+          {absentRows.length > 0 && (
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Tìm theo tên, cấp bậc, chức vụ..."
+                className="pl-8"
+              />
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {absentRows.length === 0 ? (
