@@ -128,64 +128,69 @@ export interface ReportRow {
   raw: ReportItemDTO | null;
 }
 
-export interface NhiemVuNgay {  
-  idNhiemvuNgay: string;  
-  nhiemVuPhandoi: string;  
-  noiDungDotXuat: string;  
-  noiDungUuDiem: string;  
-  noiDungKhuyetDiem: string;  
-  noiDungCanGiaiQuyet: string;  
-}  
-  
-export interface NhiemVuNgayPayload {  
-  nhiemVuPhandoi: string;  
-  noiDungDotXuat: string;  
-  noiDungUuDiem: string;  
-  noiDungKhuyetDiem: string;  
-  noiDungCanGiaiQuyet: string;  
-  donBaoCao: string;  
+export interface NhiemVuNgay {
+  idNhiemvuNgay: string;
+  nhiemVuPhandoi: string;
+  noiDungDotXuat: string;
+  noiDungUuDiem: string;
+  noiDungKhuyetDiem: string;
+  noiDungCanGiaiQuyet: string;
 }
 
-export interface TrucNguoiCaTruc {  
-  idNguoitruc?: string;  
-  tenNguoitruc?: string;  
-  capbacNguoitruc?: string;  
-  chucvuNguoitruc?: string;  
-  sodienthoai?: string;  
-}  
-  
-export interface ReportDetailResult {  
-  idDonBaoCao: string;  
-  quanSoTong: number;  
-  quanSoHienDien: number;  
-  quanSoVang: number;  
-  ghiChu?: string | null;  
-  chiTietVang?: string;  
-  trucBanChiHuy?: string;  
-  trucBanTacChien?: string;  
-  status: string;  
-  chuKySo?: string;  
-  thoiGianBaoCao: string;  
-  loaiDonBaoCao?: LoaiDonBaoCao;  
-  thongTinVang: string;  
-  tinhHinhHoatDong?: string;  
-  caTruc?: {  
-    idCatruc?: string;  
-    ngaytruc?: string;  
-    trucBanTacChien?: TrucNguoiCaTruc;  
-    trucChiHuy?: TrucNguoiCaTruc;  
-  };  
-  donVi: {  
-    maDonVi: string;  
-    tenDonvi: string;  
-    kyhieuDonvi?: string;  
-    capDonVi?: string;  
-  };  
-}  
-  
-export interface ReportDetailResponse {  
-  success: boolean;  
-  code: number;  
-  message: string;  
-  Result: ReportDetailResult;  
+export interface NhiemVuNgayPayload {
+  nhiemVuPhandoi: string;
+  noiDungDotXuat: string;
+  noiDungUuDiem: string;
+  noiDungKhuyetDiem: string;
+  noiDungCanGiaiQuyet: string;
+  donBaoCao: string;
+}
+
+export interface TrucNguoiCaTruc {
+  idNguoitruc?: string;
+  tenNguoitruc?: string;
+  capbacNguoitruc?: string;
+  chucvuNguoitruc?: string;
+  sodienthoai?: string;
+}
+
+export interface ReportDetailResult {
+  idDonBaoCao: string;
+  quanSoTong: number;
+  quanSoHienDien: number;
+  quanSoVang: number;
+  ghiChu?: string | null;
+  chiTietVang?: string;
+  trucBanChiHuy?: string;
+  trucBanTacChien?: string;
+  status: string;
+  chuKySo?: string;
+  thoiGianBaoCao: string;
+  loaiDonBaoCao?: LoaiDonBaoCao;
+  thongTinVang: string;
+  tinhHinhHoatDong?: string;
+  caTruc?: {
+    idCatruc?: string;
+    ngaytruc?: string;
+    trucBanTacChien?: TrucNguoiCaTruc;
+    trucChiHuy?: TrucNguoiCaTruc;
+  };
+  donVi: {
+    maDonVi: string;
+    tenDonvi: string;
+    kyhieuDonvi?: string;
+    capDonVi?: string;
+  };
+}
+
+export interface ReportDetailResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  Result: ReportDetailResult;
+}
+
+export interface TraVeRequest {
+  idDonBaoCao: string;
+  ghiChu: string;
 }

@@ -9,6 +9,7 @@ import type {
   RefuseRequest,
   ActionResponse,
   ApproveResponse,
+  TraVeRequest,
 } from "@/types/dailyReport";  
 
 export const reportApi = {
@@ -98,6 +99,24 @@ export const reportApi = {
 
   refuse: async (id: string, body: RefuseRequest): Promise<ActionResponse> => {
     const res = await api.put<ActionResponse>(`/donbaocao/refuse/${id}`, body);
+    return res.data;
+  },
+
+  returnReport: async (body: TraVeRequest): Promise<ActionResponse> => {
+    const res = await api.put<ActionResponse>("/donbaocao/return", body);
+    return res.data;
+  },
+
+  draftReport: async (
+    maDonVi: string,
+    lyDo: string,
+    ngayLoc: string,
+  ): Promise<ActionResponse> => {
+    const res = await api.put<ActionResponse>(
+      `/donbaocao/draft/${maDonVi}`,
+      null,
+      { params: { lyDo, ngayLoc } },
+    );
     return res.data;
   },
 };

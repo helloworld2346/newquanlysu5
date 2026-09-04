@@ -1,10 +1,21 @@
-export const EDITABLE = ["Nháp", "Tu_Choi", "Từ_Chối", "Từ chối"];
+export const EDITABLE = [
+  "Nháp",
+  "Tu_Choi",
+  "Từ_Chối",
+  "Từ chối",
+  "Trả_Về",
+  "Trả về",
+  "Tra_Ve",
+];
 
 const DRAFT = ["Nháp", "Nhap", "DRAFT"];
 export const isDraft = (s: string) => DRAFT.includes(s);
 
 const REFUSED = ["Từ_Chối", "Từ chối", "Tu_Choi"];
 export const isRefused = (s: string) => REFUSED.includes(s);
+
+const RETURNED = ["Trả_Về", "Trả về", "Tra_Ve"];
+export const isReturned = (s: string) => RETURNED.includes(s);
 
 export const STATUS_FILTERS = [
   { value: "Chua_Nop", label: "Chưa nộp" },

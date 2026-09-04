@@ -198,6 +198,24 @@ export function useRefuseReport() {
   });
 }
 
+export function useReturnReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { idDonBaoCao: string; ghiChu: string }) =>
+      reportApi.returnReport({ idDonBaoCao: v.idDonBaoCao, ghiChu: v.ghiChu }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
+export function useDraftReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { maDonVi: string; lyDo: string; ngayLoc: string }) =>
+      reportApi.draftReport(v.maDonVi, v.lyDo, v.ngayLoc),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reports"] }),
+  });
+}
+
 export function useOwnReport(
   maDonVi: string | undefined,
   ngay: string,

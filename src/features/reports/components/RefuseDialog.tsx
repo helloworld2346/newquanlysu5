@@ -14,22 +14,30 @@ export default function RefuseDialog({
   onOpenChange,
   loading,
   onConfirm,
+  variant = "refuse",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   loading?: boolean;
   onConfirm: (lyDo: string) => void;
+  variant?: "refuse" | "return";
 }) {
   const [lyDo, setLyDo] = useState("");
+  const isReturn = variant === "return";
+  const title = isReturn ? "Trả về báo cáo" : "Từ chối báo cáo";
+  const placeholder = isReturn
+    ? "Nhập lý do trả về..."
+    : "Nhập lý do từ chối...";
+  const actionLabel = isReturn ? "Trả về" : "Từ chối";
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Từ chối báo cáo</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Textarea
           rows={4}
-          placeholder="Nhập lý do từ chối..."
+          placeholder={placeholder}
           value={lyDo}
           onChange={(e) => setLyDo(e.target.value)}
         />
@@ -38,11 +46,11 @@ export default function RefuseDialog({
             Hủy
           </Button>
           <Button
-            variant="destructive"
+            variant={isReturn ? "default" : "destructive"}
             disabled={loading || !lyDo.trim()}
             onClick={() => onConfirm(lyDo.trim())}
           >
-            {loading ? "Đang xử lý..." : "Từ chối"}
+            {loading ? "Đang xử lý..." : actionLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

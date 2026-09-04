@@ -42,6 +42,8 @@ import {
   useUpdateReport,
   useApproveReport,
   useRefuseReport,
+  useReturnReport,
+  useDraftReport,
   TONG_HOP_CAPS,
   useTongHopReports,
   useOwnReport,
@@ -126,9 +128,12 @@ export default function DailyReport() {
   const submitReport = useSubmitReport();
   const approveReport = useApproveReport();
   const refuseReport = useRefuseReport();
+  const returnReport = useReturnReport();
+  const draftReport = useDraftReport();
 
   const [confirmApprove, setConfirmApprove] = useState<ReportRow | null>(null);
   const [refuseTarget, setRefuseTarget] = useState<ReportRow | null>(null);
+  const [returnTarget, setReturnTarget] = useState<ReportRow | null>(null);
 
   const { units, capByUnit, hideDraftForCommander, hasChildren } =
     useUnitHierarchy({
@@ -465,6 +470,31 @@ export default function DailyReport() {
     }
   };
 
+  const doReturn = async (lyDo: string) => {
+    const row = returnTarget;
+    if (!row) return;
+    try {
+      if (row.raw?.loaiDonBaoCao === "DON_VI") {
+        await draftReport.mutateAsync({
+          maDonVi: row.donVi,
+          lyDo,
+          ngayLoc: ngay,
+        });
+      } else {
+        await returnReport.mutateAsync({
+          idDonBaoCao: row.idDonBaoCao,
+          ghiChu: lyDo,
+        });
+      }
+      toast.success("Đã trả về báo cáo.");
+      setReturnTarget(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  const returning = returnReport.isPending || draftReport.isPending;
+
   const approving = updateReport.isPending || approveReport.isPending;
 
   const submitting = updateReport.isPending || submitReport.isPending;
@@ -739,24 +769,35 @@ export default function DailyReport() {
               </TableRow>
             ) : (
               <>
-                {hasChildren && !isChiHuy && maDonVi && (
-                  <InlineOwnReportRow
-                    maDonVi={maDonVi}
-                    label={capByUnit[maDonVi] === "SU_DOAN" ? "CH/f" : "CH/e"}
-                    ngay={ngay}
-                    existing={ownDonViRow}
-                    bienCheTong={
-                      units.find((u) => u.maDonVi === maDonVi)?.quanSoTong ?? 0
-                    }
-                  />
-                )}
+                {hasChildren &&
+                  !isChiHuy &&
+                  maDonVi &&
+                  (capByUnit[maDonVi] === "SU_DOAN" ||
+                    capByUnit[maDonVi] === "TRUNG_DOAN") && (
+                    <InlineOwnReportRow
+                      maDonVi={maDonVi}
+                      label={capByUnit[maDonVi] === "SU_DOAN" ? "CH/f" : "CH/e"}
+                      ngay={ngay}
+                      existing={ownDonViRow}
+                      bienCheTong={
+                        units.find((u) => u.maDonVi === maDonVi)?.quanSoTong ??
+                        0
+                      }
+                    />
+                  )}
                 {filteredRows.map((r) => (
                   <ReportTableRow
                     key={r.idDonBaoCao}
                     row={r}
                     canEdit={!r.notSubmitted && EDITABLE.includes(r.status)}
+                    canReturn={
+                      isChiHuy &&
+                      !r.notSubmitted &&
+                      normalizeStatus(r.status) === "Đã_Duyệt"
+                    }
                     onViewDetail={goDetail}
                     onEdit={goEditOrCreate}
+                    onReturn={setReturnTarget}
                   />
                 ))}
                 <ReportTotalRow t={totals} absentList={absentList} />{" "}
@@ -910,6 +951,14 @@ export default function DailyReport() {
         onOpenChange={(v) => !v && setRefuseTarget(null)}
         loading={refuseReport.isPending}
         onConfirm={doRefuse}
+      />
+
+      <RefuseDialog
+        open={!!returnTarget}
+        onOpenChange={(v) => !v && setReturnTarget(null)}
+        loading={returning}
+        onConfirm={doReturn}
+        variant="return"
       />
     </div>
   );

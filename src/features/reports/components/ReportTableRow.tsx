@@ -7,6 +7,7 @@ import {
   Undo2,
   CheckCircle2,
   XCircle,
+  RotateCcw,
 } from "lucide-react";
 import KySoModal from "./KySoModal";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -32,19 +33,33 @@ const STATUS_LABEL: Record<string, string> = {
   Từ_Chối: "Từ chối",
   Nháp: "Nháp",
   Nhap: "Nháp",
+  Trả_Về: "Cần cập nhật",
+  "Trả về": "Cần cập nhật",
+  Tra_Ve: "Cần cập nhật",
 };
 
 const STATUS_TONE: Record<string, string> = {
-  Chờ_Duyệt: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
-  "Chờ duyệt": "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
-  Đã_Duyệt: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
-  Da_Duyet: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
-  "Đã duyệt": "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+  Chờ_Duyệt:
+    "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
+  "Chờ duyệt":
+    "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
+  Đã_Duyệt:
+    "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+  Da_Duyet:
+    "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+  "Đã duyệt":
+    "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
   Tu_Choi: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
   Từ_Chối: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
   "Từ chối": "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
   Nháp: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
   Nhap: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
+  Trả_Về:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  "Trả về":
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  Tra_Ve:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
 };
 
 function parseJson<T>(raw: string | undefined | null, fallback: T): T {
@@ -74,12 +89,14 @@ export default function ReportTableRow({
   canRecall = false,
   canApprove = false,
   canRefuse = false,
+  canReturn = false,
   onViewDetail,
   onEdit,
   onSubmit,
   onRecall,
   onApprove,
   onRefuse,
+  onReturn,
   displayKyHieu,
   noKySo = false,
 }: {
@@ -89,12 +106,14 @@ export default function ReportTableRow({
   canRecall?: boolean;
   canApprove?: boolean;
   canRefuse?: boolean;
+  canReturn?: boolean;
   onViewDetail: (r: ReportRow) => void;
   onEdit: (r: ReportRow) => void;
   onSubmit?: (r: ReportRow) => void;
   onRecall?: (r: ReportRow) => void;
   onApprove?: (r: ReportRow) => void;
   onRefuse?: (r: ReportRow) => void;
+  onReturn?: (r: ReportRow) => void;
   displayKyHieu?: string;
   noKySo?: boolean;
 }) {
@@ -111,7 +130,11 @@ export default function ReportTableRow({
 
   return (
     <TableRow
-      className={notSubmitted ? "bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50" : undefined}
+      className={
+        notSubmitted
+          ? "bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50"
+          : undefined
+      }
     >
       <TableCell
         className={`${td} text-center font-medium ${
@@ -201,8 +224,8 @@ export default function ReportTableRow({
               {(canApprove || canRefuse) && <DropdownMenuSeparator />}
               {canApprove && (
                 <DropdownMenuItem onClick={() => onApprove?.(row)}>
-                  <CheckCircle2 className="mr-2 size-4 text-emerald-600 dark:text-emerald-400" /> Phê
-                  duyệt
+                  <CheckCircle2 className="mr-2 size-4 text-emerald-600 dark:text-emerald-400" />
+                  Phê duyệt
                 </DropdownMenuItem>
               )}
               {canRefuse && (
@@ -211,6 +234,14 @@ export default function ReportTableRow({
                   onClick={() => onRefuse?.(row)}
                 >
                   <XCircle className="mr-2 size-4" /> Từ chối
+                </DropdownMenuItem>
+              )}
+              {canReturn && (
+                <DropdownMenuItem
+                  className="text-orange-600 dark:text-orange-400 focus:text-orange-600"
+                  onClick={() => onReturn?.(row)}
+                >
+                  <RotateCcw className="mr-2 size-4" /> Trả về
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
