@@ -1,5 +1,12 @@
 import { useState } from "react";
 import {
+  ShieldCheck,
+  ShieldAlert,
+  Sparkles,
+  AlertTriangle,
+  ListChecks,
+} from "lucide-react";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -52,56 +59,66 @@ function Badge({
   children: React.ReactNode;
 }) {
   const map = {
-    success: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
-    danger: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
-    warning: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
-    neutral: "bg-slate-100 dark:bg-slate-800 text-muted-foreground",
+    success:
+      "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-400/20",
+    danger:
+      "bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-400/20",
+    warning:
+      "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-400/20",
+    neutral:
+      "bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-400/20",
   } as const;
   return (
     <span
-      className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${map[tone]}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${map[tone]}`}
     >
       {children}
     </span>
   );
 }
 
-const accentBorder: Record<Accent, string> = {
-  success: "border-l-emerald-500",
-  danger: "border-l-rose-500",
-  warning: "border-l-amber-500",
-  neutral: "border-l-slate-300",
+const accentChip: Record<Accent, string> = {
+  success:
+    "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300",
+  danger: "bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300",
+  warning:
+    "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300",
+  neutral: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300",
 };
 
 function DetailItem({
-  index,
   label,
   accent,
+  icon,
   badge,
   detail,
 }: {
-  index: number;
   label: string;
   accent: Accent;
+  icon: React.ReactNode;
   badge: React.ReactNode;
   detail?: string;
 }) {
   return (
-    <div
-      className={`rounded-lg border border-l-4 bg-card p-4 shadow-sm transition hover:shadow-md ${accentBorder[accent]}`}
-    >
-      <div className="flex items-start justify-between">
-        <span className="text-sm font-semibold leading-snug">
-          <span className="mr-2 text-muted-foreground">{index}.</span>
-          {label}
-        </span>
-        <span className="ml-3 shrink-0">{badge}</span>
+    <div className="rounded-2xl border bg-card p-4 shadow-sm transition hover:shadow-md">
+      <div className="flex items-start gap-3">
+        <div
+          className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${accentChip[accent]}`}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <span className="text-sm font-semibold leading-snug">{label}</span>
+            <span className="shrink-0">{badge}</span>
+          </div>
+          {detail ? (
+            <p className="mt-3 whitespace-pre-line rounded-xl bg-muted/60 px-3 py-2 text-sm leading-relaxed">
+              {detail}
+            </p>
+          ) : null}
+        </div>
       </div>
-      {detail ? (
-        <p className="mt-3 whitespace-pre-line rounded-md border bg-muted/50 px-3 py-2 text-sm leading-relaxed">
-          {detail}
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -111,44 +128,53 @@ function NhiemVuBody({ data }: { data: NhiemVu }) {
   const items: {
     label: string;
     accent: Accent;
+    icon: React.ReactNode;
     badge: React.ReactNode;
     detail?: string;
   }[] = [
     {
       label: "Nhiệm vụ các phân đội đóng quân canh phòng và các phân đội khác",
       accent: safe ? "success" : "danger",
+      icon: safe ? (
+        <ShieldCheck className="size-5" />
+      ) : (
+        <ShieldAlert className="size-5" />
+      ),
       badge: (
         <Badge tone={safe ? "success" : "danger"}>
-          {safe ? "✓ Đảm bảo an toàn" : "✕ Không đảm bảo an toàn"}
+          {safe ? "Đảm bảo an toàn" : "Không đảm bảo an toàn"}
         </Badge>
       ),
     },
     {
       label: "Những việc đột xuất xảy ra",
       accent: data.noiDungDotXuat ? "warning" : "success",
+      icon: <AlertTriangle className="size-5" />,
       badge: (
         <Badge tone={data.noiDungDotXuat ? "warning" : "success"}>
-          {data.noiDungDotXuat ? "⚠ Có phát sinh" : "✓ Không phát sinh"}
+          {data.noiDungDotXuat ? "Có phát sinh" : "Không phát sinh"}
         </Badge>
       ),
       detail: data.noiDungDotXuat,
     },
     {
-      label: "Ưu điểm nội vụ, vệ sinh",
+      label: "Ưu điểm",
       accent: data.noiDungUuDiem ? "success" : "neutral",
+      icon: <Sparkles className="size-5" />,
       badge: (
         <Badge tone={data.noiDungUuDiem ? "success" : "neutral"}>
-          {data.noiDungUuDiem ? "✓ Có" : "— Không có"}
+          {data.noiDungUuDiem ? "Có" : "Không có"}
         </Badge>
       ),
       detail: data.noiDungUuDiem,
     },
     {
-      label: "Khuyết điểm nội vụ, vệ sinh",
+      label: "Khuyết điểm",
       accent: data.noiDungKhuyetDiem ? "danger" : "success",
+      icon: <AlertTriangle className="size-5" />,
       badge: (
         <Badge tone={data.noiDungKhuyetDiem ? "danger" : "success"}>
-          {data.noiDungKhuyetDiem ? "✕ Có" : "✓ Không có"}
+          {data.noiDungKhuyetDiem ? "Có" : "Không có"}
         </Badge>
       ),
       detail: data.noiDungKhuyetDiem,
@@ -156,9 +182,10 @@ function NhiemVuBody({ data }: { data: NhiemVu }) {
     {
       label: "Những việc cần tiếp tục giải quyết",
       accent: data.noiDungCanGiaiQuyet ? "warning" : "success",
+      icon: <ListChecks className="size-5" />,
       badge: (
         <Badge tone={data.noiDungCanGiaiQuyet ? "warning" : "success"}>
-          {data.noiDungCanGiaiQuyet ? "⚠ Cần xử lý" : "✓ Không có"}
+          {data.noiDungCanGiaiQuyet ? "Cần xử lý" : "Không có"}
         </Badge>
       ),
       detail: data.noiDungCanGiaiQuyet,
@@ -167,12 +194,12 @@ function NhiemVuBody({ data }: { data: NhiemVu }) {
 
   return (
     <div className="space-y-3">
-      {items.map((item, i) => (
+      {items.map((item) => (
         <DetailItem
           key={item.label}
-          index={i + 1}
           label={item.label}
           accent={item.accent}
+          icon={item.icon}
           badge={item.badge}
           detail={item.detail}
         />
@@ -256,7 +283,7 @@ export default function NhiemVuNgaySection({
                 type="button"
                 disabled={r.notSubmitted}
                 onClick={() => setOpenKey(key)}
-                className="flex h-full w-full flex-col items-center justify-center rounded-lg border bg-background p-3 text-center transition hover:border-slate-400 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-full w-full flex-col items-center justify-center rounded-xl border bg-background p-3 text-center transition hover:border-primary/50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span className="mb-2 line-clamp-2 text-sm font-semibold">
                   {r.kyhieuDonVi || r.tenDonVi}
@@ -269,9 +296,9 @@ export default function NhiemVuNgaySection({
       </div>
 
       <Dialog open={!!openKey} onOpenChange={(v) => !v && setOpenKey(null)}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center">
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto rounded-2xl">
+          <DialogHeader className="border-b pb-3">
+            <DialogTitle className="text-lg font-bold">
               {openRow?.kyhieuDonVi || openRow?.tenDonVi}
             </DialogTitle>
           </DialogHeader>
