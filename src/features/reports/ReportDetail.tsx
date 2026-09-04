@@ -175,21 +175,13 @@ function KySoCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="-mx-2 flex flex-wrap">
-        {/* Khung chữ ký */}
         <div className="w-full px-2 mb-4 lg:w-1/2">
           <div className="rounded-lg border bg-primary/5 p-4">
             <div className="mb-2 flex items-center text-sm font-medium text-primary">
               <ShieldCheck className="mr-1.5 size-4" />
               {hasSign ? "Đã ký số" : "Chưa ký số"}
             </div>
-            <div
-              className="flex h-40 items-center justify-center overflow-hidden rounded-md border bg-card bg-[length:16px_16px] bg-[linear-gradient(to_right,rgba(31,92,63,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(31,92,63,0.06)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(to right, rgba(31,92,63,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(31,92,63,0.06) 1px, transparent 1px)",
-                backgroundSize: "16px 16px",
-              }}
-            >
+            <div className="flex h-40 items-center justify-center overflow-hidden rounded-md border bg-card bg-[length:16px_16px] bg-[linear-gradient(to_right,rgba(31,92,63,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(31,92,63,0.06)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)]">
               {hasSign ? (
                 <img
                   src={chuKySo}

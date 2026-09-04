@@ -91,14 +91,7 @@ export default function KySoModal({
             )}
           </div>
 
-          <div
-            className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-card p-4 bg-[length:16px_16px] bg-[linear-gradient(#f1f5f9_1px,transparent_1px),linear-gradient(90deg,#f1f5f9_1px,transparent_1px)] dark:border-slate-700 dark:bg-[linear-gradient(#334155_1px,transparent_1px),linear-gradient(90deg,#334155_1px,transparent_1px)]"
-            style={{
-              backgroundImage:
-                "linear-gradient(#f1f5f9 1px, transparent 1px), linear-gradient(90deg, #f1f5f9 1px, transparent 1px)",
-              backgroundSize: "16px 16px",
-            }}
-          >
+          <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-card p-4 bg-[length:16px_16px] bg-[linear-gradient(#f1f5f9_1px,transparent_1px),linear-gradient(90deg,#f1f5f9_1px,transparent_1px)] dark:border-slate-700 dark:bg-[linear-gradient(#334155_1px,transparent_1px),linear-gradient(90deg,#334155_1px,transparent_1px)]">
             {hasSign ? (
               <img
                 src={chuKySo!}

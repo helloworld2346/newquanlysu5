@@ -73,6 +73,7 @@ import {
   EDITABLE,
   isDraft,
   isRefused,
+  isNeedUpdate,
   STATUS_FILTERS,
   normalizeStatus,
 } from "@/shared/report/status";
@@ -346,6 +347,21 @@ export default function DailyReport() {
     [tongHopRows, maDonVi],
   );
 
+  const tongHopNeedUpdate = useMemo(
+    () =>
+      tongHopRows.find(
+        (r) => r.donVi === maDonVi && !r.notSubmitted && isNeedUpdate(r.status),
+      ) ?? null,
+    [tongHopRows, maDonVi],
+  );
+
+  const handleReconsolidate = () => {
+    if (!tongHopNeedUpdate) return;
+    navigate(
+      `/daily-report/edit/${tongHopNeedUpdate.idDonBaoCao}?ngay=${ngay}&tongHop=1`,
+    );
+  };
+
   const activeDraft = hasChildren ? tongHopDraft : ownDraft;
 
   const commanderReport = useMemo(
@@ -604,6 +620,13 @@ export default function DailyReport() {
                 disabled={submitting}
               >
                 <Send className="mr-2 size-4" /> Trình phê duyệt
+              </Button>
+            ) : tongHopNeedUpdate ? (
+              <Button
+                className="bg-amber-500 text-white hover:bg-amber-600"
+                onClick={handleReconsolidate}
+              >
+                <Layers className="mr-2 size-4" /> Tổng hợp lại
               </Button>
             ) : tongHopDone ? (
               <span className="text-sm text-muted-foreground">
