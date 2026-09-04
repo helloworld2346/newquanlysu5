@@ -33,6 +33,9 @@ const STATUS_LABEL: Record<string, string> = {
   Từ_Chối: "Từ chối",
   Nháp: "Nháp",
   Nhap: "Nháp",
+  Cần_Cập_Nhật: "Cần cập nhật",
+  "Cần cập nhật": "Cần cập nhật",
+  Can_Cap_Nhat: "Cần cập nhật",
   Trả_Về: "Cần cập nhật",
   "Trả về": "Cần cập nhật",
   Tra_Ve: "Cần cập nhật",
@@ -54,6 +57,12 @@ const STATUS_TONE: Record<string, string> = {
   "Từ chối": "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
   Nháp: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
   Nhap: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
+  Cần_Cập_Nhật:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  "Cần cập nhật":
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  Can_Cap_Nhat:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
   Trả_Về:
     "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
   "Trả về":

@@ -104,6 +104,10 @@ export default function DailyReport() {
   const { account, role } = useAuthInfo();
   const maDonVi = account?.donVi?.maDonVi;
   const isChiHuy = role === "Trực chỉ huy";
+  const canReturnRole =
+    role === "Trực chỉ huy" ||
+    role === "Trực ban tác chiến" ||
+    role === "Trực ban nội vụ";
 
   const [searchParams, setSearchParams] = useSearchParams();
   const ngay = searchParams.get("ngay") || todayIso();
@@ -791,7 +795,7 @@ export default function DailyReport() {
                     row={r}
                     canEdit={!r.notSubmitted && EDITABLE.includes(r.status)}
                     canReturn={
-                      isChiHuy &&
+                      canReturnRole &&
                       !r.notSubmitted &&
                       normalizeStatus(r.status) === "Đã_Duyệt"
                     }
@@ -843,7 +847,7 @@ export default function DailyReport() {
             <div className="-mx-2 flex flex-wrap items-stretch">
               <div className="mb-2 w-full px-2 md:w-2/3">
                 {chuKySo ? (
-                  <div className="flex h-full items-center justify-center rounded-lg border bg-[length:16px_16px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%),linear-gradient(-45deg,#f1f5f9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f1f5f9_75%),linear-gradient(-45deg,transparent_75%,#f1f5f9_75%)] p-4">
+                  <div className="flex h-full items-center justify-center rounded-lg border bg-[length:16px_16px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%),linear-gradient(-45deg,#f1f5f9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f1f5f9_75%),linear-gradient(-45deg,transparent_75%,#f1f5f9_75%)] p-4 dark:bg-[linear-gradient(45deg,#334155_25%,transparent_25%),linear-gradient(-45deg,#334155_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#334155_75%),linear-gradient(-45deg,transparent_75%,#334155_75%)]">
                     <img
                       src={chuKySo}
                       alt="Chữ ký"
