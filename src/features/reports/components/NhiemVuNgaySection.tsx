@@ -36,6 +36,12 @@ const STATUS_LABEL: Record<string, string> = {
   Tu_Choi: "Từ chối",
   Từ_Chối: "Từ chối",
   "Từ chối": "Từ chối",
+  Cần_Cập_Nhật: "Cần cập nhật",
+  "Cần cập nhật": "Cần cập nhật",
+  Can_Cap_Nhat: "Cần cập nhật",
+  Trả_Về: "Cần cập nhật",
+  "Trả về": "Cần cập nhật",
+  Tra_Ve: "Cần cập nhật",
 };
 
 const STATUS_TONE: Record<string, Accent> = {
@@ -49,6 +55,12 @@ const STATUS_TONE: Record<string, Accent> = {
   Tu_Choi: "danger",
   Từ_Chối: "danger",
   "Từ chối": "danger",
+  Cần_Cập_Nhật: "warning",
+  "Cần cập nhật": "warning",
+  Can_Cap_Nhat: "warning",
+  Trả_Về: "warning",
+  "Trả về": "warning",
+  Tra_Ve: "warning",
 };
 
 function Badge({

@@ -65,6 +65,12 @@ const STATUS_LABEL: Record<string, string> = {
   Da_Duyet: "Đã duyệt",
   Tu_Choi: "Từ chối",
   Từ_Chối: "Từ chối",
+  Cần_Cập_Nhật: "Cần cập nhật",
+  "Cần cập nhật": "Cần cập nhật",
+  Can_Cap_Nhat: "Cần cập nhật",
+  Trả_Về: "Cần cập nhật",
+  "Trả về": "Cần cập nhật",
+  Tra_Ve: "Cần cập nhật",
 };
 
 const STATUS_TONE: Record<string, string> = {
@@ -78,6 +84,18 @@ const STATUS_TONE: Record<string, string> = {
     "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
   Tu_Choi: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
   Từ_Chối: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
+  Cần_Cập_Nhật:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  "Cần cập nhật":
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  Can_Cap_Nhat:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  Trả_Về:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  "Trả về":
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+  Tra_Ve:
+    "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
 };
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];

@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Eye } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Eye, Search } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -62,20 +63,36 @@ export default function ReportTotalRow({
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
 
   const openDialog = () => {
     setPage(1);
+    setSearch("");
     setOpen(true);
   };
 
   const handleOpenChange = (next: boolean) => {
-    if (next) setPage(1);
+    if (next) {
+      setPage(1);
+      setSearch("");
+    }
     setOpen(next);
   };
 
-  const totalPages = Math.max(1, Math.ceil(absentList.length / pageSize));
+  const filteredAbsent = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return absentList;
+    return absentList.filter((m) => {
+      const lyDo = LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "";
+      return [m.tenDonVi, m.hoTen, m.capBac, m.chucVu, m.ghiChu, lyDo]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q));
+    });
+  }, [absentList, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAbsent.length / pageSize));
   const safePage = Math.min(page, totalPages);
-  const paginatedAbsent = absentList.slice(
+  const paginatedAbsent = filteredAbsent.slice(
     (safePage - 1) * pageSize,
     safePage * pageSize,
   );
@@ -118,7 +135,7 @@ export default function ReportTotalRow({
       </TableRow>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
+        <DialogContent className="max-h-[85vh] w-[95vw] max-w-6xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Chi tiết quân số vắng ({formatNum(absentList.length)})
@@ -130,6 +147,19 @@ export default function ReportTotalRow({
             </p>
           ) : (
             <>
+              <div className="relative w-full sm:max-w-xs">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="Tìm theo tên, cấp bậc, đơn vị, lý do..."
+                  className="pl-8"
+                />
+              </div>
+
               <div className="overflow-x-auto rounded-md border">
                 <Table className="w-full">
                   <TableHeader>
@@ -144,23 +174,34 @@ export default function ReportTotalRow({
                     </TR>
                   </TableHeader>
                   <TableBody>
-                    {paginatedAbsent.map((m, i) => (
-                      <TR key={m.id || i}>
-                        <TC className="text-center text-muted-foreground">
-                          {(safePage - 1) * pageSize + i + 1}
+                    {filteredAbsent.length === 0 ? (
+                      <TR>
+                        <TC
+                          colSpan={7}
+                          className="text-center text-sm text-muted-foreground"
+                        >
+                          Không tìm thấy quân nhân phù hợp.
                         </TC>
-                        <TC>{m.tenDonVi || "—"}</TC>
-                        <TC className="font-medium">{m.hoTen || "—"}</TC>
-                        <TC>{m.capBac || "—"}</TC>
-                        <TC>{m.chucVu || "—"}</TC>
-                        <TC>
-                          <span className="inline-block rounded bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-amber-700 dark:text-amber-300">
-                            {LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "—"}
-                          </span>
-                        </TC>
-                        <TC>{m.ghiChu || "—"}</TC>
                       </TR>
-                    ))}
+                    ) : (
+                      paginatedAbsent.map((m, i) => (
+                        <TR key={m.id || i}>
+                          <TC className="text-center text-muted-foreground">
+                            {(safePage - 1) * pageSize + i + 1}
+                          </TC>
+                          <TC>{m.tenDonVi || "—"}</TC>
+                          <TC className="font-medium">{m.hoTen || "—"}</TC>
+                          <TC>{m.capBac || "—"}</TC>
+                          <TC>{m.chucVu || "—"}</TC>
+                          <TC>
+                            <span className="inline-block rounded bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-amber-700 dark:text-amber-300">
+                              {LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "—"}
+                            </span>
+                          </TC>
+                          <TC>{m.ghiChu || "—"}</TC>
+                        </TR>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
