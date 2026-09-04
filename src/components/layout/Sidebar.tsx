@@ -73,7 +73,7 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
                         collapsed ? "justify-center px-2" : "pl-6 pr-3"
                       } ${
                         isActive
-                          ? "bg-gold font-medium text-primary-text"
+                          ? "bg-gold font-medium text-primary"
                           : "text-primary-foreground/80 hover:bg-gold/20 hover:text-gold"
                       }`
                     }

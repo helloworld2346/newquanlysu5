@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CalendarDays, Clock } from "lucide-react";
 
 const WEEKDAYS = [
@@ -26,17 +26,27 @@ export default function DateTimeWidget() {
   const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
   return (
-    <div className="flex flex-col gap-1 rounded-xl border bg-card px-4 py-2 text-sm shadow-sm">
-      <div className="flex items-center gap-2">
-        <CalendarDays className="size-4 text-primary-text" />
-        <span className="font-medium">
-          {weekday}, {dateStr}
+    <div className="flex items-stretch gap-3 rounded-2xl border bg-gradient-to-br from-primary/10 to-transparent px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-9 place-items-center rounded-xl bg-primary/15 text-primary-text">
+          <CalendarDays className="size-5" />
         </span>
+        <div className="leading-tight">
+          <p className="text-xs text-muted-foreground">{weekday}</p>
+          <p className="text-sm font-semibold tabular-nums">{dateStr}</p>
+        </div>
       </div>
-      <div className="h-px bg-border" />
-      <div className="flex items-center gap-2">
-        <Clock className="size-4 text-primary-text" />
-        <span className="font-medium tabular-nums">{timeStr}</span>
+
+      <div className="w-px self-stretch bg-border" />
+
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-9 place-items-center rounded-xl bg-primary/15 text-primary-text">
+          <Clock className="size-5" />
+        </span>
+        <div className="leading-tight">
+          <p className="text-xs text-muted-foreground">Thời gian</p>
+          <p className="text-sm font-semibold tabular-nums">{timeStr}</p>
+        </div>
       </div>
     </div>
   );
