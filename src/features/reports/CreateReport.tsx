@@ -1,351 +1,351 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
-import {
-  Trash2,
-  ArrowLeft,
-  Plus,
-  Save,
-  Copy,
-  AlertTriangle,
-  Layers,
-} from "lucide-react";
-import api from "@/lib/api";
-import { reportApi } from "./api";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useAuthInfo } from "@/features/auth/queries";
-import { useCreateReport, useUpdateReport } from "./queries";
-import {
-  LY_DO_OPTIONS,
-  CAP_BAC_OPTIONS,
-  EMPTY_VANG,
-  classifyCapBac,
-  todayIso,
-} from "./utils";
-import type {
-  AbsentRow,
-  TrucNguoiInfo,
-  DetailStepData,
-  CreateReportRequest,
-  VangChiTiet,
-  ReportItemDTO,
-} from "@/types/dailyReport";
-import { useUnits } from "@/features/units/queries";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
-import type { DonVi } from "@/types/account";
-
-const genId = () => Math.random().toString(36).slice(2);
-
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
-const COMMAND_KYHIEU = ["CH/e", "CH/f"];
-const EXPAND_CAPS = ["SU_DOAN", "TRUNG_DOAN"];
-
-type Agg = { siQuan: number; qncn: number; hsqBs: number };
-
-function getDirectChildren(maDonVi: string, all: DonVi[]): DonVi[] {
-  return all.filter((u) => {
-    if (!u.maDonVi.startsWith(maDonVi + ".")) return false;
-    return !u.maDonVi.slice(maDonVi.length + 1).includes(".");
-  });
-}
-
-function unitFullAgg(unit: DonVi, all: DonVi[]): Agg {
-  const own: Agg = {
-    siQuan: unit.quanSoSiQuan ?? 0,
-    qncn: unit.quanSoQncn ?? 0,
-    hsqBs: unit.quanSoHsqBs ?? 0,
-  };
-  if (!EXPAND_CAPS.includes(unit.capDonVi ?? "")) return own;
-  const children = getDirectChildren(unit.maDonVi, all).filter(
-    (u) => !COMMAND_KYHIEU.includes(u.kyhieuDonvi),
-  );
-  return children.reduce((acc, c) => {
-    const t = unitFullAgg(c, all);
-    return {
-      siQuan: acc.siQuan + t.siQuan,
-      qncn: acc.qncn + t.qncn,
-      hsqBs: acc.hsqBs + t.hsqBs,
-    };
-  }, own);
-}
-
-function getPageList(current: number, total: number): (number | "…")[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  if (current <= 4) return [1, 2, 3, 4, 5, "…", total];
-  if (current >= total - 3)
-    return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
-  return [1, "…", current - 1, current, current + 1, "…", total];
-}
-
-const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];
-const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];
-const isApproved = (s: string) => APPROVED_STATUSES.includes(s);
-
-const EMPTY_TRUC: TrucNguoiInfo = {
-  tenNguoitruc: "",
-  capbacNguoitruc: "",
-  chucvuNguoitruc: "",
-  sodienthoai: "",
-};
-
-const EMPTY_DETAIL: DetailStepData = {
-  securityStatus: "",
-  incidentStatus: "",
-  incidentDetail: "",
-  advantageStatus: "",
-  advantageDetail: "",
-  disadvantageStatus: "",
-  disadvantageDetail: "",
-  pendingTaskStatus: "",
-  pendingDetail: "",
-};
-
-type NhiemVuNgayPayload = {
-  nhiemVuPhandoi: string;
-  noiDungDotXuat: string;
-  noiDungUuDiem: string;
-  noiDungKhuyetDiem: string;
-  noiDungCanGiaiQuyet: string;
-  donBaoCao: string;
-};
-type NhiemVuNgay = {
-  idNhiemvuNgay?: string;
-  nhiemVuPhandoi?: string;
-  noiDungDotXuat?: string;
-  noiDungUuDiem?: string;
-  noiDungKhuyetDiem?: string;
-  noiDungCanGiaiQuyet?: string;
-};
-
-async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {
-  try {
-    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {
-      skipErrorToast: true,
-    });
-    return (res.data?.Result as NhiemVuNgay) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {
-  const payload = detailToNhiemVu(detail, idDonBaoCao);
-  const existing = await fetchNhiemVu(idDonBaoCao);
-  try {
-    if (existing?.idNhiemvuNgay) {
-      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {
-        skipErrorToast: true,
-      });
-    } else {
-      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });
-    }
-  } catch {
-    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */
-  }
-}
-
-function detailToNhiemVu(
-  d: DetailStepData,
-  donBaoCao: string,
-): NhiemVuNgayPayload {
-  return {
-    nhiemVuPhandoi: d.securityStatus,
-    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",
-    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",
-    noiDungKhuyetDiem:
-      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",
-    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",
-    donBaoCao,
-  };
-}
-
-function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {
-  const sec = nv.nhiemVuPhandoi;
-  return {
-    securityStatus: sec === "safe" || sec === "unsafe" ? sec : "",
-    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",
-    incidentDetail: nv.noiDungDotXuat ?? "",
-    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",
-    advantageDetail: nv.noiDungUuDiem ?? "",
-    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",
-    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",
-    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",
-    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",
-  };
-}
-
-type Errors = Record<string, string>;
-
-function FieldError({ msg }: { msg?: string }) {
-  if (!msg) return null;
-  return (
-    <p className="mt-1 flex items-center text-sm text-red-600">
-      <AlertTriangle className="mr-1 size-3.5 shrink-0" />
-      {msg}
-    </p>
-  );
-}
-
-function ReqLabel({
-  children,
-  required,
-}: {
-  children: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="mb-1 block text-sm text-muted-foreground">
-      {children}
-      {required && <span className="text-red-500"> *</span>}
-    </label>
-  );
-}
-
-function TrucSection({
-  title,
-  value,
-  onChange,
-  prefix,
-  errors,
-  clearError,
-}: {
-  title: string;
-  value: TrucNguoiInfo;
-  onChange: (v: TrucNguoiInfo) => void;
-  prefix: string;
-  errors: Errors;
-  clearError: (key: string) => void;
-}) {
-  const errClass = (key: string) =>
-    errors[`${prefix}.${key}`]
-      ? "border-red-500 focus-visible:ring-red-500"
-      : "";
-
-  return (
-    <div className="-mx-1.5 flex flex-wrap">
-      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel required>Họ và tên</ReqLabel>
-        <Input
-          className={errClass("ten")}
-          placeholder="Nhập họ và tên..."
-          value={value.tenNguoitruc}
-          onChange={(e) => {
-            onChange({ ...value, tenNguoitruc: e.target.value });
-            clearError(`${prefix}.ten`);
-          }}
-        />
-        <FieldError msg={errors[`${prefix}.ten`]} />
-      </div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel required>Cấp bậc</ReqLabel>
-        <Select
-          value={value.capbacNguoitruc}
-          onValueChange={(v) => {
-            onChange({ ...value, capbacNguoitruc: v });
-            clearError(`${prefix}.capBac`);
-          }}
-        >
-          <SelectTrigger className={errClass("capBac")}>
-            <SelectValue placeholder="-- Cấp bậc --" />
-          </SelectTrigger>
-          <SelectContent>
-            {CAP_BAC_OPTIONS.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <FieldError msg={errors[`${prefix}.capBac`]} />
-      </div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel required>Chức vụ</ReqLabel>
-        <Input
-          className={errClass("chucVu")}
-          placeholder="Nhập chức vụ..."
-          value={value.chucvuNguoitruc}
-          onChange={(e) => {
-            onChange({ ...value, chucvuNguoitruc: e.target.value });
-            clearError(`${prefix}.chucVu`);
-          }}
-        />
-        <FieldError msg={errors[`${prefix}.chucVu`]} />
-      </div>
-      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">
-        <ReqLabel>Số điện thoại</ReqLabel>
-        <Input
-          placeholder="Nhập số điện thoại..."
-          value={value.sodienthoai}
-          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}
-        />
-      </div>
-    </div>
-  );
-}
-
-function RadioRow({
-  value,
-  options,
-  onChange,
-  hasError,
-}: {
-  value: string;
-  options: { value: string; label: string; tone?: "success" | "danger" }[];
-  onChange: (v: string) => void;
-  hasError?: boolean;
-}) {
-  return (
-    <div className="-mb-2 flex flex-wrap">
-      {options.map((o) => {
-        const active = value === o.value;
-        const tone = o.tone ?? "success";
-        const activeCls =
-          tone === "danger"
-            ? "border-rose-200 tone-danger border"
-            : "border-emerald-200 tone-success border";
-        const idleCls =
-          tone === "danger"
-            ? "border-input bg-background text-foreground hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
-            : "border-input bg-background text-foreground hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700";
-        return (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => onChange(o.value)}
-            className={
-              "mb-2 mr-2 inline-flex select-none items-center gap-1 rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +
-              (active ? activeCls : idleCls) +
-              (hasError && !active ? " border-red-400" : "")
-            }
-          >
-            {active && <span aria-hidden>{tone === "danger" ? "✕" : "✓"}</span>}
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
+import { useEffect, useMemo, useState } from "react";  
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";  
+import { toast } from "sonner";  
+import {  
+  Trash2,  
+  ArrowLeft,  
+  Plus,  
+  Save,  
+  Copy,  
+  AlertTriangle,  
+  Layers,  
+} from "lucide-react";  
+import api from "@/lib/api";  
+import { reportApi } from "./api";  
+import { Button } from "@/components/ui/button";  
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";  
+import { Input } from "@/components/ui/input";  
+import { Textarea } from "@/components/ui/textarea";  
+import {  
+  Select,  
+  SelectContent,  
+  SelectItem,  
+  SelectTrigger,  
+  SelectValue,  
+} from "@/components/ui/select";  
+import { useAuthInfo } from "@/features/auth/queries";  
+import { useCreateReport, useUpdateReport } from "./queries";  
+import {  
+  LY_DO_OPTIONS,  
+  CAP_BAC_OPTIONS,  
+  EMPTY_VANG,  
+  classifyCapBac,  
+  todayIso,  
+} from "./utils";  
+import type {  
+  AbsentRow,  
+  TrucNguoiInfo,  
+  DetailStepData,  
+  CreateReportRequest,  
+  VangChiTiet,  
+  ReportItemDTO,  
+} from "@/types/dailyReport";  
+import { useUnits } from "@/features/units/queries";  
+import {  
+  Pagination,  
+  PaginationContent,  
+  PaginationItem,  
+  PaginationLink,  
+  PaginationPrevious,  
+  PaginationNext,  
+  PaginationEllipsis,  
+} from "@/components/ui/pagination";  
+import type { DonVi } from "@/types/account";  
+  
+const genId = () => Math.random().toString(36).slice(2);  
+  
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];  
+const COMMAND_KYHIEU = ["CH/e", "CH/f"];  
+const EXPAND_CAPS = ["SU_DOAN", "TRUNG_DOAN"];  
+  
+type Agg = { siQuan: number; qncn: number; hsqBs: number };  
+  
+function getDirectChildren(maDonVi: string, all: DonVi[]): DonVi[] {  
+  return all.filter((u) => {  
+    if (!u.maDonVi.startsWith(maDonVi + ".")) return false;  
+    return !u.maDonVi.slice(maDonVi.length + 1).includes(".");  
+  });  
+}  
+  
+function unitFullAgg(unit: DonVi, all: DonVi[]): Agg {  
+  const own: Agg = {  
+    siQuan: unit.quanSoSiQuan ?? 0,  
+    qncn: unit.quanSoQncn ?? 0,  
+    hsqBs: unit.quanSoHsqBs ?? 0,  
+  };  
+  if (!EXPAND_CAPS.includes(unit.capDonVi ?? "")) return own;  
+  const children = getDirectChildren(unit.maDonVi, all).filter(  
+    (u) => !COMMAND_KYHIEU.includes(u.kyhieuDonvi),  
+  );  
+  return children.reduce((acc, c) => {  
+    const t = unitFullAgg(c, all);  
+    return {  
+      siQuan: acc.siQuan + t.siQuan,  
+      qncn: acc.qncn + t.qncn,  
+      hsqBs: acc.hsqBs + t.hsqBs,  
+    };  
+  }, own);  
+}  
+  
+function getPageList(current: number, total: number): (number | "…")[] {  
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);  
+  if (current <= 4) return [1, 2, 3, 4, 5, "…", total];  
+  if (current >= total - 3)  
+    return [1, "…", total - 4, total - 3, total - 2, total - 1, total];  
+  return [1, "…", current - 1, current, current + 1, "…", total];  
+}  
+  
+const TONG_HOP_CAPS = ["TRUNG_DOAN", "TIEU_DOAN"];  
+const APPROVED_STATUSES = ["Da_Duyet", "Đã_Duyệt", "Đã duyệt"];  
+const isApproved = (s: string) => APPROVED_STATUSES.includes(s);  
+  
+const EMPTY_TRUC: TrucNguoiInfo = {  
+  tenNguoitruc: "",  
+  capbacNguoitruc: "",  
+  chucvuNguoitruc: "",  
+  sodienthoai: "",  
+};  
+  
+const EMPTY_DETAIL: DetailStepData = {  
+  securityStatus: "",  
+  incidentStatus: "",  
+  incidentDetail: "",  
+  advantageStatus: "",  
+  advantageDetail: "",  
+  disadvantageStatus: "",  
+  disadvantageDetail: "",  
+  pendingTaskStatus: "",  
+  pendingDetail: "",  
+};  
+  
+type NhiemVuNgayPayload = {  
+  nhiemVuPhandoi: string;  
+  noiDungDotXuat: string;  
+  noiDungUuDiem: string;  
+  noiDungKhuyetDiem: string;  
+  noiDungCanGiaiQuyet: string;  
+  donBaoCao: string;  
+};  
+type NhiemVuNgay = {  
+  idNhiemvuNgay?: string;  
+  nhiemVuPhandoi?: string;  
+  noiDungDotXuat?: string;  
+  noiDungUuDiem?: string;  
+  noiDungKhuyetDiem?: string;  
+  noiDungCanGiaiQuyet?: string;  
+};  
+  
+async function fetchNhiemVu(idDonBaoCao: string): Promise<NhiemVuNgay | null> {  
+  try {  
+    const res = await api.get(`/nhiemvungay/donbaocao/${idDonBaoCao}`, {  
+      skipErrorToast: true,  
+    });  
+    return (res.data?.Result as NhiemVuNgay) ?? null;  
+  } catch {  
+    return null;  
+  }  
+}  
+  
+async function saveNhiemVu(idDonBaoCao: string, detail: DetailStepData) {  
+  const payload = detailToNhiemVu(detail, idDonBaoCao);  
+  const existing = await fetchNhiemVu(idDonBaoCao);  
+  try {  
+    if (existing?.idNhiemvuNgay) {  
+      await api.put(`/nhiemvungay/${existing.idNhiemvuNgay}`, payload, {  
+        skipErrorToast: true,  
+      });  
+    } else {  
+      await api.post(`/nhiemvungay`, payload, { skipErrorToast: true });  
+    }  
+  } catch {  
+    /* không chặn lưu báo cáo chính nếu nhiệm vụ ngày lỗi */  
+  }  
+}  
+  
+function detailToNhiemVu(  
+  d: DetailStepData,  
+  donBaoCao: string,  
+): NhiemVuNgayPayload {  
+  return {  
+    nhiemVuPhandoi: d.securityStatus,  
+    noiDungDotXuat: d.incidentStatus === "yes" ? d.incidentDetail : "",  
+    noiDungUuDiem: d.advantageStatus === "yes" ? d.advantageDetail : "",  
+    noiDungKhuyetDiem:  
+      d.disadvantageStatus === "yes" ? d.disadvantageDetail : "",  
+    noiDungCanGiaiQuyet: d.pendingTaskStatus === "yes" ? d.pendingDetail : "",  
+    donBaoCao,  
+  };  
+}  
+  
+function nhiemVuToDetail(nv: NhiemVuNgay): DetailStepData {  
+  const sec = nv.nhiemVuPhandoi;  
+  return {  
+    securityStatus: sec === "safe" || sec === "unsafe" ? sec : "",  
+    incidentStatus: nv.noiDungDotXuat ? "yes" : "no",  
+    incidentDetail: nv.noiDungDotXuat ?? "",  
+    advantageStatus: nv.noiDungUuDiem ? "yes" : "no",  
+    advantageDetail: nv.noiDungUuDiem ?? "",  
+    disadvantageStatus: nv.noiDungKhuyetDiem ? "yes" : "no",  
+    disadvantageDetail: nv.noiDungKhuyetDiem ?? "",  
+    pendingTaskStatus: nv.noiDungCanGiaiQuyet ? "yes" : "no",  
+    pendingDetail: nv.noiDungCanGiaiQuyet ?? "",  
+  };  
+}  
+  
+type Errors = Record<string, string>;  
+  
+function FieldError({ msg }: { msg?: string }) {  
+  if (!msg) return null;  
+  return (  
+    <p className="mt-1 flex items-center text-sm text-red-600">  
+      <AlertTriangle className="mr-1 size-3.5 shrink-0" />  
+      {msg}  
+    </p>  
+  );  
+}  
+  
+function ReqLabel({  
+  children,  
+  required,  
+}: {  
+  children: string;  
+  required?: boolean;  
+}) {  
+  return (  
+    <label className="mb-1 block text-sm text-muted-foreground">  
+      {children}  
+      {required && <span className="text-red-500"> *</span>}  
+    </label>  
+  );  
+}  
+  
+function TrucSection({  
+  title,  
+  value,  
+  onChange,  
+  prefix,  
+  errors,  
+  clearError,  
+}: {  
+  title: string;  
+  value: TrucNguoiInfo;  
+  onChange: (v: TrucNguoiInfo) => void;  
+  prefix: string;  
+  errors: Errors;  
+  clearError: (key: string) => void;  
+}) {  
+  const errClass = (key: string) =>  
+    errors[`${prefix}.${key}`]  
+      ? "border-red-500 focus-visible:ring-red-500"  
+      : "";  
+  
+  return (  
+    <div className="-mx-1.5 flex flex-wrap">  
+      <div className="w-full px-1.5 mb-3 text-sm font-semibold">{title}</div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel required>Họ và tên</ReqLabel>  
+        <Input  
+          className={errClass("ten")}  
+          placeholder="Nhập họ và tên..."  
+          value={value.tenNguoitruc}  
+          onChange={(e) => {  
+            onChange({ ...value, tenNguoitruc: e.target.value });  
+            clearError(`${prefix}.ten`);  
+          }}  
+        />  
+        <FieldError msg={errors[`${prefix}.ten`]} />  
+      </div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel required>Cấp bậc</ReqLabel>  
+        <Select  
+          value={value.capbacNguoitruc}  
+          onValueChange={(v) => {  
+            onChange({ ...value, capbacNguoitruc: v });  
+            clearError(`${prefix}.capBac`);  
+          }}  
+        >  
+          <SelectTrigger className={errClass("capBac")}>  
+            <SelectValue placeholder="-- Cấp bậc --" />  
+          </SelectTrigger>  
+          <SelectContent>  
+            {CAP_BAC_OPTIONS.map((c) => (  
+              <SelectItem key={c} value={c}>  
+                {c}  
+              </SelectItem>  
+            ))}  
+          </SelectContent>  
+        </Select>  
+        <FieldError msg={errors[`${prefix}.capBac`]} />  
+      </div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel required>Chức vụ</ReqLabel>  
+        <Input  
+          className={errClass("chucVu")}  
+          placeholder="Nhập chức vụ..."  
+          value={value.chucvuNguoitruc}  
+          onChange={(e) => {  
+            onChange({ ...value, chucvuNguoitruc: e.target.value });  
+            clearError(`${prefix}.chucVu`);  
+          }}  
+        />  
+        <FieldError msg={errors[`${prefix}.chucVu`]} />  
+      </div>  
+      <div className="w-full px-1.5 mb-3 sm:w-1/2 lg:w-1/4">  
+        <ReqLabel>Số điện thoại</ReqLabel>  
+        <Input  
+          placeholder="Nhập số điện thoại..."  
+          value={value.sodienthoai}  
+          onChange={(e) => onChange({ ...value, sodienthoai: e.target.value })}  
+        />  
+      </div>  
+    </div>  
+  );  
+}  
+  
+function RadioRow({  
+  value,  
+  options,  
+  onChange,  
+  hasError,  
+}: {  
+  value: string;  
+  options: { value: string; label: string; tone?: "success" | "danger" }[];  
+  onChange: (v: string) => void;  
+  hasError?: boolean;  
+}) {  
+  return (  
+    <div className="-mb-2 flex flex-wrap">  
+      {options.map((o) => {  
+        const active = value === o.value;  
+        const tone = o.tone ?? "success";  
+        const activeCls =  
+          tone === "danger"  
+            ? "border-rose-200 tone-danger border"  
+            : "border-emerald-200 tone-success border";  
+        const idleCls =  
+          tone === "danger"  
+            ? "border-input bg-background text-foreground hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"  
+            : "border-input bg-background text-foreground hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700";  
+        return (  
+          <button  
+            key={o.value}  
+            type="button"  
+            onClick={() => onChange(o.value)}  
+            className={  
+              "mb-2 mr-2 inline-flex select-none items-center gap-1 rounded-lg border px-4 py-1.5 text-sm font-semibold transition-colors " +  
+              (active ? activeCls : idleCls) +  
+              (hasError && !active ? " border-red-400" : "")  
+            }  
+          >  
+            {active && <span aria-hidden>{tone === "danger" ? "✕" : "✓"}</span>}  
+            {o.label}  
+          </button>  
+        );  
+      })}  
+    </div>  
+  );  
+}  
+  
 export default function CreateReport() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -378,6 +378,8 @@ export default function CreateReport() {
   const [searchParams] = useSearchParams();
   const ngayParam = searchParams.get("ngay");
   const isTongHop = searchParams.get("tongHop") === "1" && !isEdit;
+  // >>> SỬA: cờ tái tổng hợp, KHÔNG phụ thuộc isEdit (dùng cho nút "Tổng hợp lại")
+  const wantReconsolidate = searchParams.get("tongHop") === "1";
   const [ngayBaoCao, setNgayBaoCao] = useState(ngayParam || todayIso());
 
   const [aggTongQuanSo, setAggTongQuanSo] = useState(0);
@@ -424,7 +426,8 @@ export default function CreateReport() {
           }
           if (r.loaiDonBaoCao === "TONG_HOP") {
             setIsAggregatingReport(true);
-            setAggTongQuanSo(r.quanSoTong ?? 0);
+            // >>> SỬA: khi tái tổng hợp thì KHÔNG nạp số tổng cũ (để effect gộp lại ghi đè)
+            if (!wantReconsolidate) setAggTongQuanSo(r.quanSoTong ?? 0);
           }
           try {
             if (r.trucBanChiHuy)
@@ -442,7 +445,8 @@ export default function CreateReport() {
             /* ignore */
           }
           try {
-            if (r.chiTietVang) {
+            // >>> SỬA: khi tái tổng hợp thì KHÔNG nạp danh sách vắng cũ
+            if (r.chiTietVang && !wantReconsolidate) {
               const rows = JSON.parse(r.chiTietVang) as AbsentRow[];
               setAbsentRows(rows.map((row) => ({ ...row, id: genId() })));
             }
@@ -478,10 +482,12 @@ export default function CreateReport() {
     return () => {
       ignore = true;
     };
-  }, [isEdit, id]);
+  }, [isEdit, id, wantReconsolidate]); // >>> SỬA: thêm wantReconsolidate vào deps
 
   useEffect(() => {
-    if (!isTongHop || !donVi?.maDonVi || units.length === 0) return;
+    // >>> SỬA: chạy khi tổng hợp mới (isTongHop) HOẶC tái tổng hợp trong edit (wantReconsolidate)
+    const shouldAggregate = isTongHop || wantReconsolidate;
+    if (!shouldAggregate || !donVi?.maDonVi || units.length === 0) return;
     let ignore = false;
 
     (async () => {
@@ -535,7 +541,14 @@ export default function CreateReport() {
     return () => {
       ignore = true;
     };
-  }, [isTongHop, donVi?.maDonVi, ngayBaoCao, units.length, capByUnit]);
+  }, [
+    isTongHop,
+    wantReconsolidate, // >>> SỬA: thêm vào deps
+    donVi?.maDonVi,
+    ngayBaoCao,
+    units.length,
+    capByUnit,
+  ]);
 
   const quanSoVang = absentRows.length;
   const quanSoHienDien = Math.max(0, tongQuanSo - quanSoVang);
