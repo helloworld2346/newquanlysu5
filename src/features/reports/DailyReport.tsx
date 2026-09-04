@@ -259,14 +259,8 @@ export default function DailyReport() {
     : `Tổng hợp (${approvedChildRows.length}/${totalRequiredCount})`;
 
   const visibleRows = useMemo(
-    () =>
-      rows.filter((r) => {
-        if (hideDraftForCommander) {
-          return !r.notSubmitted && !isDraft(r.status);
-        }
-        return !isDraft(r.status) || r.donVi === maDonVi;
-      }),
-    [rows, maDonVi, hideDraftForCommander],
+    () => rows.filter((r) => !isDraft(r.status) || r.donVi === maDonVi),
+    [rows, maDonVi],
   );
 
   const hasFilter = search.trim() !== "" || filterStatus !== "ALL";
@@ -375,7 +369,7 @@ export default function DailyReport() {
     !!commanderReport &&
     normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
 
-  const effectiveTab = isChiHuy && hasChildren ? "consolidated" : activeTab;
+const effectiveTab = activeTab;
 
   const signerSource = activeDraft ?? (canApprove ? commanderReport : null);
   const signer = useMemo(
@@ -691,7 +685,7 @@ export default function DailyReport() {
           </Button>
         )}
       </div>
-      {hasChildren && !isChiHuy && (
+      {hasChildren &&  (
         <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1 dark:border-emerald-900/50 dark:bg-emerald-950/30">
           <button
             type="button"
