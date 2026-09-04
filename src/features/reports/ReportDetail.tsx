@@ -15,6 +15,10 @@ import {
   Briefcase,
   Building2,
   CalendarClock,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  MinusCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,12 +66,16 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_TONE: Record<string, string> = {
-  Chờ_Duyệt: "bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300",
-  "Chờ duyệt": "bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300",
-  Đã_Duyệt: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300",
-  Da_Duyet: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300",
-  Tu_Choi: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300",
-  Từ_Chối: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300",
+  Chờ_Duyệt:
+    "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
+  "Chờ duyệt":
+    "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
+  Đã_Duyệt:
+    "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+  Da_Duyet:
+    "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+  Tu_Choi: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
+  Từ_Chối: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
 };
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -122,8 +130,6 @@ function InfoField({
     </div>
   );
 }
-
-
 
 function KySoInfoRow({
   icon,
@@ -239,49 +245,74 @@ function KySoCard({
   );
 }
 
+const NHIEM_VU_TONE = {
+  success: {
+    icon: CheckCircle2,
+    badge:
+      "bg-[hsl(var(--tone-success-bg))] text-[hsl(var(--tone-success-fg))] ring-1 ring-inset ring-[hsl(var(--tone-success-border))]",
+    iconColor: "text-[hsl(var(--tone-success-fg))]",
+  },
+  danger: {
+    icon: XCircle,
+    badge:
+      "bg-[hsl(var(--tone-danger-bg))] text-[hsl(var(--tone-danger-fg))] ring-1 ring-inset ring-[hsl(var(--tone-danger-border))]",
+    iconColor: "text-[hsl(var(--tone-danger-fg))]",
+  },
+  warning: {
+    icon: AlertTriangle,
+    badge:
+      "bg-[hsl(var(--tone-warning-bg))] text-[hsl(var(--tone-warning-fg))] ring-1 ring-inset ring-[hsl(var(--tone-warning-border))]",
+    iconColor: "text-[hsl(var(--tone-warning-fg))]",
+  },
+  neutral: {
+    icon: MinusCircle,
+    badge:
+      "bg-[hsl(var(--tone-neutral-bg))] text-[hsl(var(--tone-neutral-fg))] ring-1 ring-inset ring-[hsl(var(--tone-neutral-border))]",
+    iconColor: "text-[hsl(var(--tone-neutral-fg))]",
+  },
+} as const;
+
 function NhiemVuItem({
   index,
   label,
   status,
   detail,
   accent,
+  last,
 }: {
   index: number;
   label: string;
   status: string;
   detail?: string;
   accent: "success" | "danger" | "warning" | "neutral";
+  last?: boolean;
 }) {
-  const accentBorder = {
-    success: "border-l-emerald-500 dark:border-l-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:bg-emerald-950/30 dark:bg-emerald-950/40/40",
-    danger: "border-l-rose-500 dark:border-l-rose-600 bg-rose-50 dark:bg-rose-950/30 dark:bg-rose-950/40/40",
-    warning: "border-l-amber-500 dark:border-l-amber-600 bg-amber-50/40 dark:bg-amber-950/30",
-    neutral: "border-l-slate-300 dark:border-l-slate-600",
-  }[accent];
-  const badgeTone = {
-    success: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300",
-    danger: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300",
-    warning: "bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300",
-    neutral: "bg-slate-100 dark:bg-slate-900/40 text-muted-foreground",
-  }[accent];
+  const tone = NHIEM_VU_TONE[accent];
+  const Icon = tone.icon;
 
   return (
-    <div className={`mb-3 rounded-md border border-l-4 p-4 ${accentBorder}`}>
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold">
-          {index}. {label}
-        </p>
-        <span
-          className={`ml-2 shrink-0 rounded-full px-2 py-0.5 text-sm font-medium ${badgeTone}`}
-        >
-          {status}
-        </span>
-      </div>
-      {detail && detail.trim() !== "" && (
-        <div className="mt-3 whitespace-pre-wrap rounded-md border bg-muted/50 p-3 text-sm">
-          {detail}
+    <div className={last ? "" : "border-b border-border"}>
+      <div className="flex items-start gap-3 py-4">
+        <Icon className={`mt-0.5 size-5 shrink-0 ${tone.iconColor}`} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground">
+              <span className="mr-1.5 text-muted-foreground">{index}.</span>
+              {label}
+            </p>
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${tone.badge}`}
+            >
+              {status}
+            </span>
+          </div>
+          {detail && detail.trim() !== "" && (
+            <p className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-sm leading-relaxed text-foreground">
+              {detail}
+            </p>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -435,7 +466,8 @@ export default function ReportDetail() {
         </div>
         <span
           className={`rounded-full px-3 py-1 text-sm font-medium ${
-            STATUS_TONE[data.status] ?? "bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 dark:text-slate-300 dark:text-slate-300 dark:text-slate-300"
+            STATUS_TONE[data.status] ??
+            "bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300"
           }`}
         >
           {STATUS_LABEL[data.status] ?? data.status}
@@ -453,38 +485,38 @@ export default function ReportDetail() {
             label="Đơn vị"
             value={data.donVi.tenDonvi}
             icon={Info}
-            tone="bg-sky-50 dark:bg-sky-950/30 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 dark:text-sky-300"
+            tone="bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300"
           />
           <InfoField
             label="Ngày báo cáo"
             value={ngay}
             icon={ClipboardList}
-            tone="bg-violet-50 dark:bg-violet-950/30 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 dark:text-violet-300"
+            tone="bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300"
           />
           <InfoField
             label="Tổng quân số"
             value={formatNum(data.quanSoTong)}
             icon={Users}
-            tone="bg-blue-50 dark:bg-blue-950/30 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 dark:text-blue-300"
+            tone="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300"
           />
           <InfoField
             label="Hiện diện"
             value={formatNum(data.quanSoHienDien)}
             icon={UserCheck}
-            tone="bg-emerald-50 dark:bg-emerald-950/30 dark:bg-emerald-950/30 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300 dark:text-emerald-300"
+            tone="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300"
           />
           <InfoField
             label="Tổng vắng"
             value={formatNum(data.quanSoVang)}
             icon={UserX}
-            tone="bg-rose-50 dark:bg-rose-950/30 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 dark:text-rose-300 dark:text-rose-300"
+            tone="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300"
           />
           {data.ghiChu ? (
             <InfoField
               label="Ghi chú"
               value={data.ghiChu}
               icon={ClipboardList}
-              tone="bg-slate-50 dark:bg-slate-900 dark:bg-slate-950/40 text-slate-700 dark:text-slate-200 dark:text-slate-300 dark:text-slate-300 dark:text-slate-300"
+              tone="bg-slate-50 dark:bg-slate-950/40 text-slate-700 dark:text-slate-300"
             />
           ) : null}
         </CardContent>
@@ -506,7 +538,7 @@ export default function ReportDetail() {
             label="Trực ban tác chiến / nội vụ"
             data={toTrucInfo(trucTacChien)}
             accent="emerald"
-          />  
+          />
         </CardContent>
       </Card>
 
@@ -546,7 +578,7 @@ export default function ReportDetail() {
                         <TableCell>{m.capBac || "—"}</TableCell>
                         <TableCell>{m.chucVu || "—"}</TableCell>
                         <TableCell>
-                          <span className="inline-block rounded-full bg-amber-100 dark:bg-amber-900/40 dark:bg-amber-900/40 px-2 py-0.5 text-sm font-medium text-amber-700 dark:text-amber-300 dark:text-amber-300 dark:text-amber-300">
+                          <span className="inline-block rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-sm font-medium text-amber-700 dark:text-amber-300">
                             {LY_DO_LABEL[m.lyDoVang] || m.lyDoVang || "—"}
                           </span>
                         </TableCell>
@@ -646,38 +678,37 @@ export default function ReportDetail() {
               <NhiemVuItem
                 index={1}
                 label="Nhiệm vụ các phân đội đóng quân canh phòng"
-                status={
-                  isSafe ? "✓ Đảm bảo an toàn" : "✕ Không đảm bảo an toàn"
-                }
+                status={isSafe ? "Đảm bảo an toàn" : "Không đảm bảo an toàn"}
                 accent={isSafe ? "success" : "danger"}
               />
               <NhiemVuItem
                 index={2}
                 label="Tình hình đột xuất"
-                status={hasDotXuat ? "⚠ Có phát sinh" : "✓ Không phát sinh"}
+                status={hasDotXuat ? "Có phát sinh" : "Không phát sinh"}
                 detail={nhiemVu.noiDungDotXuat}
                 accent={hasDotXuat ? "warning" : "success"}
               />
               <NhiemVuItem
                 index={3}
                 label="Ưu điểm trong ngày"
-                status={hasUuDiem ? "✓ Có" : "— Không có"}
+                status={hasUuDiem ? "Có" : "Không có"}
                 detail={nhiemVu.noiDungUuDiem}
                 accent={hasUuDiem ? "success" : "neutral"}
               />
               <NhiemVuItem
                 index={4}
                 label="Khuyết điểm trong ngày"
-                status={hasKhuyetDiem ? "✕ Có" : "✓ Không có"}
+                status={hasKhuyetDiem ? "Có" : "Không có"}
                 detail={nhiemVu.noiDungKhuyetDiem}
                 accent={hasKhuyetDiem ? "danger" : "success"}
               />
               <NhiemVuItem
                 index={5}
                 label="Nhiệm vụ cần giải quyết"
-                status={hasCanGiaiQuyet ? "⚠ Cần xử lý" : "✓ Không có"}
+                status={hasCanGiaiQuyet ? "Cần xử lý" : "Không có"}
                 detail={nhiemVu.noiDungCanGiaiQuyet}
                 accent={hasCanGiaiQuyet ? "warning" : "success"}
+                last
               />
             </>
           ) : (
