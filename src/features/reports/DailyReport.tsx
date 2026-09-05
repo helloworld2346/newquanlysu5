@@ -18,6 +18,8 @@ import {
   Briefcase,
   Layers,
   XCircle,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -566,6 +568,58 @@ const effectiveTab = activeTab;
     GS003: "f5",
   };
 
+  const exportRows =
+    effectiveTab === "consolidated" ? visibleTongHopRows : filteredRows;
+  const exportTotals = effectiveTab === "consolidated" ? tongHopTotals : totals;
+
+  const dutySource = commanderReport ?? ownReport ?? ownDonViRow;
+  const exportTrucChiHuy = parseJson<TrucNguoiInfo | null>(
+    dutySource?.raw?.trucBanChiHuy,
+    null,
+  );
+  const exportTrucBanTacChien = parseJson<TrucNguoiInfo | null>(
+    dutySource?.raw?.trucBanTacChien,
+    null,
+  );
+
+  const handleExportExcel = async () => {
+    if (exportRows.length === 0) {
+      toast.error("Chưa có báo cáo để xuất!");
+      return;
+    }
+    const { exportTroopReportToExcel } =
+      await import("./export/exportTroopReport");
+    await exportTroopReportToExcel({
+      displayRows: exportRows,
+      displayTotals: exportTotals,
+      reportDate: ngay,
+      trucChiHuy: exportTrucChiHuy,
+      trucBanTacChien: exportTrucBanTacChien,
+      donViName: account?.donVi?.tenDonvi,
+      parentUnitName:
+        (account?.donVi as { donViCha?: string })?.donViCha ?? undefined,
+    });
+  };
+
+  const handleExportWord = async () => {
+    if (exportRows.length === 0) {
+      toast.error("Chưa có báo cáo để xuất!");
+      return;
+    }
+    const { exportTroopReportToWord } =
+      await import("./export/exportTroopReportWord");
+    await exportTroopReportToWord({
+      displayRows: exportRows,
+      displayTotals: exportTotals,
+      reportDate: ngay,
+      trucChiHuy: exportTrucChiHuy,
+      trucBanTacChien: exportTrucBanTacChien,
+      donViName: account?.donVi?.tenDonvi,
+      parentUnitName:
+        (account?.donVi as { donViCha?: string })?.donViCha ?? undefined,
+    });
+  };
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between">
@@ -579,6 +633,16 @@ const effectiveTab = activeTab;
             onChange={setNgay}
             className="mr-2 w-[280px]"
           />
+          <Button
+            variant="outline"
+            className="mr-2"
+            onClick={handleExportExcel}
+          >
+            <FileSpreadsheet className="mr-2 size-4" /> Xuất Excel
+          </Button>
+          <Button variant="outline" className="mr-2" onClick={handleExportWord}>
+            <FileText className="mr-2 size-4" /> Xuất Word
+          </Button>
           {hasChildren ? (
             isChiHuy ? (
               canApprove && commanderReport ? (
@@ -685,7 +749,7 @@ const effectiveTab = activeTab;
           </Button>
         )}
       </div>
-      {hasChildren &&  (
+      {hasChildren && (
         <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1 dark:border-emerald-900/50 dark:bg-emerald-950/30">
           <button
             type="button"

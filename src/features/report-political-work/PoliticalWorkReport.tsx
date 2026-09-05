@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   XCircle,
   X,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
+import { donviApi } from "@/features/units/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, type StatCardTone } from "@/components/ui/stat-card";
@@ -314,6 +317,68 @@ export default function PoliticalWorkReport() {
     !!commanderReport &&
     normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
 
+  const handleExportPoliticalExcel = async () => {
+    const row = commanderReport ?? ownReport; // ⚠️ xem lưu ý bên dưới
+    if (!row) {
+      toast.error("Chưa có báo cáo để xuất!");
+      return;
+    }
+    let quanSo = { siQuan: 0, qncn: 0, hsqBs: 0 };
+    try {
+      const q = await donviApi.getQuanSoBienChe(maDonVi!);
+      quanSo = {
+        siQuan: q.quanSoSiQuan,
+        qncn: q.quanSoQncn,
+        hsqBs: q.quanSoHsqBs,
+      };
+    } catch {
+      /* giữ fallback 0 */
+    }
+    const { exportPoliticalWorkToExcel } =
+      await import("./export/exportPoliticalWork");
+    await exportPoliticalWorkToExcel({
+      row,
+      reportDate: ngay,
+      tenDonVi: account?.donVi?.tenDonvi ?? "",
+      quanSo,
+      donViName: account?.donVi?.tenDonvi,
+      parentUnitName:
+        (account?.donVi as { donViCha?: string })?.donViCha ?? undefined,
+      hideNoiVu: capSelf === "DAI_DOI",
+    });
+  };
+
+  const handleExportPoliticalWord = async () => {
+    const row = commanderReport ?? ownReport; // ⚠️ xem lưu ý
+    if (!row) {
+      toast.error("Chưa có báo cáo để xuất!");
+      return;
+    }
+    let quanSo = { siQuan: 0, qncn: 0, hsqBs: 0 };
+    try {
+      const q = await donviApi.getQuanSoBienChe(maDonVi!);
+      quanSo = {
+        siQuan: q.quanSoSiQuan,
+        qncn: q.quanSoQncn,
+        hsqBs: q.quanSoHsqBs,
+      };
+    } catch {
+      /* giữ fallback 0 */
+    }
+    const { exportPoliticalWorkToWord } =
+      await import("./export/exportPoliticalWorkWord");
+    await exportPoliticalWorkToWord({
+      row,
+      reportDate: ngay,
+      tenDonVi: account?.donVi?.tenDonvi ?? "",
+      quanSo,
+      donViName: account?.donVi?.tenDonvi,
+      parentUnitName:
+        (account?.donVi as { donViCha?: string })?.donViCha ?? undefined,
+      hideNoiVu: capSelf === "DAI_DOI",
+    });
+  };
+
   const effectiveTab =
     isCommanderView && hasChildren ? "consolidated" : activeTab;
 
@@ -574,7 +639,20 @@ export default function PoliticalWorkReport() {
                       <Plus className="mr-2 size-4" /> Thêm báo cáo
                     </Button>
                   ))}
-
+                <Button
+                  variant="outline"
+                  className="mr-2"
+                  onClick={handleExportPoliticalExcel}
+                >
+                  <FileSpreadsheet className="mr-2 size-4" /> Xuất Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  className="mr-2"
+                  onClick={handleExportPoliticalWord}
+                >
+                  <FileText className="mr-2 size-4" /> Xuất Word
+                </Button>
                 {tongHopRefused ? (
                   <Button
                     variant="outline"
