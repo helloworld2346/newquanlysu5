@@ -1,6 +1,7 @@
 import { Bell, Moon, Sun, LogOut } from "lucide-react";
 import { useAuthInfo, useLogout } from "@/features/auth/queries";
 import { useTheme } from "@/shared/hooks/useTheme";
+import { useNotifications } from "@/features/notifications/notificationContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ export default function Topbar() {
   const { account } = useAuthInfo();
   const logout = useLogout();
   const { dark, toggle } = useTheme();
+  const { notifications, unreadCount, markAllRead } = useNotifications();
 
   const displayName =
     account?.tenTaiKhoan || account?.tenDangNhap || "Người dùng";
@@ -32,17 +34,46 @@ export default function Topbar() {
         {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
       </button>
 
-      <button
-        type="button"
-        aria-label="Thông báo"
-        title="Thông báo"
-        className="relative mr-4 grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-accent"
-      >
-        <Bell className="size-5" />
-        <span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-          3
-        </span>
-      </button>
+      <DropdownMenu onOpenChange={(open) => open && markAllRead()}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label="Thông báo"
+            title="Thông báo"
+            className="relative mr-4 grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-accent"
+          >
+            <Bell className="size-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuLabel>Thông báo</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {notifications.length === 0 ? (
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+              Chưa có thông báo
+            </div>
+          ) : (
+            notifications.slice(0, 10).map((n) => (
+              <DropdownMenuItem
+                key={n.id}
+                className="flex flex-col items-start gap-0.5"
+              >
+                <span className="text-sm font-medium text-foreground">
+                  {n.title}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(n.createdAt).toLocaleString("vi-VN")}
+                </span>
+              </DropdownMenuItem>
+            ))
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "./api";
 import { storage } from "@/lib/storage";
 import { normalizeRoleName } from "@/lib/roles";
+import { wsClient } from "@/lib/ws";  
 
 export const accountKey = ["account"] as const;
 
@@ -35,6 +36,7 @@ export function useLogout() {
     try {
       if (token) await authApi.logout(token);
     } finally {
+      wsClient.disconnect();
       storage.removeToken();
       storage.clearNavState();
       qc.clear();
