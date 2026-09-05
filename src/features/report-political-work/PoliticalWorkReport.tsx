@@ -121,7 +121,7 @@ export default function PoliticalWorkReport() {
   };
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
-  const [activeTab, setActiveTab] = useState<"child" | "consolidated">("child");
+  const [userTab, setUserTab] = useState<"child" | "consolidated" | null>(null);
 
   const [chuKySo, setChuKySo] = useState("");
 
@@ -146,6 +146,9 @@ export default function PoliticalWorkReport() {
     });
 
   const unitsReady = units.length > 0;
+
+  const activeTab: "child" | "consolidated" =
+    userTab ?? (isCommanderView && hasChildren ? "consolidated" : "child");
 
   const { data: items = [], isLoading } = usePoliticalMerged(
     maDonVi,
@@ -379,8 +382,7 @@ export default function PoliticalWorkReport() {
     });
   };
 
-  const effectiveTab =
-    isCommanderView && hasChildren ? "consolidated" : activeTab;
+  const effectiveTab = activeTab;
 
   const activeDraft = hasChildren ? tongHopDraft : ownDraft;
 
@@ -391,12 +393,8 @@ export default function PoliticalWorkReport() {
   );
 
   const visibleRows = useMemo(
-    () =>
-      rows.filter((r) => {
-        if (hideDraftForCommander) return !r.notSubmitted && !isDraft(r.status);
-        return !isDraft(r.status) || r.donVi === maDonVi;
-      }),
-    [rows, maDonVi, hideDraftForCommander],
+    () => rows.filter((r) => !isDraft(r.status) || r.donVi === maDonVi),
+    [rows, maDonVi],
   );
 
   const hasFilter = search.trim() !== "" || filterStatus !== "ALL";
@@ -639,20 +637,6 @@ export default function PoliticalWorkReport() {
                       <Plus className="mr-2 size-4" /> Thêm báo cáo
                     </Button>
                   ))}
-                <Button
-                  variant="outline"
-                  className="mr-2 border-[hsl(var(--tone-success-border))] bg-[hsl(var(--tone-success-bg))] text-[hsl(var(--tone-success-fg))] hover:bg-[hsl(var(--tone-success-bg))]/70"
-                  onClick={handleExportPoliticalExcel}
-                >
-                  <FileSpreadsheet className="mr-2 size-4" /> Xuất Excel
-                </Button>
-                <Button
-                  variant="outline"
-                  className="mr-2 border-[hsl(var(--tone-info-border))] bg-[hsl(var(--tone-info-bg))] text-[hsl(var(--tone-info-fg))] hover:bg-[hsl(var(--tone-info-bg))]/70"
-                  onClick={handleExportPoliticalWord}
-                >
-                  <FileText className="mr-2 size-4" /> Xuất Word
-                </Button>
                 {tongHopRefused ? (
                   <Button
                     variant="outline"
@@ -703,6 +687,20 @@ export default function PoliticalWorkReport() {
               <Plus className="mr-2 size-4" /> Thêm báo cáo
             </Button>
           )}
+          <Button
+            variant="outline"
+            className="mr-2 border-[hsl(var(--tone-success-border))] bg-[hsl(var(--tone-success-bg))] text-[hsl(var(--tone-success-fg))] hover:bg-[hsl(var(--tone-success-bg))]/70"
+            onClick={handleExportPoliticalExcel}
+          >
+            <FileSpreadsheet className="mr-2 size-4" /> Xuất Excel
+          </Button>
+          <Button
+            variant="outline"
+            className="mr-2 border-[hsl(var(--tone-info-border))] bg-[hsl(var(--tone-info-bg))] text-[hsl(var(--tone-info-fg))] hover:bg-[hsl(var(--tone-info-bg))]/70"
+            onClick={handleExportPoliticalWord}
+          >
+            <FileText className="mr-2 size-4" /> Xuất Word
+          </Button>
         </div>
       </div>
 
@@ -747,11 +745,11 @@ export default function PoliticalWorkReport() {
         )}
       </div>
 
-      {hasChildren && !isCommanderView && (
+      {hasChildren && (
         <div className="mb-3 inline-flex items-center rounded-[10px] border bg-primary/10 p-1 dark:border-emerald-900/50 dark:bg-emerald-950/30">
           <button
             type="button"
-            onClick={() => setActiveTab("child")}
+            onClick={() => setUserTab("child")}
             className={`mr-1 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "child"
                 ? "bg-background text-primary-text shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
@@ -762,7 +760,7 @@ export default function PoliticalWorkReport() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("consolidated")}
+            onClick={() => setUserTab("consolidated")}
             className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
               activeTab === "consolidated"
                 ? "bg-background text-primary-text shadow-sm dark:bg-emerald-900/40 dark:text-emerald-200"
