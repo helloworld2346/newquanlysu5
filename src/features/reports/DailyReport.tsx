@@ -371,7 +371,7 @@ export default function DailyReport() {
     !!commanderReport &&
     normalizeStatus(commanderReport.status) === "Chờ_Duyệt";
 
-const effectiveTab = activeTab;
+  const effectiveTab = activeTab;
 
   const signerSource = activeDraft ?? (canApprove ? commanderReport : null);
   const signer = useMemo(
@@ -635,12 +635,16 @@ const effectiveTab = activeTab;
           />
           <Button
             variant="outline"
-            className="mr-2"
+            className="mr-2 border-[hsl(var(--tone-success-border))] bg-[hsl(var(--tone-success-bg))] text-[hsl(var(--tone-success-fg))] hover:bg-[hsl(var(--tone-success-bg))]/70"
             onClick={handleExportExcel}
           >
             <FileSpreadsheet className="mr-2 size-4" /> Xuất Excel
           </Button>
-          <Button variant="outline" className="mr-2" onClick={handleExportWord}>
+          <Button
+            variant="outline"
+            className="mr-2 border-[hsl(var(--tone-info-border))] bg-[hsl(var(--tone-info-bg))] text-[hsl(var(--tone-info-fg))] hover:bg-[hsl(var(--tone-info-bg))]/70"
+            onClick={handleExportWord}
+          >
             <FileText className="mr-2 size-4" /> Xuất Word
           </Button>
           {hasChildren ? (

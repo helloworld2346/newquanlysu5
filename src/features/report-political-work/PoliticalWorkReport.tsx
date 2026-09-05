@@ -641,14 +641,14 @@ export default function PoliticalWorkReport() {
                   ))}
                 <Button
                   variant="outline"
-                  className="mr-2"
+                  className="mr-2 border-[hsl(var(--tone-success-border))] bg-[hsl(var(--tone-success-bg))] text-[hsl(var(--tone-success-fg))] hover:bg-[hsl(var(--tone-success-bg))]/70"
                   onClick={handleExportPoliticalExcel}
                 >
                   <FileSpreadsheet className="mr-2 size-4" /> Xuất Excel
                 </Button>
                 <Button
                   variant="outline"
-                  className="mr-2"
+                  className="mr-2 border-[hsl(var(--tone-info-border))] bg-[hsl(var(--tone-info-bg))] text-[hsl(var(--tone-info-fg))] hover:bg-[hsl(var(--tone-info-bg))]/70"
                   onClick={handleExportPoliticalWord}
                 >
                   <FileText className="mr-2 size-4" /> Xuất Word
