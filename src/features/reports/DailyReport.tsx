@@ -626,23 +626,23 @@ export default function DailyReport() {
         <h1 className="mb-2 mr-2 text-xl font-semibold">
           Thống kê quân số trong ngày
         </h1>
-        <div className="flex items-center">
+        <div className="flex flex-wrap items-center gap-2">
           <DateInputVi
             value={ngay}
             max={todayIso()}
             onChange={setNgay}
-            className="mr-2 w-[280px]"
+            className="w-[280px]"
           />
           <Button
             variant="outline"
-            className="mr-2 border-[hsl(var(--tone-success-border))] bg-[hsl(var(--tone-success-bg))] text-[hsl(var(--tone-success-fg))] hover:bg-[hsl(var(--tone-success-bg))]/70"
+            className="border-[hsl(var(--tone-success-border))] bg-[hsl(var(--tone-success-bg))] text-[hsl(var(--tone-success-fg))] hover:bg-[hsl(var(--tone-success-bg))]/70"
             onClick={handleExportExcel}
           >
             <FileSpreadsheet className="mr-2 size-4" /> Xuất Excel
           </Button>
           <Button
             variant="outline"
-            className="mr-2 border-[hsl(var(--tone-info-border))] bg-[hsl(var(--tone-info-bg))] text-[hsl(var(--tone-info-fg))] hover:bg-[hsl(var(--tone-info-bg))]/70"
+            className="border-[hsl(var(--tone-info-border))] bg-[hsl(var(--tone-info-bg))] text-[hsl(var(--tone-info-fg))] hover:bg-[hsl(var(--tone-info-bg))]/70"
             onClick={handleExportWord}
           >
             <FileText className="mr-2 size-4" /> Xuất Word
@@ -659,7 +659,6 @@ export default function DailyReport() {
                   </Button>
                   <Button
                     variant="destructive"
-                    className="ml-2"
                     onClick={() => setRefuseTarget(commanderReport)}
                     disabled={refuseReport.isPending}
                   >

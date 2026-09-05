@@ -80,8 +80,14 @@ export default function PoliticalReportCard({
           label="Việc đột xuất"
           value={r.noiDungDotXuat}
           tone="tone-warning"
+          empty={r.notSubmitted ? "—" : "Không có"}
         />
-        <Section label="Kiến nghị" value={r.kienNghi} tone="tone-danger" />
+        <Section
+          label="Kiến nghị"
+          value={r.kienNghi}
+          tone="tone-danger"
+          empty={r.notSubmitted ? "—" : "Không có"}
+        />
       </CardContent>
     </Card>
   );
