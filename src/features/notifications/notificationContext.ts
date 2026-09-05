@@ -1,18 +1,12 @@
 import { createContext, useContext } from "react";
-
-export type AppNotification = {
-  id: string;
-  type: string;
-  title: string;
-  createdAt: number;
-  read: boolean;
-};
+import type { AppNotification } from "@/types/notification";
 
 export type NotificationCtx = {
   notifications: AppNotification[];
   unreadCount: number;
+  markRead: (id: string) => void;
   markAllRead: () => void;
-  clear: () => void;
+  clearRead: () => void;
 };
 
 export const NotificationContext = createContext<NotificationCtx | null>(null);

@@ -1,75 +1,132 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { storage } from "@/lib/storage";
-import { wsClient, type WsMessage } from "@/lib/ws";
-import {
-  NotificationContext,
-  type AppNotification,
-} from "./notificationContext";
+import { wsClient } from "@/lib/ws";
+import { useAccount } from "@/features/auth/queries";
+import { notificationApi } from "./api";
+import { NotificationContext } from "./notificationContext";
+import type { ApiNotification, AppNotification } from "@/types/notification";
 
-// Ánh xạ type sự kiện -> tiêu đề hiển thị
-const TITLE_MAP: Record<string, string> = {
-  REPORT_SUBMITTED: "Có báo cáo mới được trình duyệt",
-  REPORT_APPROVED: "Báo cáo đã được phê duyệt",
-  REPORT_REFUSED: "Báo cáo bị trả về",
-  DUTY_CREATED: "Có ca trực mới",
-};
+function mapApiNotification(n: ApiNotification): AppNotification {
+  return {
+    id: n.idThongbao,
+    title: n.tieuDe,
+    message: n.noiDung,
+    time: n.thoiGian ?? new Date().toISOString(),
+    isRead: n.daDoc,
+  };
+}
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
+  const { data: account } = useAccount();
+  const maDonVi = account?.donVi?.maDonVi;
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
+  // 1) Tải danh sách ban đầu qua REST
   useEffect(() => {
-    if (!storage.getToken()) return;
+    if (!maDonVi) return;
+    let active = true;
+    notificationApi
+      .getNotifications(maDonVi)
+      .then((res) => {
+        if (active)
+          setNotifications((res.Result ?? []).map(mapApiNotification));
+      })
+      .catch(() => {
+        /* lỗi đã được interceptor toast */
+      });
+    return () => {
+      active = false;
+    };
+  }, [maDonVi]);
+
+  // 2) Nối WebSocket + REGISTER + nhận message
+  useEffect(() => {
+    if (!account) return;
+
+    wsClient.setOnOpen(() => {
+      wsClient.send({
+        type: "REGISTER",
+        role: account.vaiTro?.idVaiTro ?? "",
+        donViId: account.donVi?.maDonVi ?? "",
+        userId: account.idTaiKhoan,
+        token: storage.getToken() ?? "",
+      });
+    });
+
+    wsClient.setOnMessage((data) => {
+      const msg = data as {
+        type?: string;
+        title?: string;
+        message?: string;
+        id?: string;
+      };
+
+      if (msg.type === "FORCE_LOGOUT") {
+        wsClient.disconnect();
+        setTimeout(() => {
+          storage.removeToken();
+          storage.clearNavState();
+          window.location.href = "/login";
+        }, 2500);
+        return;
+      }
+
+      if (msg.title || msg.message) {
+        const newNotif: AppNotification = {
+          id: msg.id ?? `${Date.now()}`,
+          title: msg.title ?? "",
+          message: msg.message ?? "",
+          time: new Date().toISOString(),
+          isRead: false,
+        };
+        setNotifications((prev) => [newNotif, ...prev]);
+
+        const text = `${msg.title ?? ""}${msg.message ? `: ${msg.message}` : ""}`;
+        if (msg.type === "URGENT" || msg.type === "WARNING") toast.error(text);
+        else if (msg.title) toast.success(text);
+      }
+
+      // Làm mới dữ liệu liên quan
+      qc.invalidateQueries({ queryKey: ["reports"] });
+      qc.invalidateQueries({ queryKey: ["ca-truc"] });
+    });
 
     wsClient.connect();
 
-    const unsubscribe = wsClient.subscribe((msg: WsMessage) => {
-      const title = TITLE_MAP[msg.type] ?? "Thông báo mới";
-
-      setNotifications((prev) => [
-        {
-          id:
-            (msg.payload as { id?: string })?.id ?? `${msg.type}-${Date.now()}`,
-          type: msg.type,
-          title,
-          createdAt: Date.now(),
-          read: false,
-        },
-        ...prev,
-      ]);
-
-      toast(title);
-
-      // Làm mới dữ liệu liên quan
-      if (msg.type.startsWith("REPORT_")) {
-        qc.invalidateQueries({ queryKey: ["reports"] });
-      }
-      if (msg.type.startsWith("DUTY_")) {
-        qc.invalidateQueries({ queryKey: ["ca-truc"] });
-      }
-    });
-
-    // reconnect khi tab được focus lại
-    const onFocus = () => wsClient.connect();
-    window.addEventListener("focus", onFocus);
-
     return () => {
-      unsubscribe();
-      window.removeEventListener("focus", onFocus);
+      wsClient.disconnect();
     };
-  }, [qc]);
+  }, [account, qc]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const markRead = useCallback((id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+    );
+  }, []);
 
-  const markAllRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const clear = () => setNotifications([]);
+  const markAllRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  }, []);
+
+  const clearRead = useCallback(async () => {
+    if (maDonVi) {
+      try {
+        await notificationApi.deleteReadNotifications(maDonVi);
+      } catch {
+        /* interceptor đã toast */
+      }
+    }
+    setNotifications((prev) => prev.filter((n) => !n.isRead));
+  }, [maDonVi]);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAllRead, clear }}
+      value={{ notifications, unreadCount, markRead, markAllRead, clearRead }}
     >
       {children}
     </NotificationContext.Provider>

@@ -1,113 +1,91 @@
-import { storage } from "@/lib/storage";
+export interface WebSocketOptions {
+  url: string;
+  onMessage?: (data: unknown) => void;
+  onOpen?: () => void;
+  onClose?: () => void;
+  reconnectInterval?: number;
+}
 
-export type WsMessage<T = unknown> = {
-  type: string;
-  payload: T;
-};
-
-type Listener = (msg: WsMessage) => void;
-
-const WS_BASE = import.meta.env.VITE_WS_URL || "ws://localhost:8080/api/ws";
-
-class WsClient {
+export class WebSocketManager {
   private socket: WebSocket | null = null;
-  private listeners = new Set<Listener>();
-  private reconnectAttempts = 0;
   private reconnectTimer: number | null = null;
   private manuallyClosed = false;
-  private pingTimer: number | null = null;
+  private options: WebSocketOptions;
+
+  constructor(options: WebSocketOptions) {
+    this.options = options;
+  }
 
   connect() {
-    const token = storage.getToken();
-    if (!token) return; // chưa đăng nhập thì không kết nối
+    this.manuallyClosed = false;
     if (
       this.socket &&
       (this.socket.readyState === WebSocket.OPEN ||
         this.socket.readyState === WebSocket.CONNECTING)
     ) {
-      return; // đã kết nối rồi
+      return;
     }
 
-    this.manuallyClosed = false;
-    const url = `${WS_BASE}?token=${encodeURIComponent(token)}`;
-    const socket = new WebSocket(url);
-    this.socket = socket;
+    this.socket = new WebSocket(this.options.url);
 
-    socket.onopen = () => {
-      this.reconnectAttempts = 0;
-      this.startPing();
-    };
+    this.socket.onopen = () => this.options.onOpen?.();
 
-    socket.onmessage = (event) => {
-      let msg: WsMessage;
+    this.socket.onmessage = (event) => {
       try {
-        msg = JSON.parse(event.data);
+        this.options.onMessage?.(JSON.parse(event.data));
       } catch {
-        return; // bỏ qua message không phải JSON (vd: "pong")
+        this.options.onMessage?.(event.data);
       }
-      this.listeners.forEach((fn) => fn(msg));
     };
 
-    socket.onclose = () => {
-      this.stopPing();
-      this.socket = null;
-      if (!this.manuallyClosed) this.scheduleReconnect();
+    this.socket.onclose = () => {
+      this.options.onClose?.();
+      if (this.manuallyClosed) return;
+      this.reconnectTimer = window.setTimeout(
+        () => this.connect(),
+        this.options.reconnectInterval ?? 3000,
+      );
     };
 
-    socket.onerror = () => {
-      socket.close();
+    this.socket.onerror = () => {
+      if (import.meta.env.DEV) console.error("WebSocket Error");
     };
   }
 
-  private scheduleReconnect() {
-    if (this.reconnectTimer !== null) return;
-    if (!storage.getToken()) return; // đã đăng xuất
-    const delay = Math.min(1000 * 2 ** this.reconnectAttempts, 30_000);
-    this.reconnectAttempts += 1;
-    this.reconnectTimer = window.setTimeout(() => {
-      this.reconnectTimer = null;
-      this.connect();
-    }, delay);
-  }
-
-  private startPing() {
-    this.stopPing();
-    this.pingTimer = window.setInterval(() => {
-      if (this.socket?.readyState === WebSocket.OPEN) {
-        this.socket.send(JSON.stringify({ type: "ping" }));
-      }
-    }, 25_000);
-  }
-
-  private stopPing() {
-    if (this.pingTimer !== null) {
-      window.clearInterval(this.pingTimer);
-      this.pingTimer = null;
+  send(data: unknown) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(typeof data === "string" ? data : JSON.stringify(data));
     }
-  }
-
-  send(msg: WsMessage) {
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(msg));
-    }
-  }
-
-  subscribe(fn: Listener) {
-    this.listeners.add(fn);
-    return () => this.listeners.delete(fn);
   }
 
   disconnect() {
     this.manuallyClosed = true;
-    if (this.reconnectTimer !== null) {
-      window.clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
-    this.stopPing();
-    this.socket?.close();
-    this.socket = null;
-    this.reconnectAttempts = 0;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.socket?.close(1000, "Manual Close");
+  }
+
+  setOnOpen(cb: () => void) {
+    this.options.onOpen = cb;
+  }
+  setOnMessage(cb: (data: unknown) => void) {
+    this.options.onMessage = cb;
+  }
+  setOnClose(cb: () => void) {
+    this.options.onClose = cb;
+  }
+  isConnected() {
+    return this.socket?.readyState === WebSocket.OPEN;
   }
 }
 
-export const wsClient = new WsClient();
+function resolveWsUrl(): string {
+  const envUrl = import.meta.env.VITE_WS_URL;
+  if (envUrl) return envUrl;
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.host}/ws`;
+}
+
+export const wsClient = new WebSocketManager({
+  url: resolveWsUrl(),
+  reconnectInterval: 3000,
+});

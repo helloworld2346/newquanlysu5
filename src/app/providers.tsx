@@ -10,8 +10,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
         <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
-        <Toaster />
       </NotificationProvider>
+      <Toaster />
     </QueryClientProvider>
   );
 }
